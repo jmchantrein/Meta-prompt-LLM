@@ -1,0 +1,174 @@
+# Skill definition template
+# ============================================================================
+# This file serves as documentation and template for creating new skills.
+# Copy this file and rename it to your-skill-name.yaml
+#
+# The generate.sh script parses these YAML files and generates platform-specific
+# configurations for: Claude Code, Cursor, Ollama, OpenCode, Aider, Continue.dev,
+# Codex, and others.
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# METADATA (required)
+# ----------------------------------------------------------------------------
+name: "skill-name"                    # Unique identifier (kebab-case)
+version: "1.0.0"                      # Semantic versioning
+description: "Brief description"      # One-line description (< 80 chars)
+
+# Author and dates
+author: "your-name"                   # Creator of this skill
+created: "YYYY-MM-DD"                 # Creation date
+updated: "YYYY-MM-DD"                 # Last modification date
+
+# Classification
+category: "category-name"             # One of: core, validation, translation,
+                                      # documentation, development, devops, other
+tags:                                 # Searchable tags
+  - "tag1"
+  - "tag2"
+
+# ----------------------------------------------------------------------------
+# ACTIVATION (required)
+# ----------------------------------------------------------------------------
+triggers:
+  # When should this skill be activated?
+  patterns:                           # File patterns that trigger this skill
+    - "*.md"
+    - "docs/**/*"
+  keywords:                           # Keywords in user input that trigger
+    - "translate"
+    - "review"
+  commands:                           # Explicit commands (if supported by platform)
+    - "/skill-name"
+  automatic: false                    # Auto-activate when patterns match?
+
+# ----------------------------------------------------------------------------
+# CONTEXT (optional)
+# ----------------------------------------------------------------------------
+context:
+  # What context does this skill need?
+  files:                              # Files to read for context
+    - ".ai/MEMORY.md"
+    - "AGENTS.md"
+  environment:                        # Environment variables needed
+    - "LANG"
+  dependencies:                       # Other skills this depends on
+    - "other-skill-name"
+
+# ----------------------------------------------------------------------------
+# INSTRUCTIONS (required)
+# ----------------------------------------------------------------------------
+instructions:
+  # The actual skill instructions in markdown format
+  # This is the core content that will be adapted for each platform
+
+  role: |
+    You are a [role description].
+    Your purpose is to [purpose].
+
+  guidelines:
+    - "Guideline 1: description"
+    - "Guideline 2: description"
+    - "Guideline 3: description"
+
+  process: |
+    ## Process
+
+    1. First step
+    2. Second step
+    3. Third step
+
+  output_format: |
+    ## Output format
+
+    Provide your response in this format:
+    - Section 1: ...
+    - Section 2: ...
+
+  examples:
+    - input: "Example input"
+      output: "Example output"
+      explanation: "Why this output"
+
+# ----------------------------------------------------------------------------
+# CONSTRAINTS (optional)
+# ----------------------------------------------------------------------------
+constraints:
+  # Limitations and boundaries for this skill
+  must:                               # Things the skill MUST do
+    - "Always check X before Y"
+    - "Must validate against schema"
+  must_not:                           # Things the skill must NEVER do
+    - "Never modify files outside scope"
+    - "Never skip validation"
+  assumptions:                        # Assumptions the skill makes
+    - "Assumes valid UTF-8 encoding"
+
+# ----------------------------------------------------------------------------
+# PLATFORM-SPECIFIC OVERRIDES (optional)
+# ----------------------------------------------------------------------------
+platforms:
+  # Override settings for specific platforms
+  # If not specified, defaults from instructions are used
+
+  claude:
+    # Claude Code / Claude API specific
+    model: "claude-sonnet-4-20250514"    # Preferred model
+    max_tokens: 4096
+    temperature: 0.3
+    tools:                            # MCP tools this skill can use
+      - "read_file"
+      - "write_file"
+
+  ollama:
+    # Ollama Modelfile specific
+    model: "llama3.2"                 # Base model
+    parameters:
+      temperature: 0.3
+      num_ctx: 4096
+
+  cursor:
+    # Cursor .cursorrules specific
+    rules_priority: "high"            # Priority in rules file
+
+  opencode:
+    # OpenCode specific
+    agent_type: "specialist"
+
+  aider:
+    # Aider specific
+    conventions: true                 # Include in conventions
+
+  continue:
+    # Continue.dev specific
+    slash_command: true               # Register as slash command
+
+  codex:
+    # Codex CLI specific
+    agent_mode: true
+
+# ----------------------------------------------------------------------------
+# VALIDATION (optional)
+# ----------------------------------------------------------------------------
+validation:
+  # How to validate this skill's output
+  schema: null                        # JSON schema for output validation
+  tests:                              # Test cases
+    - name: "Test case 1"
+      input: "test input"
+      expected_contains:
+        - "expected string"
+
+# ----------------------------------------------------------------------------
+# METADATA EXTENSION (optional)
+# ----------------------------------------------------------------------------
+meta:
+  # Additional metadata for tooling
+  changelog:
+    - version: "1.0.0"
+      date: "YYYY-MM-DD"
+      changes:
+        - "Initial version"
+  related_skills:                     # Skills that work well together
+    - "other-skill"
+  documentation: "docs/en/skills/skill-name.md"
