@@ -18,6 +18,8 @@ model_hints:
   temperature: 0.3
 ---
 
+> [English version](./hybrid-ai-bootstrap.en.md)
+
 # Bootstrap d'architecture IA hybride
 
 > Prompt de demarrage pour initialiser un nouveau projet avec une architecture IA hybride (cloud + local), incluant memoire persistante et orchestration automatique des agents.
