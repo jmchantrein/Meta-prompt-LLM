@@ -5,7 +5,7 @@
 # ============================================================================
 
 name: "workflow-orchestrator"
-version: "1.0.0"
+version: "1.1.0"
 description: "Orchestrates multi-agent workflows and validation sequences"
 
 author: "Meta-prompt-LLM"
@@ -88,6 +88,8 @@ instructions:
             |
             +---> Docs modified? ---> translator --check-sync
             |
+            +---> Markdown modified? ---> link-checker
+            |
             +---> Important decision? ---> memory-keeper
             |
             v
@@ -106,6 +108,7 @@ instructions:
     2. prompt-validator (all prompts)
     3. inclusivity-reviewer (all FR content)
     4. translator --check-sync (all docs)
+    5. link-checker (all markdown files)
 
     ### 3. Custom workflow
     Execute specific sequence of skills:
@@ -180,10 +183,15 @@ instructions:
         - Duration: 2s
         - Output: EN/FR in sync
 
+        ### Step 5: link-checker
+        - Status: PASS
+        - Duration: 3s
+        - Output: All internal links valid
+
         ## Summary
-        - Passed: 3/4
-        - Failed: 0/4
-        - Skipped: 1/4
+        - Passed: 4/5
+        - Failed: 0/5
+        - Skipped: 1/5
 
         ## Blocking issues
         None
@@ -242,6 +250,8 @@ workflows:
       - skill: "translator"
         args: ["--check-sync"]
         condition: "docs_modified"
+      - skill: "link-checker"
+        condition: "markdown_modified"
       - skill: "memory-keeper"
         condition: "important_decision"
 
@@ -256,6 +266,8 @@ workflows:
         args: ["--all"]
       - skill: "translator"
         args: ["--check-sync", "--all"]
+      - skill: "link-checker"
+        args: ["--all"]
 
   release:
     description: "Pre-release validation"
@@ -284,6 +296,10 @@ validation:
 # ----------------------------------------------------------------------------
 meta:
   changelog:
+    - version: "1.1.0"
+      date: "2026-01-31"
+      changes:
+        - "Added link-checker to pre-commit and full-validation workflows"
     - version: "1.0.0"
       date: "2026-01-31"
       changes:
@@ -293,4 +309,5 @@ meta:
     - "inclusivity-reviewer"
     - "translator"
     - "prompt-validator"
+    - "link-checker"
   documentation: "docs/en/skills/workflow-orchestrator.md"

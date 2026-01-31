@@ -18,6 +18,7 @@ cat .ai/MEMORY.md
 ```
 
 ## Available skills- **inclusivity-reviewer**: Reviews content for inclusive writing and modern terminology
+- **link-checker**: Validates internal links and paths in markdown files
 - **memory-keeper**: Manages persistent project memory between sessions
 - **prompt-validator**: Validates prompts against schema and quality standards
 - **translator**: Manages EN/FR translation and documentation synchronization

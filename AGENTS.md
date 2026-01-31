@@ -63,6 +63,7 @@ Format: `[ ]` to do, `[x]` done, `[~]` in progress, `[!]` blocked
 - [ ] `prompt-validator` passed if prompts modified
 - [ ] `inclusivity-reviewer` passed if FR content modified
 - [ ] `translator` sync check if docs modified
+- [ ] `link-checker` passed if markdown files modified
 - [ ] `memory-keeper` invoked if important decisions made
 
 ## Rule 10: writing conventions and inclusivity
@@ -99,6 +100,7 @@ Format: `[ ]` to do, `[x]` done, `[~]` in progress, `[!]` blocked
 | Skill | Description | Category |
 |-------|-------------|----------|
 | inclusivity-reviewer | Reviews content for inclusive writing and modern terminology | validation |
+| link-checker | Validates internal links and paths in markdown files | validation |
 | memory-keeper | Manages persistent project memory between sessions | core |
 | prompt-validator | Validates prompts against schema and quality standards | validation |
 | translator | Manages EN/FR translation and documentation synchronization | translation |

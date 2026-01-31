@@ -14,6 +14,11 @@
 Reviews content for inclusive writing and modern terminology
 
 
+### link-checker
+
+Validates internal links and paths in markdown files
+
+
 ### memory-keeper
 
 Manages persistent project memory between sessions

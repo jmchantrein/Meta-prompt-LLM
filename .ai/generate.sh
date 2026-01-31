@@ -326,6 +326,7 @@ Format: `[ ]` to do, `[x]` done, `[~]` in progress, `[!]` blocked
 - [ ] `prompt-validator` passed if prompts modified
 - [ ] `inclusivity-reviewer` passed if FR content modified
 - [ ] `translator` sync check if docs modified
+- [ ] `link-checker` passed if markdown files modified
 - [ ] `memory-keeper` invoked if important decisions made
 
 ## Rule 10: writing conventions and inclusivity

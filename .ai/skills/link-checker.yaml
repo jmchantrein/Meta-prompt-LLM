@@ -1,0 +1,235 @@
+# Link checker skill
+# ============================================================================
+# Validates internal links and paths in markdown files.
+# Ensures cross-references point to existing files.
+# ============================================================================
+
+name: "link-checker"
+version: "1.0.0"
+description: "Validates internal links and paths in markdown files"
+
+author: "Meta-prompt-LLM"
+created: "2026-01-31"
+updated: "2026-01-31"
+
+category: "validation"
+tags:
+  - "validation"
+  - "links"
+  - "paths"
+  - "markdown"
+  - "cross-reference"
+
+# ----------------------------------------------------------------------------
+# ACTIVATION
+# ----------------------------------------------------------------------------
+triggers:
+  patterns:
+    - "**/*.md"
+    - "prompts/**/*.md"
+    - "docs/**/*.md"
+  keywords:
+    - "check links"
+    - "validate links"
+    - "broken links"
+    - "link check"
+  commands:
+    - "/check-links"
+    - "/validate-paths"
+  automatic: true   # Run before commit via workflow-orchestrator
+
+# ----------------------------------------------------------------------------
+# CONTEXT
+# ----------------------------------------------------------------------------
+context:
+  files:
+    - "prompts/**/*.md"
+    - "docs/**/*.md"
+    - "README*.md"
+    - "AGENTS.md"
+    - "CLAUDE.md"
+  dependencies: []
+
+# ----------------------------------------------------------------------------
+# INSTRUCTIONS
+# ----------------------------------------------------------------------------
+instructions:
+  role: |
+    You are an internal link validator. Your purpose is to ensure all
+    relative links and cross-references in markdown files point to
+    files that actually exist in the repository.
+
+  guidelines:
+    - "Check all relative links in markdown files"
+    - "Verify cross-language links (EN/FR) point to existing translations"
+    - "Validate prompt cross-references between related prompts"
+    - "Ignore external URLs (http://, https://)"
+    - "Report broken links with file location and line number"
+
+  process: |
+    ## Validation process
+
+    ### 1. Extract internal links
+    Find all markdown links matching these patterns:
+    - `[text](relative/path.md)`
+    - `[text](../path/to/file.md)`
+    - `[text](./local-file.md)`
+
+    Ignore:
+    - External URLs: `[text](https://...)`
+    - Anchors only: `[text](#section)`
+    - Empty links: `[text]()`
+
+    ### 2. Resolve paths
+    For each link:
+    - Get the source file's directory
+    - Resolve the relative path from that directory
+    - Normalize the path (handle ../, ./, etc.)
+
+    ### 3. Verify existence
+    Check if the resolved path exists:
+    - File must exist in the repository
+    - For directories, check if they exist
+
+    ### 4. Special checks for prompts
+    For files in `prompts/`:
+    - Verify EN/FR cross-links point to matching structure
+    - Check that `prompts/en/.../file.md` has corresponding `prompts/fr/.../file.md`
+    - Validate "Related prompts" section links
+
+    ### 5. Generate report
+
+  output_format: |
+    ## Output format
+
+    ```
+    # Link validation report
+
+    ## Status: [PASS/FAIL]
+
+    ## Summary
+    - Files checked: N
+    - Links found: N
+    - Valid links: N
+    - Broken links: N
+
+    ## Broken links
+
+    ### file: prompts/en/metaprompts/example/example.md
+    - Line 21: [Version francaise](../../../fr/metaprompts/example/example.md)
+      Target does not exist: prompts/fr/metaprompts/example/example.md
+
+    ### file: docs/en/guide.md
+    - Line 45: [API reference](./api.md)
+      Target does not exist: docs/en/api.md
+
+    ## Warnings
+
+    - prompts/en/metaprompts/old-prompt/old-prompt.md: Missing FR translation
+
+    ## Actions required
+    1. Create missing file: prompts/fr/metaprompts/example/example.md
+    2. Fix or remove broken link in docs/en/guide.md:45
+    ```
+
+  examples:
+    - input: |
+        Check links in prompts/en/metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md
+      output: |
+        # Link validation report
+
+        ## Status: PASS
+
+        ## Summary
+        - Files checked: 1
+        - Links found: 2
+        - Valid links: 2
+        - Broken links: 0
+
+        ## Links validated
+        - Line 21: [Version francaise](../../../fr/metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md) -> OK
+        - Line 312: [hybrid-ai-takeover](../hybrid-ai-takeover/hybrid-ai-takeover.md) -> OK
+      explanation: "All links in the file point to existing targets"
+
+# ----------------------------------------------------------------------------
+# LINK PATTERNS
+# ----------------------------------------------------------------------------
+patterns:
+  # Markdown link regex
+  markdown_link: '\[([^\]]+)\]\(([^)]+)\)'
+
+  # Internal link (not starting with http/https/mailto/#)
+  internal_link: '^(?!https?://|mailto:|#).*'
+
+  # Cross-language link patterns
+  en_to_fr: '../../../fr/'
+  fr_to_en: '../../../en/'
+
+# ----------------------------------------------------------------------------
+# CONSTRAINTS
+# ----------------------------------------------------------------------------
+constraints:
+  must:
+    - "Check all .md files in scope"
+    - "Resolve relative paths correctly from source file location"
+    - "Report line numbers for broken links"
+    - "Distinguish between missing files and missing translations"
+  must_not:
+    - "Never validate external URLs (not in scope)"
+    - "Never auto-fix links without explicit request"
+    - "Never ignore cross-language links"
+  assumptions:
+    - "All internal links use relative paths"
+    - "Prompt structure follows prompts/[lang]/[category]/[name]/[name].md"
+    - "Doc structure follows docs/[lang]/*.md"
+
+# ----------------------------------------------------------------------------
+# PLATFORM-SPECIFIC
+# ----------------------------------------------------------------------------
+platforms:
+  claude:
+    model: "claude-sonnet-4-20250514"
+    temperature: 0.1
+    tools:
+      - "read_file"
+      - "glob"
+      - "grep"
+
+  ollama:
+    model: "llama3.2"
+    parameters:
+      temperature: 0.1
+
+# ----------------------------------------------------------------------------
+# VALIDATION
+# ----------------------------------------------------------------------------
+validation:
+  tests:
+    - name: "Detects broken link"
+      input: "[test](./nonexistent.md)"
+      expected_contains:
+        - "does not exist"
+        - "broken"
+
+    - name: "Validates existing link"
+      input: "[README](../../README.md)"
+      expected_contains:
+        - "OK"
+        - "valid"
+
+# ----------------------------------------------------------------------------
+# METADATA
+# ----------------------------------------------------------------------------
+meta:
+  changelog:
+    - version: "1.0.0"
+      date: "2026-01-31"
+      changes:
+        - "Initial version with markdown link validation"
+        - "Cross-language link checking for prompts"
+        - "Related prompts validation"
+  related_skills:
+    - "prompt-validator"
+    - "translator"
+    - "workflow-orchestrator"
+  documentation: "docs/en/skills/link-checker.md"
