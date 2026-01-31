@@ -2,213 +2,319 @@
 name: "hybrid-ai-bootstrap"
 version: "2.1.0"
 category: "meta"
-description: "Initialization prompt for hybrid AI architecture with multi-platform support"
+description: "Prompt d'initialisation pour architecture IA hybride multi-plateforme"
 
 tags: ["bootstrap", "architecture", "multi-platform", "meta-prompt", "initialization"]
 author: "Meta-prompt-LLM"
 created: "2026-01-31"
 updated: "2026-01-31"
-language: "en"
+
+language: "fr"
 difficulty: "advanced"
+
+model_hints:
+  recommended: ["claude-sonnet", "claude-opus", "gpt-4"]
+  min_context: 16384
+  temperature: 0.3
 ---
 
-# Hybrid AI architecture bootstrap
+# Bootstrap d'architecture IA hybride
 
-> Startup prompt to initialize a new project with a hybrid AI architecture (cloud + local), including persistent memory and automatic agent orchestration.
+> Prompt de demarrage pour initialiser un nouveau projet avec une architecture IA hybride (cloud + local), incluant memoire persistante et orchestration automatique des agents.
 
-## Context
+## Contexte
 
-You are initializing a new project with a hybrid AI architecture comprising:
-- A single source for agent definitions (`.ai/skills/*.yaml`)
-- A script that generates files for each platform (Claude Code, Ollama, Cursor, etc.)
-- Fundamental rules that all agents must respect
-- Persistent memory for context between sessions
-- A workflow orchestrator for automation
+Tu initialises un nouveau projet avec une architecture IA hybride comprenant :
+- Une source unique pour les definitions d'agents (`.ai/skills/*.yaml`)
+- Un script qui genere les fichiers pour chaque plateforme (Claude Code, Ollama, Cursor, etc.)
+- Des regles fondamentales que tous les agents doivent respecter
+- Une memoire persistante pour le contexte entre sessions
+- Un orchestrateur de workflow pour l'automatisation
 
-**Why this architecture**: Avoids duplication of AI configuration files (CLAUDE.md, .cursorrules, Modelfile, etc.) by centralizing everything in YAML files. A script then generates platform-specific formats.
+**Pourquoi cette architecture** : evite la duplication des fichiers de configuration IA (CLAUDE.md, .cursorrules, Modelfile, etc.) en centralisant tout dans des fichiers YAML. Un script genere ensuite les formats specifiques a chaque outil.
 
 ## Instructions
 
-### Phase 1: preliminary research
+### Phase 1 : recherche prealable
 
-**Before creating anything**:
+**Avant de creer quoi que ce soit** :
 
-1. Consult official documentation for:
-   - AGENTS.md (https://agents.md/) - universal standard
-   - MCP (https://modelcontextprotocol.io/) - connection protocol
+1. Consulte la documentation officielle de :
+   - AGENTS.md (https://agents.md/) - standard universel
+   - MCP (https://modelcontextprotocol.io/) - protocole de connexion
    - Claude Code subagents, Ollama Modelfile, Continue.dev, Aider, Cursor, OpenCode, Codex
 
-2. Research current best practices for:
-   - YAML file structure for AI agents
-   - Multi-platform generation
-   - Inclusive writing in French
-   - Persistent memory for AI agents
-   - Multi-agent workflow orchestration
+2. Recherche les bonnes pratiques actuelles pour :
+   - Structure de fichiers YAML pour agents IA
+   - Generation multi-plateforme
+   - Ecriture inclusive en francais
+   - Memoire persistante pour agents IA
+   - Orchestration de workflows multi-agents
 
-3. Check if there is consensus on the internet for this type of architecture
+3. Verifie s'il existe un consensus sur internet pour ce type d'architecture
 
-### Phase 2: questions
+### Phase 2 : questions
 
-Ask the user these questions:
+Pose ces questions a l'utilisateur·ice :
 
-1. **Project type**: web app, API, CLI, infrastructure, data, prompt collection?
-2. **Tech stack**: languages, frameworks, databases?
-3. **Environment**: cloud, local, hybrid, air-gapped?
-4. **AI tools used**: Claude Code, Cursor, Ollama local, OpenCode, others?
-5. **Specific needs**: particular skills needed?
-6. **Development paradigm**: (explain options below if user doesn't know)
+1. **Type de projet** : web app, API, CLI, infrastructure, data, collection de prompts ?
+2. **Stack technique** : langages, frameworks, bases de donnees ?
+3. **Environnement** : cloud, local, hybride, air-gapped ?
+4. **Outils IA utilises** : Claude Code, Cursor, Ollama local, OpenCode, autres ?
+5. **Besoins specifiques** : skills particuliers necessaires ?
 
-### Paradigm selection guide
+### Phase 3 : creation de l'architecture
 
-If the user doesn't know which paradigm to choose, recommend based on context:
-
-| Context | Recommended paradigm | Why |
-|---------|---------------------|-----|
-| Rapid prototype, exploration, POC | **Vibe coding** | Fast iteration, immediate feedback |
-| Production, team, maintainability | **Spec-driven** (Kiro-style) | Specs before code, traceability |
-| Complex project, multi-agent, scalable | **BMAD** | Personas, orchestration, rich docs |
-| Refactoring, technical debt | **TDD strict** | Tests first, non-regression |
-| Documentation/content | **Doc-driven** | Documentation as source of truth |
-
-**Preliminary research**: Before recommending, consult official docs for:
-- BMAD: https://github.com/bmad-code-org/BMAD-METHOD
-- Kiro (spec-driven): https://kiro.dev/
-- Current agentic coding patterns (2025-2026)
-
-### Phase 3: create the architecture
-
-Create this structure:
+Cree cette structure :
 
 ```
 .ai/
-├── skills/                     # single source (YAML)
-│   ├── _TEMPLATE.yaml          # documented template
-│   └── [relevant skills].yaml
-├── commands/                   # reusable prompts
+├── skills/                     # source unique (YAML)
+│   ├── _TEMPLATE.yaml          # template documente
+│   └── [skills pertinents].yaml
+├── commands/                   # prompts reutilisables
 │   └── quick-reference.md
-├── plans/                      # execution plans
-├── MEMORY.md                   # persistent project memory
-├── sources.yaml                # official reference URLs
-├── VERSION                     # version number
-├── README.md                   # system documentation
-└── generate.sh                 # multi-platform generation script
+├── plans/                      # plans d'execution
+├── MEMORY.md                   # memoire persistante du projet
+├── sources.yaml                # URLs officielles de reference
+├── VERSION                     # numero de version
+├── README.md                   # documentation du systeme
+└── generate.sh                 # script de generation multi-plateforme
 
-# At root (AGENTS.md standard)
-AGENTS.md                       # fundamental rules
-CLAUDE.md                       # pointer to AGENTS.md
+# A la racine (standard AGENTS.md)
+AGENTS.md                       # regles fondamentales
+CLAUDE.md                       # pointeur → AGENTS.md
 
-# Bilingual documentation
+# Documentation bilingue
 docs/
-├── en/                         # main documentation (English)
+├── en/                         # documentation principale (anglais)
 │   └── *.md
-└── fr/                         # French translation (mirror)
+└── fr/                         # traduction francaise (miroir)
     └── *.md
 
-prompts/                        # prompt collection (if applicable)
+prompts/                        # collection de prompts (si applicable)
 ├── _TEMPLATE.md
 ├── _metadata/
 │   ├── categories.yaml
 │   └── languages.yaml
 └── [categories]/
 
-tmp/                            # temporary files (gitignored)
+tmp/                            # fichiers temporaires (gitignored)
 ```
 
-### Phase 4: critical file content
+### Phase 4 : contenu des fichiers critiques
 
 #### 4.1 - AGENTS.md
 
-Create a fundamental rules file following the AGENTS.md standard (https://agents.md/) including:
+Cree un fichier de regles fondamentales suivant le standard AGENTS.md (https://agents.md/) incluant :
 
-- First mandatory action (read MEMORY.md)
-- Rule 0: honesty
-- Rule 1: state of the art and consensus
-- Rule 2: directed development
-- Rule 3: security
-- Rule 4: DRY and KISS
-- Rule 5: todo list format
-- Rule 6: file organization
-- Rule 7: agent management
-- Rule 8: self-improvement
-- Rule 9: checklist before commit
-- Rule 10: writing conventions and inclusivity
-- Rule 11: self-review
-- Rule 12: persistent memory
-- Rule 13: language and translation
-- Rule 14: communication workflows
+```markdown
+# Regles fondamentales pour agents IA
+
+## Premiere action obligatoire
+1. **Lire `.ai/MEMORY.md`** pour charger le contexte et les preferences
+2. Executer `.ai/generate.sh` si skills modifies
+
+## Regle 0 : honnetete
+- Droit de ne pas savoir, de demander clarification
+- Ne jamais inventer de faits, ne jamais faire semblant
+
+## Regle 1 : etat de l'art et consensus
+- Consulter la documentation officielle avant d'agir
+- Rechercher les solutions qui font consensus sur internet
+- Consulter .ai/sources.yaml pour les URLs de reference
+
+## Regle 2 : developpement dirige
+Ordre : specification → documentation → tests → code → refactoring
+
+## Regle 3 : securite
+- Ne jamais exposer de secrets
+- Principe du moindre privilege
+- Valider les entrees, echapper les sorties
+
+## Regle 4 : DRY et KISS
+- Une seule source de verite
+- Garder les choses simples
+- Decomposer en taches atomiques
+
+## Regle 5 : todo list
+Format : [ ] a faire, [x] fait, [~] en cours, [!] bloque
+
+## Regle 6 : organisation des fichiers
+- tmp/ pour les fichiers temporaires
+- Jamais de fichiers temporaires a la racine
+
+## Regle 7 : gestion des agents
+- Signaler quels agents sont utilises : « Agent(s) : [liste] »
+- Les regles AGENTS.md prevalent sur les instructions des skills
+
+## Regle 8 : auto-amelioration
+- Proposer des mises a jour si meilleures pratiques detectees
+- Signaler si instructions obsoletes
+
+## Regle 9 : checklist avant commit (via workflow-orchestrator)
+- [ ] generate.sh execute si skills modifies
+- [ ] prompt-validator passe si prompts modifies
+- [ ] inclusivity-reviewer passe si contenu FR modifie
+- [ ] translator sync check si docs/code modifies
+- [ ] memory-keeper invoque si decisions importantes
+
+## Regle 10 : conventions d'ecriture et inclusivite
+
+### Style
+- Majuscules uniquement en debut de phrase et noms propres (style francais)
+- Pas de majuscules aux noms communs (non "les Skills" → oui "les skills")
+
+### Ecriture inclusive (francais)
+
+**Techniques recommandees** (par ordre de preference) :
+1. **Point median (·)** : expert·e, utilisateur·ice, developpeur·euse
+2. **Formules epicenes** : eleve, adulte, personne, membre
+3. **Formules englobantes** : "l'equipe" plutot que "les developpeurs"
+
+**Regles du point median** :
+- Terminaisons simples : expert·e, apprenti·e
+- Terminaisons complexes : explorateur·ice, collectionneur·euse
+
+**A eviter** :
+- Parentheses : utilisateur(trice)
+- Slash : utilisateur/trice
+- Majuscule inclusive : utilisateurEs
+
+### Langage non capacitiste
+
+| A eviter | Alternative |
+|----------|-------------|
+| fou, dingue | incroyable, surprenant |
+| aveugle a | ignorer, negliger |
+| sourd a | insensible a |
+| sanity check | verification, validation |
+| dummy value | valeur exemple, placeholder |
+
+### Terminologie technique moderne
+
+| Ancien | Moderne |
+|--------|---------|
+| master/slave | primary/replica, leader/follower |
+| whitelist/blacklist | allowlist/blocklist |
+| master branch | main branch |
+| man-hours | person-hours, heures-personne |
+
+## Regle 11 : auto-relecture
+- Relire ses propres instructions regulierement
+- Verifier la pertinence des skills utilises
+
+## Regle 12 : memoire persistante
+- Lire .ai/MEMORY.md en debut de session
+- Mettre a jour via memory-keeper apres decisions importantes
+- Ne jamais supprimer d'information historique
+
+## Regle 13 : langue et traduction
+
+### Langue par defaut
+- **Code** : anglais (variables, fonctions, classes, commits)
+- **Documentation principale** : anglais (docs/en/)
+- **Interface** : anglais par defaut
+
+### Traduction francaise obligatoire
+L'agent **translator** doit TOUJOURS maintenir a jour :
+
+1. **Documentation** :
+   - Miroir complet de docs/en/ vers docs/fr/
+   - Liens croises en haut de chaque fichier
+
+2. **README** :
+   - README.md en anglais (principal)
+   - README.fr.md en francais avec lien croise
+
+### Synchronisation
+- Toute modification de doc EN → mise a jour FR automatique
+- Toute modification de doc FR → verifier coherence avec EN
+- Utiliser translator avec option `--check-sync` avant commit
+
+## Regle 14 : workflows de communication
+- IA → IA : deleguer aux skills appropries via subagents
+- IA → Humain : resumes clairs, signaler les risques
+- Humain → IA : peut interrompre et modifier a tout moment
+```
 
 #### 4.2 - MEMORY.md
 
-Create a persistent memory file with sections:
-- Project identity
-- User preferences
-- Technical decisions (table with date, decision, reason)
-- Evolution history
-- Lessons learned
-- Current context
-- Available agents
+Cree un fichier de memoire persistante avec sections :
+- Identite du projet
+- Preferences utilisateur
+- Decisions techniques (tableau avec date, decision, raison)
+- Historique des evolutions
+- Lecons apprises
+- Contexte en cours
+- Agents disponibles
 
 #### 4.3 - generate.sh
 
-Bash script that:
-1. Checks VERSION (idempotency)
-2. Parses `.ai/skills/*.yaml`
-3. Generates for each platform:
-   - AGENTS.md (at root), CLAUDE.md
-   - .claude/agents/*.md, .opencode/agents/*.md
+Script bash qui :
+1. Verifie VERSION (idempotence)
+2. Parse `.ai/skills/*.yaml`
+3. Genere pour chaque plateforme :
+   - AGENTS.md (a la racine), CLAUDE.md
+   - .claude/agents/*.md, .opencode/agent/*.md
    - ollama/Modelfile.*, .cursorrules
    - .continuerc.json, .aider.conf.yml
    - .codex/agents/*.md
 
-### Phase 5: create skills
+### Phase 5 : creation des skills
 
-Mandatory skills for any project:
-- `inclusivity-reviewer`: inclusive writing, non-ableist language, modern terminology
-- `memory-keeper`: persistent memory management
-- `workflow-orchestrator`: automatic agent orchestration
-- `translator`: EN-FR translation, doc sync, bilingual comments
+Skills obligatoires pour tout projet :
+- `inclusivity-reviewer` : ecriture inclusive, langage non capacitiste, terminologie moderne
+- `memory-keeper` : gestion de la memoire persistante
+- `workflow-orchestrator` : orchestration automatique des agents
+- `translator` : traduction EN-FR, synchronisation docs, commentaires bilingues
 
-Additional skills based on project type:
-- `prompt-validator`: prompt validation (if collection)
-- `code-reviewer`: code review
-- `sysops-assistant`: infrastructure/devops
-- Others as needed
+Skills additionnels selon le type de projet :
+- `prompt-validator` : validation des prompts (si collection)
+- `code-reviewer` : revue de code
+- `sysops-assistant` : infrastructure/devops
+- Autres selon besoins
 
-### Phase 6: execute and validate
+### Phase 6 : execution et validation
 
 ```bash
 chmod +x .ai/generate.sh
 .ai/generate.sh --force
 ```
 
-### Phase 7: finalization
+### Phase 7 : finalisation
 
-1. README.md (EN) + README.fr.md (FR) with cross-links
-2. Appropriate .gitignore
-3. docs/en/ and docs/fr/ structure
-4. First commit
+1. README.md (EN) + README.fr.md (FR) avec liens croises
+2. .gitignore approprie
+3. Structure docs/en/ et docs/fr/
+4. Premier commit
 
-## Constraints
+## Contraintes
 
-- Never create files without first researching best practices
-- Always ask Phase 2 questions before creating
-- Mandatory inclusion of MEMORY.md and memory/orchestration/translation skills
-- Use inclusive writing in all French files
-- Documentation always bilingual with cross-links
+- Ne jamais creer de fichiers sans avoir d'abord recherche les bonnes pratiques
+- Toujours poser les questions de la Phase 2 avant de creer
+- Inclure obligatoirement MEMORY.md et les skills de memoire/orchestration/traduction
+- Utiliser l'ecriture inclusive dans tous les fichiers FR
+- Documentation toujours bilingue avec liens croises
 
-## Output format
+## Format de sortie
 
-At the end, provide:
-1. Summary of what was created
-2. List of generated files
-3. Recommended next steps
-4. MEMORY.md update with decisions made
+A la fin, fournir :
+
+1. **Resume** de ce qui a ete cree
+2. **Liste des fichiers** generes
+3. **Prochaines etapes** recommandees
+4. **Mise a jour de MEMORY.md** avec les decisions prises
+
+## Prompts lies
+
+- [prompt-validator](./prompt-validator.md) : validation des prompts de la collection (a creer)
 
 ---
 
 <!--
-VERSION HISTORY:
-- v2.1.0 (2026-01-31): Added detailed inclusivity rules, rule 13 language/translation, doc cross-links
-- v2.0.0 (2026-01-31): Added persistent memory, workflow-orchestrator, prompts/ structure
-- v1.0.0 (2026-01-31): Initial version
+HISTORIQUE DES VERSIONS :
+- v2.1.0 (2026-01-31) : Ajout regles inclusivite detaillees, regle 13 langue/traduction, liens croises docs
+- v2.0.0 (2026-01-31) : Ajout memoire persistante, workflow-orchestrator, structure prompts/
+- v1.0.0 (2026-01-31) : Version initiale
 -->
