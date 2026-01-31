@@ -1,0 +1,70 @@
+# Supported languages
+# ============================================================================
+# Define valid language codes for prompts.
+# Uses ISO 639-1 two-letter codes.
+# ============================================================================
+
+languages:
+  # Primary supported languages
+  - code: "en"
+    name: "English"
+    native_name: "English"
+    primary: true
+
+  - code: "fr"
+    name: "French"
+    native_name: "Francais"
+    primary: true
+
+  # Additional languages (extend as needed)
+  - code: "es"
+    name: "Spanish"
+    native_name: "Espanol"
+    primary: false
+
+  - code: "de"
+    name: "German"
+    native_name: "Deutsch"
+    primary: false
+
+  - code: "it"
+    name: "Italian"
+    native_name: "Italiano"
+    primary: false
+
+  - code: "pt"
+    name: "Portuguese"
+    native_name: "Portugues"
+    primary: false
+
+  - code: "zh"
+    name: "Chinese"
+    native_name: "Zhongwen"
+    primary: false
+
+  - code: "ja"
+    name: "Japanese"
+    native_name: "Nihongo"
+    primary: false
+
+  - code: "ko"
+    name: "Korean"
+    native_name: "Hangugeo"
+    primary: false
+
+  - code: "ar"
+    name: "Arabic"
+    native_name: "Al-Arabiyya"
+    primary: false
+
+# ============================================================================
+# Language guidelines
+# ============================================================================
+#
+# - Use ISO 639-1 codes (two letters)
+# - primary: true means full support with documentation
+# - primary: false means community-contributed, may be incomplete
+# - Default language for prompts is "en" (English)
+# - French content must follow inclusive writing rules
+#
+# ============================================================================

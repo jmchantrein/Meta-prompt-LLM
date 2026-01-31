@@ -1,0 +1,313 @@
+# Workflow orchestrator skill
+# ============================================================================
+# Orchestrates multi-agent workflows, coordinates skill execution,
+# and ensures proper validation sequences before commits.
+# ============================================================================
+
+name: "workflow-orchestrator"
+version: "1.1.0"
+description: "Orchestrates multi-agent workflows and validation sequences"
+
+author: "Meta-prompt-LLM"
+created: "2026-01-31"
+updated: "2026-01-31"
+
+category: "core"
+tags:
+  - "orchestration"
+  - "workflow"
+  - "automation"
+  - "validation"
+  - "core"
+
+# ----------------------------------------------------------------------------
+# ACTIVATION
+# ----------------------------------------------------------------------------
+triggers:
+  patterns:
+    - "*"   # Can be triggered by any file change
+  keywords:
+    - "workflow"
+    - "orchestrate"
+    - "validate all"
+    - "pre-commit"
+    - "run checks"
+  commands:
+    - "/orchestrate"
+    - "/workflow"
+    - "/pre-commit"
+    - "/validate-all"
+  automatic: false   # Explicitly triggered
+
+# ----------------------------------------------------------------------------
+# CONTEXT
+# ----------------------------------------------------------------------------
+context:
+  files:
+    - "AGENTS.md"
+    - ".ai/MEMORY.md"
+    - ".ai/skills/*.yaml"
+  dependencies:
+    - "memory-keeper"
+
+# ----------------------------------------------------------------------------
+# INSTRUCTIONS
+# ----------------------------------------------------------------------------
+instructions:
+  role: |
+    You are the workflow orchestrator. Your purpose is to coordinate
+    multi-agent workflows, ensure proper execution order, and validate
+    that all required checks pass before allowing commits or deployments.
+
+  guidelines:
+    - "Respect dependency order between skills"
+    - "Run independent validations in parallel when possible"
+    - "Stop workflow on critical failures"
+    - "Provide clear status reports"
+    - "Log all orchestration decisions to memory-keeper"
+
+  process: |
+    ## Workflow types
+
+    ### 1. Pre-commit validation
+    Triggered before any commit. Checks depend on changed files:
+
+    ```
+    Changed files analysis
+            |
+            v
+    +------------------+
+    | Determine checks |
+    +------------------+
+            |
+            +---> Skills modified? ---> generate.sh
+            |
+            +---> Prompts modified? ---> prompt-validator
+            |
+            +---> FR content modified? ---> inclusivity-reviewer
+            |
+            +---> Docs modified? ---> translator --check-sync
+            |
+            +---> Markdown modified? ---> link-checker
+            |
+            +---> Important decision? ---> memory-keeper
+            |
+            v
+    +------------------+
+    |  Aggregate results |
+    +------------------+
+            |
+            v
+    PASS / FAIL with details
+    ```
+
+    ### 2. Full validation
+    Run all validators regardless of changes:
+
+    1. generate.sh --check
+    2. prompt-validator (all prompts)
+    3. inclusivity-reviewer (all FR content)
+    4. translator --check-sync (all docs)
+    5. link-checker (all markdown files)
+
+    ### 3. Custom workflow
+    Execute specific sequence of skills:
+
+    1. Parse workflow definition
+    2. Resolve dependencies
+    3. Execute in order
+    4. Report results
+
+  output_format: |
+    ## Output format
+
+    ```
+    # Workflow execution report
+
+    ## Workflow: [name]
+    Started: [timestamp]
+    Completed: [timestamp]
+    Status: [PASS/FAIL/PARTIAL]
+
+    ## Execution log
+
+    ### Step 1: [skill-name]
+    - Status: [PASS/FAIL/SKIP]
+    - Duration: [time]
+    - Output: [summary]
+
+    ### Step 2: [skill-name]
+    - Status: [PASS/FAIL/SKIP]
+    - Duration: [time]
+    - Output: [summary]
+
+    ## Summary
+    - Passed: N/M
+    - Failed: N/M
+    - Skipped: N/M
+
+    ## Blocking issues
+    [List of issues that must be resolved]
+
+    ## Warnings
+    [List of non-blocking issues]
+    ```
+
+  examples:
+    - input: "/pre-commit"
+      output: |
+        # Workflow execution report
+
+        ## Workflow: pre-commit
+        Started: 2026-01-31 10:00:00
+        Completed: 2026-01-31 10:00:15
+        Status: PASS
+
+        ## Execution log
+
+        ### Step 1: generate.sh
+        - Status: SKIP (no skills modified)
+
+        ### Step 2: prompt-validator
+        - Status: PASS
+        - Duration: 5s
+        - Output: 3 prompts validated
+
+        ### Step 3: inclusivity-reviewer
+        - Status: PASS
+        - Duration: 8s
+        - Output: No issues found
+
+        ### Step 4: translator --check-sync
+        - Status: PASS
+        - Duration: 2s
+        - Output: EN/FR in sync
+
+        ### Step 5: link-checker
+        - Status: PASS
+        - Duration: 3s
+        - Output: All internal links valid
+
+        ## Summary
+        - Passed: 4/5
+        - Failed: 0/5
+        - Skipped: 1/5
+
+        ## Blocking issues
+        None
+
+        ## Warnings
+        None
+      explanation: "Standard pre-commit with all checks passing"
+
+# ----------------------------------------------------------------------------
+# CONSTRAINTS
+# ----------------------------------------------------------------------------
+constraints:
+  must:
+    - "Always check file changes before determining required validations"
+    - "Always respect skill dependencies"
+    - "Always report all failures, not just the first one"
+    - "Log important workflow results to memory-keeper"
+  must_not:
+    - "Never skip mandatory pre-commit checks"
+    - "Never continue after critical failure"
+    - "Never modify files during validation-only workflows"
+  assumptions:
+    - "All referenced skills are available"
+    - "generate.sh is executable"
+
+# ----------------------------------------------------------------------------
+# PLATFORM-SPECIFIC
+# ----------------------------------------------------------------------------
+platforms:
+  claude:
+    model: "claude-sonnet-4-20250514"
+    temperature: 0.1
+    tools:
+      - "read_file"
+      - "write_file"
+      - "bash"
+
+  ollama:
+    model: "llama3.2"
+    parameters:
+      temperature: 0.1
+
+# ----------------------------------------------------------------------------
+# WORKFLOWS DEFINITION
+# ----------------------------------------------------------------------------
+workflows:
+  pre-commit:
+    description: "Validation before commit"
+    steps:
+      - skill: "generate.sh"
+        condition: "skills_modified"
+      - skill: "prompt-validator"
+        condition: "prompts_modified"
+      - skill: "inclusivity-reviewer"
+        condition: "fr_content_modified"
+      - skill: "translator"
+        args: ["--check-sync"]
+        condition: "docs_modified"
+      - skill: "link-checker"
+        condition: "markdown_modified"
+      - skill: "memory-keeper"
+        condition: "important_decision"
+
+  full-validation:
+    description: "Complete validation of all content"
+    steps:
+      - skill: "generate.sh"
+        args: ["--check"]
+      - skill: "prompt-validator"
+        args: ["--all"]
+      - skill: "inclusivity-reviewer"
+        args: ["--all"]
+      - skill: "translator"
+        args: ["--check-sync", "--all"]
+      - skill: "link-checker"
+        args: ["--all"]
+
+  release:
+    description: "Pre-release validation"
+    steps:
+      - workflow: "full-validation"
+      - skill: "memory-keeper"
+        args: ["--record-release"]
+
+# ----------------------------------------------------------------------------
+# VALIDATION
+# ----------------------------------------------------------------------------
+validation:
+  tests:
+    - name: "Detects skill changes"
+      input: "Changed: .ai/skills/test.yaml"
+      expected_contains:
+        - "generate.sh"
+
+    - name: "Detects prompt changes"
+      input: "Changed: prompts/test.md"
+      expected_contains:
+        - "prompt-validator"
+
+# ----------------------------------------------------------------------------
+# METADATA
+# ----------------------------------------------------------------------------
+meta:
+  changelog:
+    - version: "1.1.0"
+      date: "2026-01-31"
+      changes:
+        - "Added link-checker to pre-commit and full-validation workflows"
+    - version: "1.0.0"
+      date: "2026-01-31"
+      changes:
+        - "Initial version with pre-commit, full-validation, release workflows"
+  related_skills:
+    - "memory-keeper"
+    - "inclusivity-reviewer"
+    - "translator"
+    - "prompt-validator"
+    - "link-checker"
+  documentation: "docs/en/skills/workflow-orchestrator.md"

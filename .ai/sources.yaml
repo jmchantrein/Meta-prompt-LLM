@@ -1,0 +1,106 @@
+# Official reference sources
+# ============================================================================
+# URLs to consult for documentation and best practices.
+# Used by Rule 1 (state of the art and consensus).
+# ============================================================================
+
+# Core standards
+standards:
+  agents_md:
+    name: "AGENTS.md Standard"
+    url: "https://agents.md/"
+    description: "Universal standard for AI agent configuration"
+
+  mcp:
+    name: "Model Context Protocol"
+    url: "https://modelcontextprotocol.io/"
+    description: "Protocol for AI-to-tool integration"
+
+# Development methodologies
+methodologies:
+  bmad:
+    name: "BMAD Method"
+    url: "https://github.com/bmad-code-org/BMAD-METHOD"
+    description: "Breakthrough Method for Agile AI-Driven Development"
+
+  kiro:
+    name: "Kiro Spec-Driven Development"
+    url: "https://kiro.dev/"
+    description: "Specification-driven development workflow"
+
+# AI tools documentation
+tools:
+  claude_code:
+    name: "Claude Code"
+    url: "https://docs.anthropic.com/en/docs/claude-code"
+    description: "Anthropic's CLI for Claude"
+
+  cursor:
+    name: "Cursor"
+    url: "https://cursor.sh/docs"
+    description: "AI-first code editor"
+
+  ollama:
+    name: "Ollama"
+    url: "https://ollama.ai/"
+    description: "Local LLM runner"
+
+  continue_dev:
+    name: "Continue.dev"
+    url: "https://continue.dev/docs"
+    description: "Open-source AI code assistant"
+
+  aider:
+    name: "Aider"
+    url: "https://aider.chat/docs/"
+    description: "AI pair programming in your terminal"
+
+  opencode:
+    name: "OpenCode"
+    url: "https://opencode.ai/"
+    description: "Open-source AI coding assistant"
+
+  codex_cli:
+    name: "Codex CLI"
+    url: "https://github.com/openai/codex"
+    description: "OpenAI's Codex command-line tool"
+
+# Writing guidelines
+writing:
+  inclusive_fr:
+    name: "Ecriture inclusive"
+    url: "https://www.haut-conseil-egalite.gouv.fr/stereotypes-et-roles-sociaux/zoom-sur/article/pour-une-communication-sans-stereotype-de-sexe-le-guide-pratique-du-haut"
+    description: "Guide pratique HCE pour l'ecriture inclusive"
+
+  a11y:
+    name: "Web Accessibility Guidelines"
+    url: "https://www.w3.org/WAI/standards-guidelines/wcag/"
+    description: "WCAG accessibility standards"
+
+# Prompt engineering
+prompts:
+  anthropic_guide:
+    name: "Anthropic Prompt Engineering"
+    url: "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering"
+    description: "Official Anthropic prompt engineering guide"
+
+  openai_guide:
+    name: "OpenAI Prompt Engineering"
+    url: "https://platform.openai.com/docs/guides/prompt-engineering"
+    description: "OpenAI prompt engineering best practices"
+
+# Version control
+version_control:
+  conventional_commits:
+    name: "Conventional Commits"
+    url: "https://www.conventionalcommits.org/"
+    description: "Specification for commit messages"
+
+  semver:
+    name: "Semantic Versioning"
+    url: "https://semver.org/"
+    description: "Version numbering standard"
+
+# ============================================================================
+# Last updated: 2026-01-31
+# ============================================================================

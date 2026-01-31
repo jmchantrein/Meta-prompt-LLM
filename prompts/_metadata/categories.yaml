@@ -1,0 +1,67 @@
+# Prompt categories
+# ============================================================================
+# Define valid categories for prompts.
+# Each prompt must have a category from this list.
+# ============================================================================
+
+categories:
+  # Core categories
+  - name: "metaprompts"
+    description: "Meta-prompts for AI initialization, configuration, and prompt engineering"
+    color: "#6366f1"  # Indigo
+
+  - name: "development"
+    description: "Software development, coding, debugging"
+    color: "#22c55e"  # Green
+
+  - name: "documentation"
+    description: "Writing documentation, READMEs, guides"
+    color: "#3b82f6"  # Blue
+
+  - name: "review"
+    description: "Code review, content review, validation"
+    color: "#f59e0b"  # Amber
+
+  - name: "translation"
+    description: "Translation, localization, i18n"
+    color: "#ec4899"  # Pink
+
+  - name: "analysis"
+    description: "Code analysis, data analysis, research"
+    color: "#8b5cf6"  # Violet
+
+  - name: "refactoring"
+    description: "Code refactoring, optimization, cleanup"
+    color: "#14b8a6"  # Teal
+
+  - name: "testing"
+    description: "Test generation, test review, QA"
+    color: "#ef4444"  # Red
+
+  - name: "devops"
+    description: "CI/CD, infrastructure, deployment"
+    color: "#f97316"  # Orange
+
+  - name: "creative"
+    description: "Creative writing, brainstorming, ideation"
+    color: "#a855f7"  # Purple
+
+  - name: "learning"
+    description: "Tutorials, explanations, learning materials"
+    color: "#06b6d4"  # Cyan
+
+  - name: "other"
+    description: "Prompts that don't fit other categories"
+    color: "#6b7280"  # Gray
+
+# ============================================================================
+# Category guidelines
+# ============================================================================
+#
+# When choosing a category:
+# 1. Pick the most specific category that applies
+# 2. If a prompt spans multiple categories, choose the primary purpose
+# 3. Use "other" sparingly - consider if a new category is needed
+# 4. Categories can be added by editing this file and updating the validator
+#
+# ============================================================================
