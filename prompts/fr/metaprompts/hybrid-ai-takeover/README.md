@@ -20,7 +20,7 @@ Utilisez ce prompt quand :
 - Vous voulez centraliser et unifier les definitions d'agents
 - Vous devez ajouter une orchestration de workflows a une configuration existante
 
-Pour les nouveaux projets, utilisez plutot [hybrid-ai-bootstrap](../../hybrid-ai-bootstrap/hybrid-ai-bootstrap.md).
+Pour les nouveaux projets, utilisez plutot [hybrid-ai-bootstrap](../hybrid-ai-bootstrap/hybrid-ai-bootstrap.md).
 
 ## Ce qu'il fait
 
@@ -58,5 +58,5 @@ Le prompt vous aide a choisir le bon paradigme de developpement :
 
 ## Ressources connexes
 
-- [hybrid-ai-bootstrap](../../hybrid-ai-bootstrap/hybrid-ai-bootstrap.md) - pour les nouveaux projets
+- [hybrid-ai-bootstrap](../hybrid-ai-bootstrap/hybrid-ai-bootstrap.md) - pour les nouveaux projets
 - [Standard AGENTS.md](https://agents.md/)

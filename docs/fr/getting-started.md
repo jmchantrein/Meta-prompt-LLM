@@ -116,4 +116,3 @@ Editer le fichier YAML avec :
 - Lire [AGENTS.md](../../AGENTS.md) pour les regles completes
 - Explorer les skills existants dans `.ai/skills/`
 - Parcourir la collection de prompts dans `prompts/`
-- Consulter le [guide d'architecture](./architecture.md)

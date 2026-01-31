@@ -21,7 +21,7 @@ Utilisez ce prompt quand :
 - Vous voulez une memoire persistante entre les sessions
 - Vous avez besoin d'une orchestration automatique des workflows
 
-Pour les projets existants, utilisez plutot [hybrid-ai-takeover](../../hybrid-ai-takeover/hybrid-ai-takeover.md).
+Pour les projets existants, utilisez plutot [hybrid-ai-takeover](../hybrid-ai-takeover/hybrid-ai-takeover.md).
 
 ## Prerequis
 

@@ -5,7 +5,7 @@
 # ============================================================================
 
 name: "link-checker"
-version: "1.0.0"
+version: "1.1.0"
 description: "Validates internal links and paths in markdown files"
 
 author: "Meta-prompt-LLM"
@@ -79,25 +79,58 @@ instructions:
     - External URLs: `[text](https://...)`
     - Anchors only: `[text](#section)`
     - Empty links: `[text]()`
+    - Template placeholders: `[text]([category]/[name].md)`
 
-    ### 2. Resolve paths
-    For each link:
-    - Get the source file's directory
-    - Resolve the relative path from that directory
-    - Normalize the path (handle ../, ./, etc.)
+    ### 2. Resolve paths CAREFULLY
+    For each link, follow these steps precisely:
 
-    ### 3. Verify existence
-    Check if the resolved path exists:
-    - File must exist in the repository
-    - For directories, check if they exist
+    **Step 2.1**: Get the source file's directory
+    Example: `prompts/fr/metaprompts/hybrid-ai-bootstrap/README.md`
+    Directory: `prompts/fr/metaprompts/hybrid-ai-bootstrap/`
 
-    ### 4. Special checks for prompts
+    **Step 2.2**: Count `../` segments and navigate UP
+    - Each `../` goes up ONE directory level
+    - `../../` from `prompts/fr/metaprompts/hybrid-ai-bootstrap/` = `prompts/fr/`
+    - `../` from `prompts/fr/metaprompts/hybrid-ai-bootstrap/` = `prompts/fr/metaprompts/`
+
+    **Step 2.3**: Append remaining path
+    - Link: `../../hybrid-ai-takeover/hybrid-ai-takeover.md`
+    - After `../../`: `prompts/fr/`
+    - Append rest: `prompts/fr/hybrid-ai-takeover/hybrid-ai-takeover.md`
+    - THIS IS WRONG - missing `metaprompts/` category!
+
+    **Step 2.4**: Verify the final resolved path exists
+    Use glob or file read to confirm file exists.
+
+    ### 3. Common errors to detect
+
+    **Missing category in prompts path**:
+    - WRONG: `prompts/fr/hybrid-ai-takeover/...`
+    - RIGHT: `prompts/fr/metaprompts/hybrid-ai-takeover/...`
+
+    **Too many `../` segments**:
+    - From `prompts/en/metaprompts/foo/README.md`
+    - `../../bar/bar.md` → `prompts/en/bar/bar.md` (skips metaprompts!)
+    - `../bar/bar.md` → `prompts/en/metaprompts/bar/bar.md` (correct)
+
+    **Mismatched EN/FR structure**:
+    - EN link should match FR structure exactly
+    - `../../../fr/metaprompts/foo/foo.md` must exist if linked
+
+    ### 4. Verify existence
+    For each resolved path:
+    - Use glob to check if file exists
+    - Report full resolved path in error message
+    - Show both the link AND the resolved target
+
+    ### 5. Special checks for prompts
     For files in `prompts/`:
-    - Verify EN/FR cross-links point to matching structure
-    - Check that `prompts/en/.../file.md` has corresponding `prompts/fr/.../file.md`
-    - Validate "Related prompts" section links
+    - Structure MUST be: `prompts/[lang]/[category]/[name]/[name].md`
+    - Cross-language links: `../../../[other-lang]/[category]/[name]/[name].md`
+    - Same-category links: `../[name]/[name].md`
+    - Verify EN/FR translations exist for each prompt
 
-    ### 5. Generate report
+    ### 6. Generate detailed report
 
   output_format: |
     ## Output format
@@ -171,17 +204,23 @@ patterns:
 constraints:
   must:
     - "Check all .md files in scope"
-    - "Resolve relative paths correctly from source file location"
+    - "Resolve relative paths STEP BY STEP from source file location"
+    - "Count each ../ segment individually when navigating up"
     - "Report line numbers for broken links"
+    - "Show both the link text AND the resolved absolute path"
+    - "Verify resolved paths exist using glob"
     - "Distinguish between missing files and missing translations"
   must_not:
     - "Never validate external URLs (not in scope)"
     - "Never auto-fix links without explicit request"
     - "Never ignore cross-language links"
+    - "Never skip path resolution verification"
+    - "Never assume a path is correct without checking file exists"
   assumptions:
     - "All internal links use relative paths"
     - "Prompt structure follows prompts/[lang]/[category]/[name]/[name].md"
     - "Doc structure follows docs/[lang]/*.md"
+    - "Category directory is ALWAYS required in prompts paths"
 
 # ----------------------------------------------------------------------------
 # PLATFORM-SPECIFIC
@@ -217,11 +256,36 @@ validation:
         - "OK"
         - "valid"
 
+    - name: "Detects missing category in path"
+      input: |
+        # From prompts/en/metaprompts/foo/README.md
+        [bar](../../bar/bar.md)
+      expected_contains:
+        - "prompts/en/bar/bar.md"
+        - "does not exist"
+        - "missing category"
+
+    - name: "Detects too many ../ segments"
+      input: |
+        # From prompts/en/metaprompts/foo/README.md
+        # Link should be ../bar/bar.md not ../../bar/bar.md
+        [bar](../../bar/bar.md)
+      expected_contains:
+        - "skips"
+        - "metaprompts"
+
 # ----------------------------------------------------------------------------
 # METADATA
 # ----------------------------------------------------------------------------
 meta:
   changelog:
+    - version: "1.1.0"
+      date: "2026-01-31"
+      changes:
+        - "Added step-by-step path resolution instructions"
+        - "Added common errors detection (missing category, too many ../)"
+        - "Added tests for missing category and ../ count errors"
+        - "Stricter constraints for path verification"
     - version: "1.0.0"
       date: "2026-01-31"
       changes:

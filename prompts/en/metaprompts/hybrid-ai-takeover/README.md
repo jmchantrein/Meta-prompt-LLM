@@ -20,7 +20,7 @@ Use this prompt when:
 - You want to centralize and unify agent definitions
 - You need to add workflow orchestration to an existing setup
 
-For new projects, use [hybrid-ai-bootstrap](../../hybrid-ai-bootstrap/hybrid-ai-bootstrap.md) instead.
+For new projects, use [hybrid-ai-bootstrap](../hybrid-ai-bootstrap/hybrid-ai-bootstrap.md) instead.
 
 ## What it does
 
@@ -58,5 +58,5 @@ The prompt helps you choose the right development paradigm:
 
 ## Related resources
 
-- [hybrid-ai-bootstrap](../../hybrid-ai-bootstrap/hybrid-ai-bootstrap.md) - for new projects
+- [hybrid-ai-bootstrap](../hybrid-ai-bootstrap/hybrid-ai-bootstrap.md) - for new projects
 - [AGENTS.md standard](https://agents.md/)

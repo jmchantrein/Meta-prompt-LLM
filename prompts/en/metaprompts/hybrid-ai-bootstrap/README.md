@@ -21,7 +21,7 @@ Use this prompt when:
 - You want persistent memory between sessions
 - You need automatic workflow orchestration
 
-For existing projects, use [hybrid-ai-takeover](../../hybrid-ai-takeover/hybrid-ai-takeover.md) instead.
+For existing projects, use [hybrid-ai-takeover](../hybrid-ai-takeover/hybrid-ai-takeover.md) instead.
 
 ## Requirements
 
