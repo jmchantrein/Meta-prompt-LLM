@@ -310,7 +310,7 @@ At the end, provide:
 
 ## Related prompts
 
-- [prompt-validator](./prompt-validator.md): prompt collection validation (to create)
+- [hybrid-ai-takeover](../hybrid-ai-takeover/hybrid-ai-takeover.md): for migrating existing projects
 
 ---
 

@@ -310,7 +310,7 @@ A la fin, fournir :
 
 ## Prompts lies
 
-- [prompt-validator](./prompt-validator.md) : validation des prompts de la collection (a creer)
+- [hybrid-ai-takeover](../hybrid-ai-takeover/hybrid-ai-takeover.md) : pour migrer des projets existants
 
 ---
 
