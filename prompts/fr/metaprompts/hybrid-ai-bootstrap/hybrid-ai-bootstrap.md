@@ -1,10 +1,10 @@
 ---
 name: "hybrid-ai-bootstrap"
 version: "2.1.0"
-category: "meta-prompt"
+category: "metaprompts"
 description: "Prompt d'initialisation pour architecture IA hybride multi-plateforme"
 
-tags: ["bootstrap", "architecture", "multi-platform", "meta-prompt", "initialization"]
+tags: ["bootstrap", "architecture", "multi-platform", "metaprompts", "initialization"]
 author: "Meta-prompt-LLM"
 created: "2026-01-31"
 updated: "2026-01-31"
@@ -18,7 +18,7 @@ model_hints:
   temperature: 0.3
 ---
 
-> [English version](../../../en/meta-prompt/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md)
+> [English version](../../../en/metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md)
 
 # Bootstrap d'architecture IA hybride
 

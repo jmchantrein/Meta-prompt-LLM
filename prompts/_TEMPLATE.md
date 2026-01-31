@@ -9,7 +9,7 @@ Each prompt must be in its own folder with the same name as the prompt:
 ```
 prompts/
 ├── [lang]/                          # en, fr, etc.
-│   └── [category]/                  # meta-prompt, development, etc.
+│   └── [category]/                  # metaprompts, development, etc.
 │       └── [prompt-name]/           # folder = prompt name (unique)
 │           ├── [prompt-name].md     # main prompt file (required)
 │           ├── README.md            # context/documentation (optional)
@@ -20,12 +20,12 @@ prompts/
 ```
 prompts/
 ├── en/
-│   └── meta-prompt/
+│   └── metaprompts/
 │       └── hybrid-ai-bootstrap/
 │           ├── hybrid-ai-bootstrap.md
 │           └── README.md
 └── fr/
-    └── meta-prompt/
+    └── metaprompts/
         └── hybrid-ai-bootstrap/
             ├── hybrid-ai-bootstrap.md
             └── README.md

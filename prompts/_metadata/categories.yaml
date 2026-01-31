@@ -6,7 +6,7 @@
 
 categories:
   # Core categories
-  - name: "meta-prompt"
+  - name: "metaprompts"
     description: "Meta-prompts for AI initialization, configuration, and prompt engineering"
     color: "#6366f1"  # Indigo
 
