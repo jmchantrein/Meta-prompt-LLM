@@ -5,7 +5,7 @@
 # ============================================================================
 
 name: "translator"
-version: "1.1.0"
+version: "1.2.0"
 description: "Manages EN/FR translation and documentation synchronization"
 
 author: "Meta-prompt-LLM"
@@ -184,7 +184,9 @@ constraints:
     - "docs/en/ is the source of truth for documentation"
     - "docs/fr/ mirrors docs/en/ structure"
     - "prompts/en/ and prompts/fr/ mirror each other by category"
-    - "Prompts use structure: prompts/[lang]/[category]/[name].md"
+    - "Prompts use structure: prompts/[lang]/[category]/[prompt-name]/[prompt-name].md"
+    - "Each prompt has its own folder named after the prompt"
+    - "README.md in prompt folders must also be synchronized EN/FR"
 
 # ----------------------------------------------------------------------------
 # TERMS GLOSSARY
@@ -262,6 +264,11 @@ validation:
 # ----------------------------------------------------------------------------
 meta:
   changelog:
+    - version: "1.2.0"
+      date: "2026-01-31"
+      changes:
+        - "Updated to nested folder structure: prompts/[lang]/[category]/[prompt-name]/[prompt-name].md"
+        - "Added README.md sync requirement for prompt folders"
     - version: "1.1.0"
       date: "2026-01-31"
       changes:

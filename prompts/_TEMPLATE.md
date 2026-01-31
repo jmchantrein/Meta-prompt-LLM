@@ -1,3 +1,47 @@
+# Prompt template
+
+> Template for creating new prompts in the collection.
+
+## Folder structure
+
+Each prompt must be in its own folder with the same name as the prompt:
+
+```
+prompts/
+├── [lang]/                          # en, fr, etc.
+│   └── [category]/                  # meta-prompt, development, etc.
+│       └── [prompt-name]/           # folder = prompt name (unique)
+│           ├── [prompt-name].md     # main prompt file (required)
+│           ├── README.md            # context/documentation (optional)
+│           └── [related].md         # related prompts (optional)
+```
+
+**Example:**
+```
+prompts/
+├── en/
+│   └── meta-prompt/
+│       └── hybrid-ai-bootstrap/
+│           ├── hybrid-ai-bootstrap.md
+│           └── README.md
+└── fr/
+    └── meta-prompt/
+        └── hybrid-ai-bootstrap/
+            ├── hybrid-ai-bootstrap.md
+            └── README.md
+```
+
+## Creating a new prompt
+
+1. Choose a unique `prompt-name` (kebab-case)
+2. Create folder: `prompts/en/[category]/[prompt-name]/`
+3. Create main file: `[prompt-name].md` using template below
+4. Create FR translation in `prompts/fr/[category]/[prompt-name]/`
+5. Add cross-reference links between EN and FR versions
+
+## Prompt file template
+
+```markdown
 ---
 name: "prompt-name"
 version: "1.0.0"
@@ -11,8 +55,15 @@ updated: "YYYY-MM-DD"
 
 # Optional fields
 language: "en"
-difficulty: "intermediate"
+difficulty: "beginner|intermediate|advanced"
+
+model_hints:
+  recommended: ["claude-sonnet", "gpt-4"]
+  min_context: 8192
+  temperature: 0.3
 ---
+
+> [Version francaise](../../../fr/[category]/[prompt-name]/[prompt-name].md)
 
 # Prompt name
 
@@ -49,12 +100,6 @@ List any constraints or limitations:
 
 Describe the expected output format:
 
-```
-[Expected format or structure]
-```
-
-Or provide a template:
-
 | Field | Description |
 |-------|-------------|
 | field1 | What this field contains |
@@ -65,31 +110,14 @@ Or provide a template:
 ### Example 1: [Brief description]
 
 **Input:**
-```
 [Example input]
-```
 
 **Output:**
-```
 [Expected output]
-```
-
-### Example 2: [Brief description]
-
-**Input:**
-```
-[Another example input]
-```
-
-**Output:**
-```
-[Expected output]
-```
 
 ## Related prompts
 
-- [related-prompt-1](../category/related-prompt-1.md): Brief description
-- [related-prompt-2](../category/related-prompt-2.md): Brief description
+- [related-prompt](../category/related-prompt/related-prompt.md): Brief description
 
 ---
 
@@ -97,3 +125,37 @@ Or provide a template:
 VERSION HISTORY:
 - v1.0.0 (YYYY-MM-DD): Initial version
 -->
+```
+
+## Optional README.md
+
+Each prompt folder can include a README.md for additional context:
+
+```markdown
+# [Prompt name]
+
+Additional documentation, context, or usage examples for this prompt.
+
+## Use cases
+
+- Use case 1
+- Use case 2
+
+## Related resources
+
+- Link to relevant documentation
+- External references
+```
+
+**Note:** README.md files must also be synchronized EN/FR via translator.
+
+## Validation
+
+Before committing a new prompt:
+- [ ] Unique name (not existing in collection)
+- [ ] Folder structure correct
+- [ ] Main file named same as folder
+- [ ] EN and FR versions created
+- [ ] Cross-reference links added
+- [ ] prompt-validator passed
+- [ ] inclusivity-reviewer passed (FR content)

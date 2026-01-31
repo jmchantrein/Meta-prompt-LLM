@@ -1,7 +1,7 @@
 ---
 name: "hybrid-ai-bootstrap"
 version: "2.1.0"
-category: "meta"
+category: "meta-prompt"
 description: "Initialization prompt for hybrid AI architecture with multi-platform support"
 
 tags: ["bootstrap", "architecture", "multi-platform", "meta-prompt", "initialization"]
@@ -18,7 +18,7 @@ model_hints:
   temperature: 0.3
 ---
 
-> [Version francaise](../../fr/meta/hybrid-ai-bootstrap.md)
+> [Version francaise](../../../fr/meta-prompt/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md)
 
 # Hybrid AI architecture bootstrap
 
