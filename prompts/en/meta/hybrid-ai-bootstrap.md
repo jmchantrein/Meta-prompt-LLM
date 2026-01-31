@@ -18,7 +18,7 @@ model_hints:
   temperature: 0.3
 ---
 
-> [Version francaise](./hybrid-ai-bootstrap.md)
+> [Version francaise](../../fr/meta/hybrid-ai-bootstrap.md)
 
 # Hybrid AI architecture bootstrap
 
