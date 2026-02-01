@@ -57,13 +57,13 @@ integrity:
     version: "1.0.0"
     last_modified: "2026-02-01"
 
-  "prompts/en/pedagogy/socratic-tutor.md":
-    hash: "sha256:cab6a34c68df886521fe5ba3b2c429dbb0d43aef0fb18ca2c7454410827ee380"
+  "prompts/socratic-tutor/socratic-tutor.en.md":
+    hash: "sha256:8e92b4d159ebcfebf43df8ad92d2bb3655a81428a3da3ddac25046b74372fee9"
     version: "1.0.0"
     last_modified: "2026-02-01"
 
-  "prompts/fr/pedagogy/socratic-tutor.md":
-    hash: "sha256:d1fb7185f0d22bef0df714388ef953c397c76af4cd18daae617aaf34cf633240"
+  "prompts/socratic-tutor/socratic-tutor.fr.md":
+    hash: "sha256:bca160951678f5a7647bdbaed03c57ed465e5727bd45ff6cd8ee73a8aff6b5f7"
     version: "1.0.0"
     last_modified: "2026-02-01"
 
@@ -134,11 +134,11 @@ prompts:
       version: "1.0.0"
       languages:
         en:
-          url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/en/pedagogy/socratic-tutor/socratic-tutor.md"
-          hash: "sha256:cab6a34c68df886521fe5ba3b2c429dbb0d43aef0fb18ca2c7454410827ee380"
+          url: "{base_url}/prompts/socratic-tutor/socratic-tutor.en.md"
+          hash: "sha256:8e92b4d159ebcfebf43df8ad92d2bb3655a81428a3da3ddac25046b74372fee9"
         fr:
-          url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/pedagogy/socratic-tutor/socratic-tutor.md"
-          hash: "sha256:d1fb7185f0d22bef0df714388ef953c397c76af4cd18daae617aaf34cf633240"
+          url: "{base_url}/prompts/socratic-tutor/socratic-tutor.fr.md"
+          hash: "sha256:bca160951678f5a7647bdbaed03c57ed465e5727bd45ff6cd8ee73a8aff6b5f7"
       category: "pedagogy"
       description: "Pedagogical tutor using Socratic method and evidence-based principles"
       applicable_rules: ["rule-0", "rule-1", "rule-8"]

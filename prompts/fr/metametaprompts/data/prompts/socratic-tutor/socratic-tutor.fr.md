@@ -21,20 +21,20 @@ model_hints:
 <!-- META
 prompt_id: "socratic-tutor"
 version: "1.0.0"
-source_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/pedagogy/socratic-tutor/socratic-tutor.md"
+source_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/prompts/socratic-tutor/socratic-tutor.fr.md"
 applicable_rules: ["rule-0", "rule-1", "rule-8"]
 applicable_skills: ["prompt-validator", "inclusivity-reviewer"]
 
 # --- PROMPTS COPIER-COLLER ---
-use_prompt: "Récupère et applique le prompt depuis : https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/pedagogy/socratic-tutor/socratic-tutor.md"
+use_prompt: "Récupère et applique le prompt depuis : https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/prompts/socratic-tutor/socratic-tutor.fr.md"
 update_prompt: |
   Vérifie si mon prompt est à jour :
   - Ma version : 1.0.0
-  - Source : https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/pedagogy/socratic-tutor/socratic-tutor.md
+  - Source : https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/prompts/socratic-tutor/socratic-tutor.fr.md
   Compare les versions et informe-moi des changements.
 -->
 
-> [English version](../../../en/pedagogy/socratic-tutor/socratic-tutor.md)
+> [English version](./socratic-tutor.en.md)
 
 # Tuteur·ice Socratique
 
