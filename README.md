@@ -4,7 +4,7 @@
 > This project is under development. Structure and APIs may change.
 
 > [!NOTE]
-> This project has been developed from the ground up with LLMs (Claude, GPT-4, etc.) as primary contributors.
+> This project has been developed from the ground up with LLMs.
 
 # Meta-prompt-LLM
 
