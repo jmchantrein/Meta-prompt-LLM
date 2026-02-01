@@ -1,7 +1,7 @@
 # Version Check and Self-Update System
 
-> **Status**: DRAFT - Updated with decisions
-> **Version**: 0.2.0
+> **Status**: DRAFT - Updated with user feedback
+> **Version**: 0.3.0
 > **Date**: 2026-02-01
 
 ## 1. Overview
@@ -15,144 +15,179 @@ When a prompt from the Meta-prompt-LLM collection is copied and used in another 
 
 ### 1.2 Objectives
 
-1. **Deterministic retrieval**: Prompts can fetch their associated rules/skills via URLs
+1. **Deterministic retrieval**: Prompts can fetch their rules/skills via URLs
 2. **Version tracking**: Each prompt has a semantic version
 3. **Self-checking**: At session start, prompts verify if updates are available
 4. **User control**: Updates are proposed, never forced
+5. **Copy-paste friendly**: Mini-prompts for easy adoption in deployed prompts
 
 ### 1.3 Principles
 
+- **KISS**: Keep it simple, avoid over-engineering
 - **Non-intrusive**: User decides whether to update
 - **Transparent**: Changelog explains what changed
 - **Deterministic**: Version numbers, no ambiguity
-- **Autonomous**: Prompts know how to check themselves
+- **Project validates**: Validation is done before distribution, not by consuming LLMs
 
 ## 2. Architecture
 
-### 2.1 Current vs proposed
+### 2.1 Source of truth
+
+All data lives in `data/` within the metametaprompts folder:
 
 ```
-CURRENT:
-.ai/skills/*.yaml  ──► generate.sh ──► AGENTS.md
-                                         │
-prompts/**/*.md ◄────────────────────────┘ (manual sync)
-
-PROPOSED:
-data/
-├── manifest.yaml        ──► GitHub raw URL ──► LLM fetches
+prompts/fr/metametaprompts/data/    # Source of truth
+├── manifest.yaml                   # Central index + versions + hashes
 ├── rules/
+│   ├── rules.yaml                 # All rules
+│   └── CHANGELOG.md
 ├── skills/
+│   ├── *.yaml                     # All skills
+│   └── CHANGELOG.md
 └── prompts/
-
-prompts/**/*.md
-└── <!-- META --> block  ──► Contains URLs + version
-         │
-         └──► At session start: fetch manifest, compare versions
+    ├── en/                        # English prompts
+    │   └── *.md
+    ├── fr/                        # French prompts
+    │   └── *.md
+    └── CHANGELOG.md
 ```
 
 ### 2.2 Data flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        Meta-prompt-LLM repo                     │
+│                  data/ (Source of Truth)                        │
 ├─────────────────────────────────────────────────────────────────┤
-│  data/manifest.yaml ◄──────────────────────────────┐            │
-│       │                                            │            │
-│       ▼                                            │            │
-│  GitHub raw URL                                    │            │
-│  https://raw.githubusercontent.com/.../manifest.yaml            │
+│  manifest.yaml                                                  │
+│  rules/*.yaml                                                   │
+│  skills/*.yaml                                                  │
+│  prompts/**/*.md  ◄── Prompts live here directly               │
 └───────────────────────────────┬─────────────────────────────────┘
                                 │
+                                │ data-sync agent
+                                │
+        ┌───────────────────────┼───────────────────────┐
+        │                       │                       │
+        ▼                       ▼                       ▼
+┌───────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│ .ai/skills/   │     │   AGENTS.md     │     │   CLAUDE.md     │
+│ (copies)      │     │   (generated)   │     │   (generated)   │
+└───────────────┘     └─────────────────┘     └─────────────────┘
+                                │
+                                │ GitHub raw URL (official repo only)
+                                │
                                 ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     User's project (elsewhere)                  │
-├─────────────────────────────────────────────────────────────────┤
-│  prompt-copy.md                                                 │
-│  ├── <!-- META                                                  │
-│  │   prompt_id: "hybrid-ai-bootstrap"                           │
-│  │   version: "1.1.0"                                           │
-│  │   manifest_url: "https://raw.githubusercontent.com/..."      │
-│  │   -->                                                        │
-│  │                                                              │
-│  └── LLM reads META ──► fetches manifest ──► compares versions  │
-│                                │                                │
-│                                ▼                                │
-│                    "Update available: 1.1.0 → 1.2.0"            │
-│                    [Update] [Ignore] [Details]                  │
-└─────────────────────────────────────────────────────────────────┘
+                    ┌───────────────────────┐
+                    │  External LLM         │
+                    │  Fetches & uses       │
+                    └───────────────────────┘
 ```
 
-## 3. Data structures
+## 3. URL scheme
 
-### 3.1 Manifest (`data/manifest.yaml`)
+### 3.1 Official repository only
 
-The central index served via GitHub raw URL.
+All fetches are restricted to the official repository:
+
+```
+https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/...
+```
+
+No other domains are allowed.
+
+### 3.2 URL examples
+
+```
+# Manifest
+https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/manifest.yaml
+
+# Rules
+https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/rules/rules.yaml
+
+# Skill
+https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/skills/inclusivity-reviewer.yaml
+
+# Prompt
+https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/prompts/en/hybrid-ai-bootstrap.md
+```
+
+## 4. Data structures
+
+### 4.1 Manifest (`data/manifest.yaml`)
 
 ```yaml
 # Meta-prompt-LLM Manifest
-# Source of truth for versions and URLs
-
 schema_version: "1.0.0"
 last_updated: "2026-02-01T12:00:00Z"
 repository: "https://github.com/jmchantrein/Meta-prompt-LLM"
 
-base_urls:
-  raw: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main"
-  pages: "https://jmchantrein.github.io/Meta-prompt-LLM"
+base_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data"
 
-# Rules from AGENTS.md
+# Integrity hashes
+integrity:
+  "rules/rules.yaml":
+    hash: "sha256:abc123..."
+    version: "1.0.0"
+  "skills/inclusivity-reviewer.yaml":
+    hash: "sha256:def456..."
+    version: "1.0.0"
+  "prompts/en/hybrid-ai-bootstrap.md":
+    hash: "sha256:ghi789..."
+    version: "1.2.0"
+
+# Rules
 rules:
   version: "1.0.0"
-  source_url: "{base_urls.raw}/data/rules/rules.yaml"
-  changelog_url: "{base_urls.raw}/data/rules/CHANGELOG.md"
+  url: "{base_url}/rules/rules.yaml"
 
-# Skills definitions
+# Skills
 skills:
   version: "1.0.0"
-  index_url: "{base_urls.raw}/data/skills/index.yaml"
-  changelog_url: "{base_urls.raw}/data/skills/CHANGELOG.md"
   items:
     - id: "inclusivity-reviewer"
       version: "1.0.0"
-      url: "{base_urls.raw}/data/skills/inclusivity-reviewer.yaml"
-    - id: "prompt-validator"
-      version: "1.0.0"
-      url: "{base_urls.raw}/data/skills/prompt-validator.yaml"
-    # ... other skills
+      url: "{base_url}/skills/inclusivity-reviewer.yaml"
 
-# Prompts collection
+# Prompts
 prompts:
-  index_url: "{base_urls.raw}/data/prompts/index.yaml"
-  changelog_url: "{base_urls.raw}/data/prompts/CHANGELOG.md"
   items:
     - id: "hybrid-ai-bootstrap"
       version: "1.2.0"
-      category: "metaprompts"
       language: "en"
-      url: "{base_urls.raw}/prompts/en/metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md"
-      applicable_rules: ["rule-0", "rule-1", "rule-2", "rule-4"]
+      url: "{base_url}/prompts/en/hybrid-ai-bootstrap.md"
+      applicable_rules: ["rule-0", "rule-1", "rule-4"]
       applicable_skills: ["prompt-validator"]
-    # ... other prompts
 ```
 
-### 3.2 Prompt metadata block
+### 4.2 Prompt META block
 
-Each prompt includes a `<!-- META -->` block (HTML comment for compatibility).
+Each prompt includes a `<!-- META -->` block with:
+- Version info
+- Source URL
+- **Mini-prompt for update** (copy-paste friendly)
+- **One-liner to use this prompt** (copy-paste friendly)
 
 ```markdown
 <!-- META
 prompt_id: "hybrid-ai-bootstrap"
 version: "1.2.0"
-manifest_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/data/manifest.yaml"
-source_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/en/metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md"
-applicable_rules:
-  - rule-0
-  - rule-1
-  - rule-2
-  - rule-4
-applicable_skills:
-  - prompt-validator
+source_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/prompts/en/hybrid-ai-bootstrap.md"
+applicable_rules: ["rule-0", "rule-1", "rule-4"]
+applicable_skills: ["prompt-validator"]
 last_updated: "2026-02-01"
+
+# --- COPY-PASTE PROMPTS ---
+
+# One-liner: Use this prompt
+use_prompt: "Fetch and apply the prompt from: https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/prompts/en/hybrid-ai-bootstrap.md"
+
+# Mini-prompt: Check for updates
+update_prompt: |
+  Check if my prompt is up-to-date:
+  - My version: 1.2.0
+  - Source: https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/prompts/en/hybrid-ai-bootstrap.md
+  Fetch the source, compare versions in META block.
+  If newer version exists, show me what changed and ask if I want to update.
 -->
 
 # Hybrid AI Bootstrap
@@ -160,584 +195,156 @@ last_updated: "2026-02-01"
 [prompt content...]
 ```
 
-### 3.3 Rules data (`data/rules/rules.yaml`)
+### 4.3 Usage scenarios
 
-```yaml
-# Rules extracted from AGENTS.md for remote access
+#### Scenario A: User has a prompt with META block
 
-schema_version: "1.0.0"
-source_file: "AGENTS.md"
-version: "1.0.0"
+LLM reads META, fetches source URL, compares versions, proposes update if needed.
 
-rules:
-  - id: "rule-0"
-    name: "honesty"
-    description: "Right to not know, to ask for clarification"
-    instruction: |
-      - Never invent facts, never pretend
-      - Acknowledge uncertainty when present
+#### Scenario B: User has an old prompt without META
 
-  - id: "rule-1"
-    name: "state of the art and consensus"
-    description: "Consult official documentation before acting"
-    instruction: |
-      - Search for solutions that have consensus
-      - Prefer established patterns over novel approaches
+User can copy-paste the `update_prompt` from a newer version to enable updates.
 
-  # ... other rules
-```
+#### Scenario C: User wants to use a prompt from scratch
 
-### 3.4 Changelog format (`data/prompts/CHANGELOG.md`)
+User copy-pastes the `use_prompt` one-liner into their LLM.
 
-```markdown
-# Prompts Changelog
+## 5. Version check mechanism
 
-## [1.2.0] - 2026-02-01
-
-### hybrid-ai-bootstrap
-- **Added**: Persistent memory support (rule-11)
-- **Changed**: Updated inclusive writing section
-- **Fixed**: Schema validation edge case
-
-### hybrid-ai-takeover
-- **Added**: Version check instruction
-
-## [1.1.0] - 2026-01-30
-
-### hybrid-ai-bootstrap
-- **Added**: Initial release with core functionality
-```
-
-## 4. Version check mechanism
-
-### 4.1 New rule: rule-13 (version check)
-
-To be added to AGENTS.md:
+### 5.1 Rule-13: version check
 
 ```markdown
 ## Rule 13: version check
 
-At session start, if this prompt originates from Meta-prompt-LLM:
+At session start, if this prompt has a META block:
 
-1. Read the `<!-- META -->` block
-2. Extract `manifest_url` and `version`
-3. Fetch the manifest (if web access available)
-4. Compare local version with remote version
-5. If different:
-   - Inform the user
+1. Read `source_url` and `version` from META
+2. Fetch source (if web access available)
+3. Compare local version with remote version
+4. If remote is newer:
+   - Inform user with version diff
    - Show changelog summary
-   - Propose: [Update] [Ignore] [View details]
-6. If same or no web access:
+   - Propose: [Update] [Ignore]
+5. If same or no web access:
    - Continue normally
 ```
 
-### 4.2 Check algorithm (pseudocode)
+### 5.2 Simple check flow
 
 ```
-function checkVersion():
-    meta = parseMetaBlock(prompt)
-    if meta is null:
-        return  // Not a Meta-prompt-LLM prompt
-
-    try:
-        manifest = fetch(meta.manifest_url)
-    catch NetworkError:
-        log("Version check skipped: no network access")
-        return
-
-    remote_prompt = manifest.prompts.find(id == meta.prompt_id)
-    if remote_prompt is null:
-        warn("Prompt not found in manifest")
-        return
-
-    if semver.gt(remote_prompt.version, meta.version):
-        displayUpdateNotification(
-            local: meta.version,
-            remote: remote_prompt.version,
-            changelog: fetch(manifest.prompts.changelog_url)
-        )
+Session Start
+     │
+     ▼
+Read META block ──► No META? ──► Continue normally
+     │
+     ▼
+Fetch source_url
+     │
+     ▼
+Compare versions
+     │
+     ├── Same ──► Continue normally
+     │
+     └── Different ──► Show update notification
+                            │
+                            ▼
+                    User chooses [Update/Ignore]
 ```
 
-### 4.3 User interaction flow
+## 6. Validation philosophy
+
+### 6.1 Project validates, not consuming LLMs
+
+LLMs cannot reliably perform deterministic validation tasks:
+- YAML structure validation
+- Prompt size checks
+- Format verification
+- Schema compliance
+
+**These are the project's responsibility, not the consuming LLM's.**
+
+### 6.2 Pre-distribution validation
+
+Before any prompt is published to `data/`:
+
+1. `prompt-validator` checks structure and schema
+2. `inclusivity-reviewer` checks French content
+3. `link-checker` validates internal links
+4. Hash and version are calculated
+5. Manifest is updated
+
+**Consuming LLMs trust that fetched content is valid.**
+
+## 7. Data-sync agent
+
+### 7.1 Purpose
+
+Synchronizes `data/` to project files:
+- `data/skills/*.yaml` → `.ai/skills/*.yaml`
+- `data/rules/rules.yaml` → `AGENTS.md` (via generate.sh)
+
+### 7.2 Integrity check at session start
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│  🔄 Version check...                                       │
-├────────────────────────────────────────────────────────────┤
-│                                                            │
-│  ⚠️  Update available!                                     │
-│                                                            │
-│  Prompt: hybrid-ai-bootstrap                               │
-│  Local version:  1.1.0                                     │
-│  Remote version: 1.2.0                                     │
-│                                                            │
-│  Changes in 1.2.0:                                         │
-│  • Added: Persistent memory support (rule-11)              │
-│  • Changed: Updated inclusive writing section              │
-│  • Fixed: Schema validation edge case                      │
-│                                                            │
-│  ┌──────────┐  ┌──────────┐  ┌──────────────┐              │
-│  │  Update  │  │  Ignore  │  │ View details │              │
-│  └──────────┘  └──────────┘  └──────────────┘              │
-│                                                            │
-└────────────────────────────────────────────────────────────┘
+1. Read manifest.yaml
+2. For each file in data/:
+   - Calculate current hash
+   - Compare with stored hash
+3. If mismatch:
+   - Report change
+   - Bump version
+   - Update manifest
+   - Sync to outputs
 ```
 
-## 5. Update workflow
-
-### 5.1 Update options
-
-| Option | Action |
-|--------|--------|
-| **Update** | Fetch new version, show diff, replace content |
-| **Ignore** | Skip this version (optionally remember choice) |
-| **View details** | Show full changelog and diff |
-
-### 5.2 Update process
-
-1. Fetch new prompt content from `source_url`
-2. Show diff between local and remote
-3. User confirms replacement
-4. Update `<!-- META -->` block with new version
-5. Log update in session
-
-### 5.3 Partial updates
-
-For prompts with local modifications:
+### 7.3 Session start sequence
 
 ```
-⚠️  Your prompt has local modifications.
-
-Options:
-1. [Replace all] - Overwrite with new version (lose local changes)
-2. [Show diff]   - Compare local vs remote
-3. [Merge]       - Attempt automatic merge (may require manual resolution)
-4. [Keep local]  - Keep your version, update META only
+1. memory-keeper --load
+2. data-sync --check
+3. [normal session]
 ```
 
-## 6. Directory structure
-
-### 6.1 New `data/` structure
-
-```
-data/
-├── manifest.yaml              # Central index
-├── rules/
-│   ├── rules.yaml            # All rules in YAML
-│   ├── CHANGELOG.md          # Rules changelog
-│   └── schema.json           # Validation schema (optional)
-├── skills/
-│   ├── index.yaml            # Skills index
-│   ├── CHANGELOG.md          # Skills changelog
-│   ├── inclusivity-reviewer.yaml
-│   ├── prompt-validator.yaml
-│   └── ... (other skills)
-└── prompts/
-    ├── index.yaml            # Prompts index with versions
-    └── CHANGELOG.md          # Prompts changelog
-```
-
-### 6.2 Relationship with existing structure
-
-| Existing | New (data/) | Relationship |
-|----------|-------------|--------------|
-| `AGENTS.md` | `data/rules/rules.yaml` | Rules extracted to YAML |
-| `.ai/skills/*.yaml` | `data/skills/*.yaml` | Copy or symlink |
-| `prompts/**/*.md` | `data/prompts/index.yaml` | Index only, prompts stay in place |
-
-### 6.3 Generation flow
-
-```
-data/rules/rules.yaml  ─────┐
-                            ├──► generate.sh ──► AGENTS.md
-data/skills/*.yaml     ─────┘
-
-data/prompts/index.yaml ◄─── generate.sh reads prompts/**/*.md
-```
-
-## 7. URL scheme
-
-### 7.1 Base URLs
-
-| Type | URL pattern |
-|------|-------------|
-| Raw content | `https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/...` |
-| GitHub Pages | `https://jmchantrein.github.io/Meta-prompt-LLM/...` |
-
-### 7.2 Recommended: Raw URLs
-
-Raw URLs are preferred because:
-- Direct content access (no HTML wrapper)
-- Always in sync with repository
-- No GitHub Pages configuration required
-- Easier for LLMs to parse
-
-### 7.3 URL examples
-
-```
-# Manifest
-https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/data/manifest.yaml
-
-# Rules
-https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/data/rules/rules.yaml
-
-# Specific skill
-https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/data/skills/inclusivity-reviewer.yaml
-
-# Specific prompt
-https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/en/metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md
-```
-
-## 8. Backward compatibility
-
-### 8.1 Prompts without META block
-
-- Continue to work normally
-- No version check performed
-- No update notifications
-
-### 8.2 Migration path
-
-1. Add `<!-- META -->` block to existing prompts
-2. Initialize all versions at `1.0.0`
-3. Increment on subsequent changes
-
-### 8.3 Graceful degradation
-
-| Scenario | Behavior |
-|----------|----------|
-| No META block | Normal execution, no check |
-| No network access | Log message, continue normally |
-| Manifest unavailable | Warning, continue normally |
-| Invalid version | Warning, continue normally |
-
-## 9. Security considerations
-
-### 9.1 URL validation
-
-- Only accept URLs from known domains (github.com, githubusercontent.com)
-- Validate URL format before fetching
-- Timeout on slow responses
-
-### 9.2 Content validation
-
-- Verify YAML/Markdown structure
-- Reject malformed content
-- Size limits on fetched content
-
-### 9.3 User consent
-
-- Never auto-update without user confirmation
-- Show full diff before replacing
-- Option to ignore specific versions
-
-## 10. Implementation checklist
-
-- [ ] Create `data/` directory structure
-- [ ] Create `data/manifest.yaml`
-- [ ] Create `data/rules/rules.yaml` from AGENTS.md
-- [ ] Copy/adapt skills to `data/skills/`
-- [ ] Create `data/prompts/index.yaml`
-- [ ] Add rule-13 to AGENTS.md
-- [ ] Update `generate.sh` to maintain data/ sync
-- [ ] Add `<!-- META -->` to prompt template
-- [ ] Inject META blocks into existing prompts
-- [ ] Create CHANGELOGs
-- [ ] Update README.md with new architecture
-- [ ] Update README.fr.md (translation)
-- [ ] Test version check with sample prompt
-
-## 11. Design decisions
+## 8. Design decisions
 
 | Question | Decision | Rationale |
 |----------|----------|-----------|
-| Branch strategy | `main` only | Simplicity, single source of truth |
-| Cache duration | 1 day | Balance between freshness and performance |
-| Check frequency | Every session | Ensure users are always informed |
-| Skills copying | Duplication + sync agent | data/ is source of truth, sync to .ai/skills/ |
+| Branch strategy | `main` only | KISS |
+| Cache duration | 1 day | Balance freshness/performance |
+| Check frequency | Every session | Keep users informed |
+| Allowed domains | Official repo only | Security |
+| Prompts location | `data/prompts/` | Single source of truth |
+| Validation | Project-side only | LLMs can't do deterministic checks |
 
-## 12. Data-sync agent
+## 9. Implementation checklist
 
-### 12.1 Purpose
-
-New agent responsible for:
-1. Synchronizing `data/` → `.ai/skills/`, `AGENTS.md`, etc.
-2. At session start: verifying hash integrity
-3. If hash mismatch: recalculate hash, bump version
-
-### 12.2 Agent specification
-
-```yaml
-name: "data-sync"
-version: "1.0.0"
-description: "Synchronizes data/ to project files and validates integrity"
-category: "core"
-
-triggers:
-  automatic: true  # Runs at session start
-  patterns:
-    - "data/**/*.yaml"
-    - "data/**/*.md"
-  commands:
-    - "/data-sync"
-    - "/sync"
-    - "/integrity-check"
-
-context:
-  files:
-    - "data/manifest.yaml"
-    - "data/rules/rules.yaml"
-    - "data/skills/*.yaml"
-    - "data/prompts/index.yaml"
-  outputs:
-    - ".ai/skills/*.yaml"
-    - "AGENTS.md"
-    - "prompts/**/*.md"  # META blocks
-
-instructions:
-  role: |
-    Tu es l'agent responsable de la synchronisation des données
-    et de l'intégrité du projet Meta-prompt-LLM.
-
-    ## Source de vérité
-
-    `data/` est la source unique de vérité pour :
-    - Règles (data/rules/rules.yaml)
-    - Skills (data/skills/*.yaml)
-    - Index des prompts (data/prompts/index.yaml)
-
-    ## Fichiers générés (outputs)
-
-    - `.ai/skills/*.yaml` : Copie depuis data/skills/
-    - `AGENTS.md` : Généré depuis data/rules/ et data/skills/
-    - `prompts/**/*.md` : Bloc META injecté/mis à jour
-
-  process: |
-    ## Processus au début de session
-
-    ### 1. Vérification d'intégrité
-
-    Pour chaque fichier dans data/ :
-    ```
-    current_hash = sha256(file_content)
-    stored_hash = manifest.items[file_id].hash
-
-    if current_hash != stored_hash:
-        # Fichier modifié manuellement
-        report_change(file_id, stored_hash, current_hash)
-    ```
-
-    ### 2. Si changements détectés
-
-    ```
-    🔄 Changements détectés dans data/
-
-    | Fichier | Action requise |
-    |---------|----------------|
-    | data/skills/new-skill.yaml | Nouveau fichier |
-    | data/rules/rules.yaml | Hash modifié |
-
-    Actions proposées :
-    1. Recalculer les hash dans manifest.yaml
-    2. Incrémenter les versions concernées
-    3. Synchroniser vers .ai/skills/ et AGENTS.md
-    4. Mettre à jour les blocs META des prompts
-
-    Procéder ? [Oui / Non / Détails]
-    ```
-
-    ### 3. Synchronisation (si validé)
-
-    1. **Skills** : data/skills/*.yaml → .ai/skills/*.yaml
-    2. **Rules** : data/rules/rules.yaml → AGENTS.md (via generate.sh)
-    3. **Prompts** : Mettre à jour les blocs META avec nouvelles versions
-    4. **Manifest** : Mettre à jour hash et timestamps
-
-    ### 4. Versioning automatique
-
-    Règles de bump de version :
-    - Nouveau fichier : 1.0.0
-    - Hash changé (contenu modifié) : bump patch (1.0.0 → 1.0.1)
-    - Structure changée : bump minor (1.0.0 → 1.1.0)
-    - Breaking change : bump major (1.0.0 → 2.0.0, manuel)
-
-  output_format: |
-    ## Rapport de synchronisation
-
-    ```
-    ✅ Synchronisation data-sync terminée
-
-    ### Fichiers vérifiés
-    - data/rules/rules.yaml: ✅ Intègre
-    - data/skills/inclusivity-reviewer.yaml: ⚠️ Modifié
-    - data/skills/new-skill.yaml: 🆕 Nouveau
-
-    ### Actions effectuées
-    - [x] Hash recalculé pour inclusivity-reviewer
-    - [x] Version bump: 1.0.0 → 1.0.1
-    - [x] Copié vers .ai/skills/inclusivity-reviewer.yaml
-    - [x] new-skill.yaml ajouté (v1.0.0)
-    - [x] AGENTS.md régénéré
-    - [x] manifest.yaml mis à jour
-
-    ### Commit suggéré
-    feat(data): sync data changes to project
-
-    @future-self: data-sync completed, all hashes verified.
-    ```
-
-constraints:
-  must:
-    - "TOUJOURS vérifier l'intégrité avant synchronisation"
-    - "TOUJOURS proposer avant de synchroniser"
-    - "TOUJOURS mettre à jour le manifest après modification"
-    - "TOUJOURS utiliser le versioning sémantique"
-  must_not:
-    - "JAMAIS modifier data/ sans validation utilisateur"
-    - "JAMAIS écraser des modifications locales sans confirmation"
-    - "JAMAIS synchroniser si les hash ne sont pas vérifiés"
-```
-
-### 12.3 Integrity verification flow
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Session Start                            │
-└─────────────────────────────┬───────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│  data-sync: Read manifest.yaml                              │
-│  Extract stored hashes for all files                        │
-└─────────────────────────────┬───────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│  For each file in data/:                                    │
-│    current_hash = sha256(file)                              │
-│    if current_hash != stored_hash:                          │
-│      mark as MODIFIED                                       │
-└─────────────────────────────┬───────────────────────────────┘
-                              │
-              ┌───────────────┴───────────────┐
-              │                               │
-              ▼                               ▼
-┌─────────────────────────┐     ┌─────────────────────────────┐
-│  No changes detected    │     │  Changes detected           │
-│  ✅ Continue normally   │     │  Propose sync actions       │
-└─────────────────────────┘     └──────────────┬──────────────┘
-                                               │
-                                               ▼
-                                ┌─────────────────────────────┐
-                                │  User validates?            │
-                                │  [Yes] → Execute sync       │
-                                │  [No]  → Skip, warn         │
-                                └─────────────────────────────┘
-```
-
-### 12.4 Manifest with hashes
-
-Updated manifest structure to include content hashes:
-
-```yaml
-# data/manifest.yaml
-
-schema_version: "1.0.0"
-last_updated: "2026-02-01T12:00:00Z"
-last_sync: "2026-02-01T12:00:00Z"
-
-# Integrity hashes for all data files
-integrity:
-  "data/rules/rules.yaml":
-    hash: "sha256:abc123..."
-    version: "1.0.0"
-    last_modified: "2026-02-01T12:00:00Z"
-
-  "data/skills/inclusivity-reviewer.yaml":
-    hash: "sha256:def456..."
-    version: "1.0.0"
-    last_modified: "2026-02-01T12:00:00Z"
-
-  "data/skills/prompt-validator.yaml":
-    hash: "sha256:ghi789..."
-    version: "1.0.0"
-    last_modified: "2026-02-01T12:00:00Z"
-
-# ... rest of manifest (rules, skills, prompts sections)
-```
-
-## 13. Updated architecture
-
-### 13.1 Complete data flow
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         data/ (Source of Truth)                     │
-├─────────────────────────────────────────────────────────────────────┤
-│  manifest.yaml ◄─── Contains hashes + versions                      │
-│  rules/rules.yaml                                                   │
-│  skills/*.yaml                                                      │
-│  prompts/index.yaml                                                 │
-└───────────────────────────────┬─────────────────────────────────────┘
-                                │
-                                │ data-sync agent
-                                │ (verifies hashes, syncs)
-                                │
-        ┌───────────────────────┼───────────────────────┐
-        │                       │                       │
-        ▼                       ▼                       ▼
-┌───────────────┐     ┌─────────────────┐     ┌─────────────────────┐
-│ .ai/skills/   │     │   AGENTS.md     │     │  prompts/**/*.md    │
-│ *.yaml        │     │   (generated)   │     │  (META blocks)      │
-│ (copies)      │     │                 │     │                     │
-└───────────────┘     └─────────────────┘     └─────────────────────┘
-                                │
-                                │ GitHub raw URL
-                                │
-                                ▼
-                    ┌───────────────────────┐
-                    │  External LLM         │
-                    │  Fetches manifest     │
-                    │  Checks versions      │
-                    └───────────────────────┘
-```
-
-### 13.2 Agent responsibilities
-
-| Agent | Responsibility |
-|-------|---------------|
-| **data-sync** | Integrity check, sync data/ → outputs |
-| **self-improver** | Detect rule/skill changes, propose propagation |
-| **generate.sh** | Generate AGENTS.md from data/ |
-
-### 13.3 Session start sequence
-
-```
-1. memory-keeper --load     # Load context
-2. data-sync --check        # Verify integrity, sync if needed
-3. self-improver --check    # Check for rule/skill propagation
-4. [normal session]
-```
-
-## 14. Updated implementation checklist
-
-- [ ] Create `data/` directory structure
-- [ ] Create `data/manifest.yaml` with integrity hashes
-- [ ] Create `data/rules/rules.yaml` from AGENTS.md
+- [ ] Create `data/` structure in metametaprompts
+- [ ] Move prompts to `data/prompts/`
+- [ ] Create `data/manifest.yaml`
+- [ ] Create `data/rules/rules.yaml`
 - [ ] Copy skills to `data/skills/`
-- [ ] Create `data/prompts/index.yaml`
-- [ ] **Create `data-sync` skill in `.ai/skills/data-sync.yaml`**
-- [ ] **Update `workflow-orchestrator` to include data-sync**
-- [ ] Add rule-13 to AGENTS.md (version check)
-- [ ] Update `generate.sh` to read from data/
-- [ ] Add `<!-- META -->` to prompt template
-- [ ] Inject META blocks into existing prompts
+- [ ] Create `data-sync` agent
+- [ ] Add rule-13 to AGENTS.md
+- [ ] Add META blocks with copy-paste prompts
 - [ ] Create CHANGELOGs
-- [ ] Update README.md with new architecture
-- [ ] Update README.fr.md (translation)
-- [ ] Test integrity check with modified file
-- [ ] Test version check with sample prompt
+- [ ] Update generate.sh
+- [ ] Update READMEs
+
+## 10. Security
+
+### 10.1 URL restriction
+
+Only accept URLs matching:
+```
+https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/...
+```
+
+### 10.2 User consent
+
+- Never auto-update without confirmation
+- Show diff before replacing
+- User can always ignore updates
 
 ---
 
-*Document version: 0.2.0 - Updated with design decisions and data-sync agent*
+*Document version: 0.3.0 - Simplified with KISS, copy-paste prompts, project-side validation*
