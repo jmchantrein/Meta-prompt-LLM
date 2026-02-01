@@ -57,6 +57,16 @@ integrity:
     version: "1.0.0"
     last_modified: "2026-02-01"
 
+  "prompts/en/pedagogy/socratic-tutor.md":
+    hash: "sha256:cab6a34c68df886521fe5ba3b2c429dbb0d43aef0fb18ca2c7454410827ee380"
+    version: "1.0.0"
+    last_modified: "2026-02-01"
+
+  "prompts/fr/pedagogy/socratic-tutor.md":
+    hash: "sha256:d1fb7185f0d22bef0df714388ef953c397c76af4cd18daae617aaf34cf633240"
+    version: "1.0.0"
+    last_modified: "2026-02-01"
+
 # Rules
 rules:
   version: "1.0.0"
@@ -116,14 +126,20 @@ skills:
       url: "{base_url}/skills/data-sync.yaml"
       description: "Synchronizes data/ to project files and validates integrity"
 
-# Prompts (to be populated as prompts are migrated)
+# Prompts
 prompts:
   changelog_url: "{base_url}/prompts/CHANGELOG.md"
-  items: []
-  # Example entry:
-  # - id: "hybrid-ai-bootstrap"
-  #   version: "1.0.0"
-  #   language: "en"
-  #   url: "{base_url}/prompts/en/hybrid-ai-bootstrap.md"
-  #   applicable_rules: ["rule-0", "rule-1", "rule-4"]
-  #   applicable_skills: ["prompt-validator"]
+  items:
+    - id: "socratic-tutor"
+      version: "1.0.0"
+      languages:
+        en:
+          url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/en/pedagogy/socratic-tutor/socratic-tutor.md"
+          hash: "sha256:cab6a34c68df886521fe5ba3b2c429dbb0d43aef0fb18ca2c7454410827ee380"
+        fr:
+          url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/pedagogy/socratic-tutor/socratic-tutor.md"
+          hash: "sha256:d1fb7185f0d22bef0df714388ef953c397c76af4cd18daae617aaf34cf633240"
+      category: "pedagogy"
+      description: "Pedagogical tutor using Socratic method and evidence-based principles"
+      applicable_rules: ["rule-0", "rule-1", "rule-8"]
+      applicable_skills: ["prompt-validator", "inclusivity-reviewer"]
