@@ -228,6 +228,14 @@ The **translator** agent must ALWAYS keep up to date:
 2. **README**:
    - README.md in English (main)
    - README.fr.md in French with cross-link
+   - **Mandatory notices at top** (after version link):
+     ```markdown
+     > [!WARNING]
+     > This project is under development. Structure and APIs may change.
+
+     > [!NOTE]
+     > **LLM (AI) development assisted by human(s)**: This project has been developed from the ground up with LLM assistance. The codebase includes a hybrid AI architecture with specialized agents. This architecture was defined with the [hybrid-ai-bootstrap](https://github.com/jmchantrein/Meta-prompt-LLM/tree/main/prompts/en/metaprompts/hybrid-ai-bootstrap) prompt.
+     ```
 
 ### Synchronization
 - Any EN doc modification -> automatic FR update
@@ -238,6 +246,13 @@ The **translator** agent must ALWAYS keep up to date:
 - AI -> AI: delegate to appropriate skills via subagents
 - AI -> Human: clear summaries, signal risks
 - Human -> AI: can interrupt and modify at any time
+
+## Rule 15: post-review actions (MANDATORY)
+After every code review or significant work session:
+1. Update MEMORY.md via memory-keeper
+2. Synchronize documentation (translator --check-sync)
+3. Mark completed tasks in todo list
+4. Use session notes template (.ai/templates/session-notes.md)
 ```
 
 #### 4.2 - MEMORY.md

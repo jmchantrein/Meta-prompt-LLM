@@ -228,6 +228,14 @@ L'agent **translator** doit TOUJOURS maintenir a jour :
 2. **README** :
    - README.md en anglais (principal)
    - README.fr.md en francais avec lien croise
+   - **Notices obligatoires en haut** (apres le lien de version) :
+     ```markdown
+     > [!WARNING]
+     > Ce projet est en cours de developpement. La structure et les APIs peuvent changer.
+
+     > [!NOTE]
+     > **Developpement LLM (IA) assiste par etre(s) humain(s)** : Ce projet a ete developpe des le depart avec l'assistance de LLM. Le codebase inclut une architecture IA hybride avec des agents specialises. Cette architecture a ete definie avec le prompt [hybrid-ai-bootstrap](https://github.com/jmchantrein/Meta-prompt-LLM/tree/main/prompts/fr/metaprompts/hybrid-ai-bootstrap).
+     ```
 
 ### Synchronisation
 - Toute modification de doc EN → mise a jour FR automatique
@@ -238,6 +246,13 @@ L'agent **translator** doit TOUJOURS maintenir a jour :
 - IA → IA : deleguer aux skills appropries via subagents
 - IA → Humain : resumes clairs, signaler les risques
 - Humain → IA : peut interrompre et modifier a tout moment
+
+## Regle 15 : actions post-revue (OBLIGATOIRE)
+Apres chaque revue de code ou session de travail significative :
+1. Mettre a jour MEMORY.md via memory-keeper
+2. Synchroniser la documentation (translator --check-sync)
+3. Marquer les taches terminees dans la todo list
+4. Utiliser le template de notes de session (.ai/templates/session-notes.md)
 ```
 
 #### 4.2 - MEMORY.md

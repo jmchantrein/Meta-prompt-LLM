@@ -1,5 +1,11 @@
 > [English version](./README.md)
 
+> [!WARNING]
+> Ce projet est en cours de developpement. La structure et les APIs peuvent changer.
+
+> [!NOTE]
+> **Developpement LLM (IA) assiste par etre(s) humain(s)** : Ce projet a ete developpe des le depart avec l'assistance de LLM. Le codebase inclut une architecture IA hybride avec des agents specialises. Cette architecture a ete definie avec le prompt [hybrid-ai-bootstrap](./prompts/fr/metaprompts/hybrid-ai-bootstrap).
+
 # Meta-prompt-LLM
 
 Un framework pour creer, modifier et maintenir des collections de prompts avec support d'architecture IA hybride.

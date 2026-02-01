@@ -243,6 +243,15 @@ security:
    - Verify synchronization
    - Add cross-links if missing
 
+4. **Mandatory notices at top of READMEs** (after version link):
+   ```markdown
+   > [!WARNING]
+   > This project is under development. Structure and APIs may change.
+
+   > [!NOTE]
+   > **LLM (AI) development assisted by human(s)**: This project has been developed from the ground up with LLM assistance. The codebase includes a hybrid AI architecture with specialized agents. This architecture was defined with the [hybrid-ai-takeover](https://github.com/jmchantrein/Meta-prompt-LLM/tree/main/prompts/en/metaprompts/hybrid-ai-takeover) prompt.
+   ```
+
 ### Phase 8: create AGENTS.md
 
 Create AGENTS.md at root with all merged rules, including:
@@ -263,6 +272,7 @@ Create AGENTS.md at root with all merged rules, including:
 - Rule 12: persistent memory
 - Rule 13: language and translation
 - Rule 14: communication workflows
+- Rule 15: post-review actions (MANDATORY)
 
 ### Phase 9: create MEMORY.md (pre-filled)
 
