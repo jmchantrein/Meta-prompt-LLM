@@ -1,0 +1,274 @@
+# Prompt validator skill
+# ============================================================================
+# Validates prompts against the template schema, checks metadata,
+# and ensures quality standards for the prompt collection.
+# ============================================================================
+
+name: "prompt-validator"
+version: "1.0.0"
+description: "Validates prompts against schema and quality standards"
+
+author: "Meta-prompt-LLM"
+created: "2026-01-31"
+updated: "2026-01-31"
+
+category: "validation"
+tags:
+  - "validation"
+  - "prompts"
+  - "schema"
+  - "quality"
+  - "metadata"
+
+# ----------------------------------------------------------------------------
+# ACTIVATION
+# ----------------------------------------------------------------------------
+triggers:
+  patterns:
+    - "prompts/**/*.md"
+    - "prompts/_TEMPLATE.md"
+  keywords:
+    - "validate prompt"
+    - "check prompt"
+    - "prompt validation"
+  commands:
+    - "/validate-prompt"
+    - "/check-prompts"
+  automatic: true   # Auto-run on prompt changes before commit
+
+# ----------------------------------------------------------------------------
+# CONTEXT
+# ----------------------------------------------------------------------------
+context:
+  files:
+    - "prompts/_TEMPLATE.md"
+    - "prompts/_metadata/categories.yaml"
+    - "prompts/_metadata/languages.yaml"
+    - "AGENTS.md"
+    - ".ai/MEMORY.md"
+  dependencies: []
+
+# ----------------------------------------------------------------------------
+# INSTRUCTIONS
+# ----------------------------------------------------------------------------
+instructions:
+  role: |
+    You are a prompt quality validator. Your purpose is to ensure all
+    prompts in the collection follow the established template, have
+    valid metadata, and meet quality standards for clarity, completeness,
+    and usability.
+
+  guidelines:
+    - "Validate YAML frontmatter against schema"
+    - "Check all required sections are present"
+    - "Verify metadata values against allowed lists"
+    - "Assess prompt clarity and completeness"
+    - "Check for proper versioning"
+
+  process: |
+    ## Validation steps
+
+    ### 1. Frontmatter validation
+    Check YAML frontmatter for:
+    - Required fields: name, version, category, description
+    - Valid category (from categories.yaml)
+    - Valid tags (array of strings)
+    - Proper date format (YYYY-MM-DD)
+    - Semantic version format
+
+    ### 2. Structure validation
+    Check document structure:
+    - Title (# heading) matches name
+    - Required sections present:
+      - Context or description
+      - Instructions
+      - Output format or expected output
+    - Optional but recommended:
+      - Examples
+      - Constraints
+      - Version history
+
+    ### 3. Content quality
+    Assess:
+    - Clear and actionable instructions
+    - Specific output format
+    - Relevant examples if complex
+    - No placeholder text left
+    - Consistent terminology
+
+    ### 4. Cross-reference validation
+    Verify:
+    - Related prompts exist if referenced
+    - Category exists in categories.yaml
+    - Language tags in languages.yaml
+
+    ### 5. Generate report
+    Produce validation report with:
+    - PASS/FAIL status
+    - List of errors (blocking)
+    - List of warnings (non-blocking)
+    - Suggestions for improvement
+
+  output_format: |
+    ## Output format
+
+    ```
+    # Prompt validation report
+
+    ## File: [path]
+    Status: [PASS/FAIL]
+
+    ## Frontmatter
+    - [x] name: valid
+    - [x] version: 1.0.0 (valid semver)
+    - [x] category: valid (found in categories.yaml)
+    - [ ] ERROR: missing 'description' field
+
+    ## Structure
+    - [x] Title present
+    - [x] Instructions section
+    - [ ] WARNING: no examples provided
+
+    ## Content quality
+    - [x] Clear instructions
+    - [ ] WARNING: output format could be more specific
+
+    ## Errors (must fix)
+    1. Missing required field 'description'
+
+    ## Warnings (should fix)
+    1. No examples provided - recommended for complex prompts
+    2. Output format could be more specific
+
+    ## Suggestions
+    1. Consider adding usage examples
+    2. Specify expected response length
+    ```
+
+  examples:
+    - input: |
+        ---
+        name: "test-prompt"
+        version: "1.0"
+        ---
+        # Test prompt
+        Do something.
+      output: |
+        # Prompt validation report
+
+        ## File: prompts/test/test-prompt.md
+        Status: FAIL
+
+        ## Frontmatter
+        - [x] name: valid
+        - [ ] ERROR: version '1.0' not valid semver (use '1.0.0')
+        - [ ] ERROR: missing 'category' field
+        - [ ] ERROR: missing 'description' field
+
+        ## Structure
+        - [x] Title present
+        - [ ] ERROR: missing Instructions section
+        - [ ] ERROR: missing Output format section
+
+        ## Errors (must fix)
+        1. Version must be valid semver (X.Y.Z)
+        2. Missing required field 'category'
+        3. Missing required field 'description'
+        4. Missing required section: Instructions
+        5. Missing required section: Output format
+      explanation: "Shows validation failures for incomplete prompt"
+
+# ----------------------------------------------------------------------------
+# CONSTRAINTS
+# ----------------------------------------------------------------------------
+constraints:
+  must:
+    - "Always check all required frontmatter fields"
+    - "Always validate against categories.yaml and languages.yaml"
+    - "Provide specific, actionable error messages"
+    - "Distinguish between errors and warnings"
+  must_not:
+    - "Never auto-fix prompts without explicit request"
+    - "Never mark invalid prompts as passing"
+    - "Never skip validation for any prompt file"
+  assumptions:
+    - "prompts/_TEMPLATE.md defines the expected structure"
+    - "Categories and languages metadata files exist"
+
+# ----------------------------------------------------------------------------
+# SCHEMA
+# ----------------------------------------------------------------------------
+schema:
+  frontmatter:
+    required:
+      - name: "string, kebab-case"
+      - version: "string, semver format (X.Y.Z)"
+      - category: "string, must exist in categories.yaml"
+      - description: "string, max 200 chars"
+    optional:
+      - tags: "array of strings"
+      - author: "string"
+      - created: "string, YYYY-MM-DD"
+      - updated: "string, YYYY-MM-DD"
+      - language: "string, must exist in languages.yaml"
+      - difficulty: "string, one of: beginner, intermediate, advanced"
+
+  sections:
+    required:
+      - title: "# heading matching name"
+      - instructions: "## Instructions or ## Context"
+      - output: "## Output format or ## Expected output"
+    optional:
+      - examples: "## Examples"
+      - constraints: "## Constraints"
+      - history: "<!-- VERSION HISTORY -->"
+
+# ----------------------------------------------------------------------------
+# PLATFORM-SPECIFIC
+# ----------------------------------------------------------------------------
+platforms:
+  claude:
+    model: "claude-sonnet-4-20250514"
+    temperature: 0.1
+    tools:
+      - "read_file"
+
+  ollama:
+    model: "llama3.2"
+    parameters:
+      temperature: 0.1
+
+# ----------------------------------------------------------------------------
+# VALIDATION
+# ----------------------------------------------------------------------------
+validation:
+  tests:
+    - name: "Detects missing required field"
+      input: "---\nname: test\n---"
+      expected_contains:
+        - "ERROR"
+        - "missing"
+
+    - name: "Validates semver"
+      input: "version: 1.0"
+      expected_contains:
+        - "semver"
+
+    - name: "Checks category exists"
+      input: "category: nonexistent"
+      expected_contains:
+        - "category"
+        - "not found"
+
+# ----------------------------------------------------------------------------
+# METADATA
+# ----------------------------------------------------------------------------
+meta:
+  changelog:
+    - version: "1.0.0"
+      date: "2026-01-31"
+      changes:
+        - "Initial version with full schema validation"
+  related_skills:
+    - "workflow-orchestrator"
+  documentation: "docs/en/skills/prompt-validator.md"

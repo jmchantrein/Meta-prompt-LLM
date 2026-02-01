@@ -1,0 +1,199 @@
+# Data-sync skill
+# ============================================================================
+# Synchronizes data/ to project files and validates integrity
+# ============================================================================
+
+name: "data-sync"
+version: "1.0.0"
+description: "Synchronizes data/ to project files and validates integrity"
+
+author: "Meta-prompt-LLM"
+created: "2026-02-01"
+updated: "2026-02-01"
+
+category: "core"
+tags:
+  - "sync"
+  - "integrity"
+  - "hash"
+  - "version"
+  - "core"
+
+# ----------------------------------------------------------------------------
+# ACTIVATION
+# ----------------------------------------------------------------------------
+triggers:
+  patterns:
+    - "prompts/fr/metametaprompts/data/**/*.yaml"
+    - "prompts/fr/metametaprompts/data/**/*.md"
+  keywords:
+    - "data-sync"
+    - "sync"
+    - "integrity"
+    - "hash check"
+  commands:
+    - "/data-sync"
+    - "/sync"
+    - "/integrity-check"
+  automatic: true   # Runs at session start
+
+# ----------------------------------------------------------------------------
+# CONTEXT
+# ----------------------------------------------------------------------------
+context:
+  files:
+    - "prompts/fr/metametaprompts/data/manifest.yaml"
+    - "prompts/fr/metametaprompts/data/rules/rules.yaml"
+    - "prompts/fr/metametaprompts/data/skills/*.yaml"
+    - "prompts/fr/metametaprompts/data/prompts/**/*.md"
+  outputs:
+    - ".ai/skills/*.yaml"
+    - "AGENTS.md"
+  dependencies:
+    - "memory-keeper"
+
+# ----------------------------------------------------------------------------
+# INSTRUCTIONS
+# ----------------------------------------------------------------------------
+instructions:
+  role: |
+    Tu es l'agent responsable de la synchronisation des données
+    et de l'intégrité du projet Meta-prompt-LLM.
+
+    ## Source de vérité
+
+    `prompts/fr/metametaprompts/data/` est la source unique de vérité pour :
+    - Règles (data/rules/rules.yaml)
+    - Skills (data/skills/*.yaml)
+    - Prompts (data/prompts/**/*.md)
+
+    ## Fichiers générés (outputs)
+
+    - `.ai/skills/*.yaml` : Copie depuis data/skills/
+    - `AGENTS.md` : Généré depuis data/rules/ et data/skills/ (via generate.sh)
+
+  guidelines:
+    - "TOUJOURS vérifier l'intégrité avant synchronisation"
+    - "TOUJOURS proposer avant de synchroniser"
+    - "TOUJOURS mettre à jour le manifest après modification"
+    - "TOUJOURS utiliser le versioning sémantique"
+
+  process: |
+    ## Processus au début de session
+
+    ### 1. Vérification d'intégrité
+
+    ```bash
+    cd prompts/fr/metametaprompts/data
+    sha256sum rules/rules.yaml skills/*.yaml
+    ```
+
+    Comparer avec les hash stockés dans manifest.yaml.
+
+    ### 2. Si changements détectés
+
+    ```
+    🔄 Changements détectés dans data/
+
+    | Fichier | Action requise |
+    |---------|----------------|
+    | data/skills/new-skill.yaml | Nouveau fichier |
+    | data/rules/rules.yaml | Hash modifié |
+
+    Actions proposées :
+    1. Recalculer les hash dans manifest.yaml
+    2. Incrémenter les versions concernées
+    3. Synchroniser vers .ai/skills/
+
+    Procéder ? [Oui / Non / Détails]
+    ```
+
+    ### 3. Synchronisation (si validé)
+
+    1. **Skills** : data/skills/*.yaml → .ai/skills/*.yaml
+    2. **Rules** : Exécuter generate.sh pour régénérer AGENTS.md
+    3. **Manifest** : Mettre à jour hash et timestamps
+
+    ### 4. Versioning automatique
+
+    Règles de bump de version :
+    - Nouveau fichier : 1.0.0
+    - Hash changé (contenu modifié) : bump patch (1.0.0 → 1.0.1)
+    - Structure changée : bump minor (1.0.0 → 1.1.0)
+    - Breaking change : bump major (manuel)
+
+  output_format: |
+    ## Rapport de synchronisation
+
+    ```
+    ✅ Synchronisation data-sync terminée
+
+    ### Fichiers vérifiés
+    - data/rules/rules.yaml: ✅ Intègre
+    - data/skills/*.yaml: ✅ Intègre (7 fichiers)
+
+    ### Actions effectuées
+    - [x] Intégrité vérifiée
+    - [x] Aucun changement détecté
+
+    ### Statut
+    ✅ Session normale
+    ```
+
+# ----------------------------------------------------------------------------
+# CONSTRAINTS
+# ----------------------------------------------------------------------------
+constraints:
+  must:
+    - "TOUJOURS vérifier l'intégrité avant synchronisation"
+    - "TOUJOURS proposer avant de synchroniser"
+    - "TOUJOURS mettre à jour le manifest après modification"
+    - "TOUJOURS utiliser le versioning sémantique"
+  must_not:
+    - "JAMAIS modifier data/ sans validation utilisateur·ice"
+    - "JAMAIS écraser des modifications locales sans confirmation"
+    - "JAMAIS synchroniser si les hash ne sont pas vérifiés"
+  assumptions:
+    - "data/ contient la source de vérité"
+    - "manifest.yaml contient les hash de référence"
+
+# ----------------------------------------------------------------------------
+# SECURITY
+# ----------------------------------------------------------------------------
+security:
+  never:
+    - "Modifier data/ sans validation utilisateur·ice"
+    - "Ignorer les différences de hash"
+  always:
+    - "Proposer avant d'agir"
+    - "Vérifier l'intégrité"
+
+# ----------------------------------------------------------------------------
+# PLATFORM-SPECIFIC
+# ----------------------------------------------------------------------------
+platforms:
+  claude:
+    model: "claude-sonnet-4-20250514"
+    temperature: 0.2
+    tools:
+      - "read_file"
+      - "write_file"
+      - "bash"
+      - "glob"
+
+# ----------------------------------------------------------------------------
+# METADATA
+# ----------------------------------------------------------------------------
+meta:
+  changelog:
+    - version: "1.0.0"
+      date: "2026-02-01"
+      changes:
+        - "Version initiale"
+        - "Vérification d'intégrité par hash"
+        - "Synchronisation data/ → .ai/skills/"
+  related_skills:
+    - "memory-keeper"
+    - "self-improver"
+    - "workflow-orchestrator"
+  documentation: "docs/en/specs/version-check-system.md"

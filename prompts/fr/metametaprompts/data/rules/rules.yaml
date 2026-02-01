@@ -1,0 +1,138 @@
+# Meta-prompt-LLM Rules
+# Extracted from AGENTS.md for remote access
+#
+# Source: https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/AGENTS.md
+
+schema_version: "1.0.0"
+version: "1.0.0"
+last_updated: "2026-02-01"
+
+first_action:
+  description: "First mandatory action at session start"
+  steps:
+    - "Read `.ai/MEMORY.md` to load context and preferences"
+    - "Run `.ai/generate.sh` if skills have been modified"
+
+rules:
+  - id: "rule-0"
+    name: "honesty"
+    description: "Right to not know, to ask for clarification"
+    instruction: |
+      - Right to not know, to ask for clarification
+      - Never invent facts, never pretend
+      - Acknowledge uncertainty when present
+
+  - id: "rule-1"
+    name: "state of the art and consensus"
+    description: "Consult official documentation before acting"
+    instruction: |
+      - Consult official documentation before acting
+      - Search for solutions that have consensus on the internet
+      - Consult `.ai/sources.yaml` for reference URLs
+      - Prefer established patterns over novel approaches
+
+  - id: "rule-2"
+    name: "directed development"
+    description: "Order of development phases"
+    instruction: |
+      Order: specification -> documentation -> tests -> code -> refactoring
+
+  - id: "rule-3"
+    name: "security"
+    description: "Security best practices"
+    instruction: |
+      - Never expose secrets (API keys, tokens, credentials)
+      - Principle of least privilege
+      - Validate inputs, escape outputs
+
+  - id: "rule-4"
+    name: "DRY and KISS"
+    description: "Single source of truth, keep things simple"
+    instruction: |
+      - Single source of truth (`.ai/skills/*.yaml`)
+      - Keep things simple
+      - Decompose into atomic tasks
+
+  - id: "rule-5"
+    name: "todo list"
+    description: "Task tracking format"
+    instruction: |
+      Format: `[ ]` to do, `[x]` done, `[~]` in progress, `[!]` blocked
+
+  - id: "rule-6"
+    name: "file organization"
+    description: "File and directory organization"
+    instruction: |
+      - `tmp/` for temporary files (gitignored)
+      - Never temporary files at root
+
+  - id: "rule-7"
+    name: "agent management"
+    description: "How to manage and signal agents"
+    instruction: |
+      - Signal which agents are used: "Agent(s): [list]"
+      - AGENTS.md rules prevail over skill instructions
+
+  - id: "rule-8"
+    name: "self-improvement"
+    description: "Continuous improvement practices"
+    instruction: |
+      - Propose updates if better practices detected
+      - Signal if instructions are obsolete
+
+  - id: "rule-9"
+    name: "checklist before commit"
+    description: "Pre-commit validation checklist"
+    instruction: |
+      - [ ] `generate.sh` executed if skills modified
+      - [ ] `prompt-validator` passed if prompts modified
+      - [ ] `inclusivity-reviewer` passed if FR content modified
+      - [ ] `translator` sync check if docs modified
+      - [ ] `link-checker` passed if markdown files modified
+      - [ ] `memory-keeper` invoked if important decisions made
+
+  - id: "rule-10"
+    name: "writing conventions and inclusivity"
+    description: "Inclusive writing and modern terminology"
+    instruction: |
+      ### Inclusive writing (French)
+      - Middle dot (·): expert·e, utilisateur·ice
+      - Epicene forms when possible
+      - Avoid ableist language
+
+      ### Modern terminology
+      | Legacy | Modern |
+      |--------|--------|
+      | master/slave | primary/replica |
+      | whitelist/blacklist | allowlist/blocklist |
+      | master branch | main branch |
+
+  - id: "rule-11"
+    name: "persistent memory"
+    description: "Memory management between sessions"
+    instruction: |
+      - Read `.ai/MEMORY.md` at session start
+      - Update via `memory-keeper` after important decisions
+
+  - id: "rule-12"
+    name: "language"
+    description: "Language conventions"
+    instruction: |
+      - Code: English
+      - Documentation: English (main) with French translation
+      - Cross-reference links between EN/FR docs
+
+  - id: "rule-13"
+    name: "version check"
+    description: "Version verification at session start"
+    instruction: |
+      At session start, if this prompt has a META block:
+      1. Read `source_url` and `version` from META
+      2. Fetch source (if web access available)
+      3. Compare local version with remote version
+      4. If remote is newer:
+         - Inform user with version diff
+         - Show changelog summary
+         - Propose: [Update] [Ignore]
+      5. If same or no web access:
+         - Continue normally

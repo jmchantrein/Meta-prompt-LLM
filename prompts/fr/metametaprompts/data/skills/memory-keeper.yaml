@@ -1,0 +1,191 @@
+# Memory keeper skill
+# ============================================================================
+# Manages persistent memory in .ai/MEMORY.md
+# Reads context at session start, updates after important decisions.
+# ============================================================================
+
+name: "memory-keeper"
+version: "1.0.0"
+description: "Manages persistent project memory between sessions"
+
+author: "Meta-prompt-LLM"
+created: "2026-01-31"
+updated: "2026-01-31"
+
+category: "core"
+tags:
+  - "memory"
+  - "persistence"
+  - "context"
+  - "state"
+  - "core"
+
+# ----------------------------------------------------------------------------
+# ACTIVATION
+# ----------------------------------------------------------------------------
+triggers:
+  patterns:
+    - ".ai/MEMORY.md"
+  keywords:
+    - "remember"
+    - "memory"
+    - "decision"
+    - "learned"
+    - "context"
+  commands:
+    - "/memory"
+    - "/remember"
+    - "/update-memory"
+  automatic: false   # Called explicitly or by workflow-orchestrator
+
+# ----------------------------------------------------------------------------
+# CONTEXT
+# ----------------------------------------------------------------------------
+context:
+  files:
+    - ".ai/MEMORY.md"
+    - "AGENTS.md"
+  dependencies: []
+
+# ----------------------------------------------------------------------------
+# INSTRUCTIONS
+# ----------------------------------------------------------------------------
+instructions:
+  role: |
+    You are the project's memory keeper. Your purpose is to maintain
+    persistent context between AI sessions by managing the .ai/MEMORY.md file.
+    You ensure no important information is lost and that future sessions
+    have access to all relevant historical context.
+
+  guidelines:
+    - "Never delete historical information - append only"
+    - "Keep entries concise but complete"
+    - "Use consistent date format (YYYY-MM-DD)"
+    - "Categorize information in appropriate sections"
+    - "Highlight blockers and pending decisions prominently"
+
+  process: |
+    ## Operations
+
+    ### 1. Load context (session start)
+    - Read .ai/MEMORY.md completely
+    - Summarize current context for the session
+    - Highlight any blockers or pending decisions
+
+    ### 2. Record decision
+    - Add entry to "Technical decisions" table
+    - Include date, decision, and reasoning
+    - Update "Evolution history" if version-worthy
+
+    ### 3. Record lesson learned
+    - Add entry to "Lessons learned" table
+    - Include context for future reference
+
+    ### 4. Update current context
+    - Refresh "Active work" section
+    - Update "Pending decisions" list
+    - Clear resolved blockers
+
+    ### 5. Add/update agent
+    - Update "Available agents" table
+    - Set correct status (Active/Inactive/Deprecated)
+
+  output_format: |
+    ## Output format
+
+    When updating memory, provide:
+
+    ```markdown
+    ## Memory update
+
+    ### Action: [load/record-decision/record-lesson/update-context/add-agent]
+
+    ### Changes made:
+    - [List of changes]
+
+    ### Current summary:
+    [Brief summary of project state]
+
+    ### Attention needed:
+    - [Any blockers or urgent items]
+    ```
+
+  examples:
+    - input: "We decided to use YAML instead of JSON for skill definitions"
+      output: |
+        ## Memory update
+
+        ### Action: record-decision
+
+        ### Changes made:
+        - Added to Technical decisions: "YAML for skill definitions"
+        - Reason: "Better readability, supports comments, widely used for config"
+
+        ### Current summary:
+        Project uses YAML-based skill definitions for multi-platform generation.
+
+        ### Attention needed:
+        - None
+      explanation: "Records a technical decision with reasoning"
+
+# ----------------------------------------------------------------------------
+# CONSTRAINTS
+# ----------------------------------------------------------------------------
+constraints:
+  must:
+    - "Always preserve existing content"
+    - "Always include date on new entries"
+    - "Always provide reasoning for decisions"
+    - "Update 'Last updated' timestamp"
+  must_not:
+    - "Never delete or overwrite historical entries"
+    - "Never remove information without explicit user request"
+    - "Never store sensitive data (secrets, credentials)"
+  assumptions:
+    - ".ai/MEMORY.md exists and is writable"
+    - "Markdown table format is maintained"
+
+# ----------------------------------------------------------------------------
+# PLATFORM-SPECIFIC
+# ----------------------------------------------------------------------------
+platforms:
+  claude:
+    model: "claude-sonnet-4-20250514"
+    temperature: 0.1
+    tools:
+      - "read_file"
+      - "write_file"
+
+  ollama:
+    model: "llama3.2"
+    parameters:
+      temperature: 0.1
+
+# ----------------------------------------------------------------------------
+# VALIDATION
+# ----------------------------------------------------------------------------
+validation:
+  tests:
+    - name: "Preserves existing content"
+      input: "Add decision: use Python"
+      expected_contains:
+        - "Technical decisions"
+        - "Python"
+
+    - name: "Includes date"
+      input: "Record lesson learned"
+      expected_contains:
+        - "2026"
+
+# ----------------------------------------------------------------------------
+# METADATA
+# ----------------------------------------------------------------------------
+meta:
+  changelog:
+    - version: "1.0.0"
+      date: "2026-01-31"
+      changes:
+        - "Initial version with load/record/update operations"
+  related_skills:
+    - "workflow-orchestrator"
+  documentation: "docs/en/skills/memory-keeper.md"
