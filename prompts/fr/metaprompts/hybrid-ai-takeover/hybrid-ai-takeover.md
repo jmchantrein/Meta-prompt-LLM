@@ -243,6 +243,15 @@ security:
    - Verifier la synchronisation
    - Ajouter liens croises si absents
 
+4. **Notices obligatoires en haut des README** (apres le lien de version) :
+   ```markdown
+   > [!WARNING]
+   > Ce projet est en cours de developpement. La structure et les APIs peuvent changer.
+
+   > [!NOTE]
+   > **Developpement LLM (IA) assiste par etre(s) humain(s)** : Ce projet a ete developpe des le depart avec l'assistance de LLM. Le codebase inclut une architecture IA hybride avec des agents specialises. Cette architecture a ete definie avec le prompt [hybrid-ai-takeover](https://github.com/jmchantrein/Meta-prompt-LLM/tree/main/prompts/fr/metaprompts/hybrid-ai-takeover).
+   ```
+
 ### Phase 8 : creation de AGENTS.md
 
 Cree AGENTS.md a la racine avec toutes les regles fusionnees, incluant :

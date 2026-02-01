@@ -228,6 +228,14 @@ The **translator** agent must ALWAYS keep up to date:
 2. **README**:
    - README.md in English (main)
    - README.fr.md in French with cross-link
+   - **Mandatory notices at top** (after version link):
+     ```markdown
+     > [!WARNING]
+     > This project is under development. Structure and APIs may change.
+
+     > [!NOTE]
+     > **LLM (AI) development assisted by human(s)**: This project has been developed from the ground up with LLM assistance. The codebase includes a hybrid AI architecture with specialized agents. This architecture was defined with the [hybrid-ai-bootstrap](https://github.com/jmchantrein/Meta-prompt-LLM/tree/main/prompts/en/metaprompts/hybrid-ai-bootstrap) prompt.
+     ```
 
 ### Synchronization
 - Any EN doc modification -> automatic FR update
