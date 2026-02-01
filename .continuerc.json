@@ -18,6 +18,10 @@
       "description": "Validates prompts against schema and quality standards"
     },
     {
+      "name": "self-improver",
+      "description": "Agent d'auto-amélioration du projet Meta-prompt-LLM"
+    },
+    {
       "name": "translator",
       "description": "Manages EN/FR translation and documentation synchronization"
     },
