@@ -93,14 +93,6 @@ Format: `[ ]` to do, `[x]` done, `[~]` in progress, `[!]` blocked
 - Documentation: English (main) with French translation
 - Cross-reference links between EN/FR docs
 
-## Rule 15: post-review actions (MANDATORY)
-
-After every code review or significant work session:
-1. Update MEMORY.md via memory-keeper
-2. Synchronize documentation (translator --check-sync)
-3. Mark completed tasks in todo list
-4. Use session notes template (.ai/templates/session-notes.md)
-
 ---
 
 ## Available skills
@@ -111,6 +103,7 @@ After every code review or significant work session:
 | link-checker | Validates internal links and paths in markdown files | validation |
 | memory-keeper | Manages persistent project memory between sessions | core |
 | prompt-validator | Validates prompts against schema and quality standards | validation |
+| self-improver | Agent d'auto-amélioration du projet Meta-prompt-LLM | core |
 | translator | Manages EN/FR translation and documentation synchronization | translation |
 | workflow-orchestrator | Orchestrates multi-agent workflows and validation sequences | core |
 

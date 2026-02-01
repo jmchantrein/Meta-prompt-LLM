@@ -1,0 +1,172 @@
+# Index des règles de AGENTS.md
+# Permet de détecter les changements sans relire tout le fichier
+#
+# NOTICE: Ce fichier fait partie du projet Meta-prompt-LLM
+# https://github.com/jmchantrein/Meta-prompt-LLM
+# Voir AGENTS.md pour les règles complètes
+
+version: "1.0.0"
+source_file: "AGENTS.md"
+source_hash: "sha256:cbf35429c01295141aeb01dbcfc67b3dd4ace494cbd1219722d0c9af77b4f464"
+last_indexed: "2026-02-01T12:00:00Z"
+
+rules:
+  - id: "rule-0"
+    name: "honesty"
+    description: "Droit à l'incertitude, jamais inventer"
+    line_start: 12
+    line_end: 16
+    keywords:
+      - honesty
+      - honnêteté
+      - incertitude
+      - inventer
+      - demander
+
+  - id: "rule-1"
+    name: "state of the art and consensus"
+    description: "Consulter documentation, consensus internet"
+    line_start: 18
+    line_end: 23
+    keywords:
+      - documentation
+      - consensus
+      - sources
+      - patterns
+
+  - id: "rule-2"
+    name: "directed development"
+    description: "specification -> documentation -> tests -> code -> refactoring"
+    line_start: 25
+    line_end: 27
+    keywords:
+      - specification
+      - documentation
+      - tests
+      - code
+      - refactoring
+
+  - id: "rule-3"
+    name: "security"
+    description: "Pas de secrets, principe moindre privilège"
+    line_start: 29
+    line_end: 33
+    keywords:
+      - security
+      - secrets
+      - credentials
+      - privilege
+
+  - id: "rule-4"
+    name: "DRY and KISS"
+    description: "Source unique, simplicité, tâches atomiques"
+    line_start: 35
+    line_end: 39
+    keywords:
+      - DRY
+      - KISS
+      - single source
+      - atomic
+
+  - id: "rule-5"
+    name: "todo list"
+    description: "Format: [ ] to do, [x] done, [~] in progress, [!] blocked"
+    line_start: 41
+    line_end: 43
+    keywords:
+      - todo
+      - task
+      - progress
+      - blocked
+
+  - id: "rule-6"
+    name: "file organization"
+    description: "tmp/ pour temporaires, pas de fichiers à la racine"
+    line_start: 45
+    line_end: 48
+    keywords:
+      - tmp
+      - temporary
+      - organization
+
+  - id: "rule-7"
+    name: "agent management"
+    description: "Signaler agents utilisés, AGENTS.md prévaut"
+    line_start: 50
+    line_end: 53
+    keywords:
+      - agent
+      - skill
+      - prevail
+
+  - id: "rule-8"
+    name: "self-improvement"
+    description: "Proposer améliorations si meilleures pratiques détectées"
+    line_start: 55
+    line_end: 58
+    keywords:
+      - improvement
+      - update
+      - obsolete
+
+  - id: "rule-9"
+    name: "checklist before commit"
+    description: "Checklist pré-commit (generate.sh, validators, etc.)"
+    line_start: 60
+    line_end: 67
+    keywords:
+      - checklist
+      - commit
+      - generate.sh
+      - validator
+      - reviewer
+
+  - id: "rule-10"
+    name: "writing conventions and inclusivity"
+    description: "Écriture inclusive FR, terminologie moderne"
+    line_start: 69
+    line_end: 83
+    keywords:
+      - inclusivity
+      - inclusive
+      - point médian
+      - epicene
+      - ableist
+      - capacitiste
+      - primary
+      - replica
+      - allowlist
+      - blocklist
+
+  - id: "rule-11"
+    name: "persistent memory"
+    description: "Lire MEMORY.md au démarrage, mettre à jour via memory-keeper"
+    line_start: 85
+    line_end: 88
+    keywords:
+      - memory
+      - MEMORY.md
+      - memory-keeper
+      - persistent
+
+  - id: "rule-12"
+    name: "language"
+    description: "Code EN, docs EN+FR, cross-reference"
+    line_start: 90
+    line_end: 94
+    keywords:
+      - language
+      - english
+      - french
+      - cross-reference
+
+  - id: "rule-15"
+    name: "post-review actions"
+    description: "Actions après review: MEMORY.md, sync docs, todo list"
+    line_start: 96
+    line_end: 103
+    keywords:
+      - post-review
+      - review
+      - session
+      - synchronize

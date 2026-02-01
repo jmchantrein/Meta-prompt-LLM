@@ -21,6 +21,7 @@ cat .ai/MEMORY.md
 - **link-checker**: Validates internal links and paths in markdown files
 - **memory-keeper**: Manages persistent project memory between sessions
 - **prompt-validator**: Validates prompts against schema and quality standards
+- **self-improver**: Agent d'auto-amélioration du projet Meta-prompt-LLM
 - **translator**: Manages EN/FR translation and documentation synchronization
 - **workflow-orchestrator**: Orchestrates multi-agent workflows and validation sequences
 

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meta-prompt-LLM</title>
+  <meta name="description" content="A collection of prompts with a hybrid AI architecture">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1><a href="/">Meta-prompt-LLM</a></h1>
+      <nav>
+        <a href="/" class="active">Home</a>
+        <a href="/prompts/">Prompts</a>
+        <a href="https://github.com/jmchantrein/Meta-prompt-LLM">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <h1>Meta-prompt-LLM</h1>
+      <p class="text-muted mb-lg">A collection of prompts with a hybrid AI architecture</p>
+
+      <h2>Overview</h2>
+      <p>
+        Meta-prompt-LLM is a framework for managing AI prompts with:
+      </p>
+      <ul>
+        <li><strong>Single source of truth</strong> - Skills in <code>.ai/skills/*.yaml</code></li>
+        <li><strong>Multi-platform generation</strong> - Claude Code, Codex, OpenCode</li>
+        <li><strong>Bilingual support</strong> - English (source) + French (with inclusive writing)</li>
+        <li><strong>Self-improvement</strong> - Automatic rule propagation via metametaprompts</li>
+      </ul>
+
+      <h2>Browse Prompts</h2>
+      <div class="card-grid">
+        <div class="card">
+          <h3>🇬🇧 English</h3>
+          <p class="text-muted">Primary language (source of truth)</p>
+          <ul>
+            <li><a href="/prompts/en/metaprompts/">Metaprompts</a></li>
+            <li><a href="/prompts/en/metametaprompts/">Metametaprompts</a></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>🇫🇷 Français</h3>
+          <p class="text-muted">Full mirror with inclusive writing</p>
+          <ul>
+            <li><a href="/prompts/fr/metaprompts/">Metaprompts</a></li>
+            <li><a href="/prompts/fr/metametaprompts/">Metametaprompts</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Data APIs</h2>
+      <p>
+        The following YAML files are served directly via GitHub Pages and can be fetched
+        by LLMs during prompt execution:
+      </p>
+      <div class="file-tree">
+        <a href="/prompts/fr/metametaprompts/data/rules-index.yaml" class="yaml">📄 rules-index.yaml</a>
+        <a href="/prompts/fr/metametaprompts/data/skills-index.yaml" class="yaml">📄 skills-index.yaml</a>
+        <a href="/prompts/fr/metametaprompts/data/prompts-index.yaml" class="yaml">📄 prompts-index.yaml</a>
+        <a href="/prompts/fr/metametaprompts/data/dependencies.yaml" class="yaml">📄 dependencies.yaml</a>
+        <a href="/prompts/fr/metametaprompts/data/pending-reviews.yaml" class="yaml">📄 pending-reviews.yaml</a>
+      </div>
+
+      <h2>Quick Start</h2>
+      <pre><code># Clone the repository
+git clone https://github.com/jmchantrein/Meta-prompt-LLM.git
+cd Meta-prompt-LLM
+
+# Read memory at session start
+cat .ai/MEMORY.md
+
+# If skills were modified
+.ai/generate.sh</code></pre>
+
+      <h2>Architecture</h2>
+      <pre><code>                    ┌─────────────────────────────────┐
+                    │    Meta-Meta-prompt-LLM         │
+                    │    (project self-reference)     │
+                    └───────────────┬─────────────────┘
+                                    │
+                    ┌───────────────▼─────────────────┐
+                    │      AGENTS.md / .ai/skills     │
+                    │      (project rules)            │
+                    └───────────────┬─────────────────┘
+                                    │
+          ┌─────────────────────────┼─────────────────────────┐
+          ▼                         ▼                         ▼
+    ┌───────────┐            ┌───────────┐            ┌───────────┐
+    │  prompt   │            │  prompt   │            │  prompt   │
+    │     A     │            │     B     │            │     C     │
+    └───────────┘            └───────────┘            └───────────┘</code></pre>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <span>Meta-prompt-LLM &copy; 2026</span>
+      <span>
+        <a href="https://github.com/jmchantrein/Meta-prompt-LLM">GitHub</a> &middot;
+        <a href="https://github.com/jmchantrein/Meta-prompt-LLM/blob/main/LICENSE">GPL-3.0</a>
+      </span>
+    </div>
+  </footer>
+</body>
+</html>

@@ -29,6 +29,11 @@ Manages persistent project memory between sessions
 Validates prompts against schema and quality standards
 
 
+### self-improver
+
+Agent d'auto-amélioration du projet Meta-prompt-LLM
+
+
 ### translator
 
 Manages EN/FR translation and documentation synchronization
