@@ -18,6 +18,22 @@ model_hints:
   temperature: 0.3
 ---
 
+<!-- META
+prompt_id: "hybrid-ai-takeover"
+version: "2.1.0"
+source_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/en/metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md"
+applicable_rules: ["rule-0", "rule-1", "rule-2", "rule-4", "rule-8", "rule-10"]
+applicable_skills: ["prompt-validator", "translator"]
+
+# --- COPY-PASTE PROMPTS ---
+use_prompt: "Fetch and apply the prompt from: https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/en/metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md"
+update_prompt: |
+  Check if my prompt is up-to-date:
+  - My version: 2.1.0
+  - Source: https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/en/metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md
+  Compare versions and inform me of any changes.
+-->
+
 > [Version francaise](../../../fr/metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md)
 
 # Project takeover to hybrid AI architecture

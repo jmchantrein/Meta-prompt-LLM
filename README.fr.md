@@ -1,14 +1,14 @@
 > [English version](./README.md)
 
 > [!WARNING]
-> Ce projet est en cours de developpement. La structure et les APIs peuvent changer.
+> Ce projet est en cours de développement. La structure et les APIs peuvent changer.
 
 > [!NOTE]
-> **Developpement LLM (IA) assiste par etre(s) humain(s)** : Ce projet a ete developpe des le depart avec l'assistance de LLM. Le codebase inclut une architecture IA hybride avec des agents specialises. Cette architecture a ete definie avec le prompt [hybrid-ai-bootstrap](./prompts/fr/metaprompts/hybrid-ai-bootstrap).
+> **Développement LLM (IA) assisté par être(s) humain(s)** : Ce projet a été développé dès le départ avec l'assistance de LLM. Le codebase inclut une architecture IA hybride avec des agents spécialisés. Cette architecture a été définie avec le prompt [hybrid-ai-bootstrap](./prompts/fr/metaprompts/hybrid-ai-bootstrap).
 
 # Meta-prompt-LLM
 
-Un framework pour creer, modifier et maintenir des collections de prompts avec support d'architecture IA hybride.
+Un framework pour créer, modifier et maintenir des collections de prompts avec support d'architecture IA hybride.
 
 ## Fonctionnalités
 
@@ -21,17 +21,17 @@ Un framework pour creer, modifier et maintenir des collections de prompts avec s
 - **Système de vérification de version** : Les prompts peuvent vérifier les mises à jour via URLs GitHub raw
 - **Source de vérité data/** : Toutes les règles, skills et prompts gérés dans `data/`
 
-## Demarrage rapide
+## Démarrage rapide
 
 ```bash
-# Cloner le depot
-git clone https://github.com/your-org/Meta-prompt-LLM.git
+# Cloner le dépôt
+git clone https://github.com/jmchantrein/Meta-prompt-LLM.git
 cd Meta-prompt-LLM
 
-# Generer les configurations des plateformes
+# Générer les configurations des plateformes
 .ai/generate.sh
 
-# Commencer a utiliser avec votre outil IA
+# Commencer à utiliser avec votre outil IA
 ```
 
 ## Structure du projet
@@ -39,31 +39,31 @@ cd Meta-prompt-LLM
 ```
 Meta-prompt-LLM/
 ├── .ai/                    # Configuration IA
-│   ├── skills/             # Definitions des skills (YAML)
-│   ├── commands/           # Commandes reutilisables
-│   ├── plans/              # Plans d'execution
-│   ├── MEMORY.md           # Memoire persistante
-│   ├── sources.yaml        # URLs de reference
-│   └── generate.sh         # Script de generation
+│   ├── skills/             # Définitions des skills (YAML)
+│   ├── commands/           # Commandes réutilisables
+│   ├── plans/              # Plans d'exécution
+│   ├── MEMORY.md           # Mémoire persistante
+│   ├── sources.yaml        # URLs de référence
+│   └── generate.sh         # Script de génération
 ├── prompts/                # Collection de prompts
 │   ├── _TEMPLATE.md        # Template de prompt
-│   ├── _metadata/          # Categories et langues
-│   └── [categories]/       # Prompts organises
+│   ├── _metadata/          # Catégories et langues
+│   └── [catégories]/       # Prompts organisés
 ├── docs/                   # Documentation
 │   ├── en/                 # Anglais (principal)
-│   └── fr/                 # Francais (miroir)
-├── AGENTS.md               # Regles fondamentales
+│   └── fr/                 # Français (miroir)
+├── AGENTS.md               # Règles fondamentales
 ├── CLAUDE.md               # Config Claude Code
 └── README.md               # Ce fichier
 ```
 
 ## Fonctionnement
 
-### Source unique de verite
+### Source unique de vérité
 
-Toutes les configurations d'agents IA sont definies une seule fois dans `.ai/skills/*.yaml`. Le script `generate.sh` cree ensuite les fichiers specifiques a chaque plateforme :
+Toutes les configurations d'agents IA sont définies une seule fois dans `.ai/skills/*.yaml`. Le script `generate.sh` crée ensuite les fichiers spécifiques à chaque plateforme :
 
-| Source | Fichiers generes |
+| Source | Fichiers générés |
 |--------|------------------|
 | `.ai/skills/*.yaml` | `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, etc. |
 
@@ -82,27 +82,27 @@ Toutes les configurations d'agents IA sont definies une seule fois dans `.ai/ski
 
 ### Workflow
 
-1. **Debut de session** : Lire `.ai/MEMORY.md`
-2. **Modifier les skills** : Editer les fichiers YAML dans `.ai/skills/`
-3. **Generer** : Executer `.ai/generate.sh`
-4. **Valider** : Verifications pre-commit via `workflow-orchestrator`
-5. **Mettre a jour la memoire** : Enregistrer les decisions via `memory-keeper`
+1. **Début de session** : Lire `.ai/MEMORY.md`
+2. **Modifier les skills** : Éditer les fichiers YAML dans `.ai/skills/`
+3. **Générer** : Exécuter `.ai/generate.sh`
+4. **Valider** : Vérifications pré-commit via `workflow-orchestrator`
+5. **Mettre à jour la mémoire** : Enregistrer les décisions via `memory-keeper`
 
 ## Utilisation
 
-### Generer les configurations
+### Générer les configurations
 
 ```bash
-# Generer si necessaire
+# Générer si nécessaire
 .ai/generate.sh
 
-# Forcer la regeneration
+# Forcer la régénération
 .ai/generate.sh --force
 
-# Verifier si regeneration necessaire (CI/CD)
+# Vérifier si régénération nécessaire (CI/CD)
 .ai/generate.sh --check
 
-# Previsualiser les changements
+# Prévisualiser les changements
 .ai/generate.sh --dry-run --verbose
 ```
 
@@ -113,9 +113,9 @@ Toutes les configurations d'agents IA sont definies une seule fois dans `.ai/ski
    cp .ai/skills/_TEMPLATE.yaml .ai/skills/mon-skill.yaml
    ```
 
-2. Editer le fichier YAML avec votre definition de skill
+2. Éditer le fichier YAML avec votre définition de skill
 
-3. Generer les configurations :
+3. Générer les configurations :
    ```bash
    .ai/generate.sh
    ```
@@ -124,10 +124,10 @@ Toutes les configurations d'agents IA sont definies une seule fois dans `.ai/ski
 
 1. Copier le template :
    ```bash
-   cp prompts/_TEMPLATE.md prompts/[categorie]/mon-prompt.md
+   cp prompts/_TEMPLATE.md prompts/[catégorie]/mon-prompt.md
    ```
 
-2. Editer avec votre contenu de prompt
+2. Éditer avec votre contenu de prompt
 
 3. Valider :
    ```bash
@@ -166,8 +166,8 @@ Pour plus de détails, voir [Spécification du système de vérification de vers
 ## Contribuer
 
 1. Lire `AGENTS.md` pour les directives de contribution
-2. Suivre les regles d'ecriture inclusive pour le contenu francais
-3. Executer `generate.sh --check` avant de commiter
+2. Suivre les règles d'écriture inclusive pour le contenu français
+3. Exécuter `generate.sh --check` avant de commiter
 4. S'assurer que la documentation est bilingue
 
 ## Licence

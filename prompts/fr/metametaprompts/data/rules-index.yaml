@@ -5,10 +5,10 @@
 # https://github.com/jmchantrein/Meta-prompt-LLM
 # Voir AGENTS.md pour les règles complètes
 
-version: "1.0.0"
+version: "1.1.0"
 source_file: "AGENTS.md"
-source_hash: "sha256:6d3bb9432369899e35a2680d5945881c35adf1dd5222185a80af8d3b94113fe9"
-last_indexed: "2026-02-01T14:30:00Z"
+source_hash: "sha256:27817ecefd4cb6908cdd623b572168b5f24eef920e13b2070dae19c30f3fb174"
+last_indexed: "2026-02-01T23:30:00Z"
 
 rules:
   - id: "rule-0"
@@ -160,3 +160,15 @@ rules:
       - french
       - cross-reference
 
+  - id: "rule-13"
+    name: "version check"
+    description: "Vérifier mise à jour prompt au démarrage via META block"
+    line_start: 96
+    line_end: 104
+    keywords:
+      - version
+      - META
+      - source_url
+      - update
+      - changelog
+      - fetch

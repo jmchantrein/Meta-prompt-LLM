@@ -25,7 +25,7 @@ A framework for creating, modifying, and maintaining prompt collections with hyb
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/Meta-prompt-LLM.git
+git clone https://github.com/jmchantrein/Meta-prompt-LLM.git
 cd Meta-prompt-LLM
 
 # Generate platform configurations

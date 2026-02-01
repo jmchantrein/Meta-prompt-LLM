@@ -5,9 +5,9 @@
 # https://github.com/jmchantrein/Meta-prompt-LLM
 # Voir AGENTS.md pour les règles complètes
 
-version: "1.0.0"
+version: "1.1.0"
 source_directory: ".ai/skills/"
-last_indexed: "2026-02-01T14:30:00Z"
+last_indexed: "2026-02-01T23:30:00Z"
 
 skills:
   - id: "inclusivity-reviewer"
@@ -79,6 +79,17 @@ skills:
     impacts:
       - ".ai/skills/*.yaml"
       - "AGENTS.md"
+
+  - id: "data-sync"
+    file: "data-sync.yaml"
+    version: "1.0.0"
+    category: "core"
+    hash: "sha256:55432e3f88f1c3fa6cec6c8f0431397975af828b6ef8847260e74465433556bf"
+    description: "Synchronizes data/ to project files and validates integrity"
+    impacts:
+      - "prompts/fr/metametaprompts/data/**/*"
+      - "AGENTS.md"
+      - ".ai/skills/*.yaml"
 
   - id: "_TEMPLATE"
     file: "_TEMPLATE.yaml"

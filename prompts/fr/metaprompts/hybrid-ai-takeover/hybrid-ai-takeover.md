@@ -18,6 +18,22 @@ model_hints:
   temperature: 0.3
 ---
 
+<!-- META
+prompt_id: "hybrid-ai-takeover"
+version: "2.1.0"
+source_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md"
+applicable_rules: ["rule-0", "rule-1", "rule-2", "rule-4", "rule-8", "rule-10"]
+applicable_skills: ["prompt-validator", "inclusivity-reviewer", "translator"]
+
+# --- PROMPTS COPIER-COLLER ---
+use_prompt: "Récupère et applique le prompt depuis : https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md"
+update_prompt: |
+  Vérifie si mon prompt est à jour :
+  - Ma version : 2.1.0
+  - Source : https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md
+  Compare les versions et informe-moi des changements.
+-->
+
 > [English version](../../../en/metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md)
 
 # Reprise de projet vers architecture IA hybride

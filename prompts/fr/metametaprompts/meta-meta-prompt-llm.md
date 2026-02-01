@@ -23,6 +23,22 @@ model_hints:
   temperature: 0.2
 ---
 
+<!-- META
+prompt_id: "meta-meta-prompt-llm"
+version: "1.0.0"
+source_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/meta-meta-prompt-llm.md"
+applicable_rules: ["rule-0", "rule-1", "rule-4", "rule-8", "rule-10", "rule-13"]
+applicable_skills: ["self-improver", "data-sync", "prompt-validator"]
+
+# --- PROMPTS COPIER-COLLER ---
+use_prompt: "Récupère et applique le prompt depuis : https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/meta-meta-prompt-llm.md"
+update_prompt: |
+  Vérifie si mon prompt est à jour :
+  - Ma version : 1.0.0
+  - Source : https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/meta-meta-prompt-llm.md
+  Compare les versions et informe-moi des changements.
+-->
+
 <!--
 NOTICE IMPORTANTE - À LIRE PAR LES LLM ET HUMAINS
 

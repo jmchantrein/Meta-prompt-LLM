@@ -5,8 +5,8 @@
 # https://github.com/jmchantrein/Meta-prompt-LLM
 # Voir AGENTS.md pour les règles complètes
 
-version: "1.0.0"
-last_updated: "2026-02-01T14:30:00Z"
+version: "1.1.0"
+last_updated: "2026-02-01T23:30:00Z"
 
 # Dépendances des règles AGENTS.md
 rules:
@@ -91,6 +91,15 @@ rules:
       - pattern: "docs/**/*.md"
         reason: "Documentation bilingue"
 
+  rule-13:
+    name: "version check"
+    description: "Vérification de mise à jour via META block"
+    impacts:
+      - pattern: "prompts/*/metametaprompts/data/**/*"
+        reason: "Données source de vérité pour version check"
+      - pattern: "prompts/**/*.md"
+        reason: "Prompts avec META block impactés"
+
 # Dépendances des skills
 skills:
   inclusivity-reviewer:
@@ -144,6 +153,16 @@ skills:
         reason: "Gère les données metametaprompts"
       - pattern: "prompts/**/*.md"
         reason: "Peut proposer des modifications aux prompts"
+
+  data-sync:
+    description: "Synchronise data/ et vérifie intégrité"
+    impacts:
+      - pattern: "prompts/*/metametaprompts/data/**/*"
+        reason: "Source de vérité pour version check"
+      - file: "AGENTS.md"
+        reason: "Synchronise règles vers data/"
+      - pattern: ".ai/skills/*.yaml"
+        reason: "Synchronise skills vers data/"
 
 # Matrice de propagation rapide
 # Quand un fichier change, quels prompts vérifier ?
