@@ -1,5 +1,11 @@
 > [English version](./README.md)
 
+> [!WARNING]
+> Ce projet est en cours de developpement. La structure et les APIs peuvent changer.
+
+> [!NOTE]
+> Ce projet a ete developpe des le depart avec des LLM (Claude, GPT-4, etc.) comme contributeur·ices principaux·ales.
+
 # Meta-prompt-LLM
 
 Un framework pour creer, modifier et maintenir des collections de prompts avec support d'architecture IA hybride.
