@@ -1,7 +1,7 @@
 # Version Check and Self-Update System
 
-> **Status**: DRAFT - Pending validation
-> **Version**: 0.1.0
+> **Status**: DRAFT - Updated with decisions
+> **Version**: 0.2.0
 > **Date**: 2026-02-01
 
 ## 1. Overview
@@ -447,13 +447,297 @@ https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/en/me
 - [ ] Update README.fr.md (translation)
 - [ ] Test version check with sample prompt
 
-## 11. Open questions
+## 11. Design decisions
 
-1. **Branch strategy**: Should manifest point to `main` or support versioned branches?
-2. **Cache duration**: How long should LLMs cache the manifest?
-3. **Notification frequency**: Check every session or configurable interval?
-4. **Skills copying**: Duplicate in data/ or symlink from .ai/skills/?
+| Question | Decision | Rationale |
+|----------|----------|-----------|
+| Branch strategy | `main` only | Simplicity, single source of truth |
+| Cache duration | 1 day | Balance between freshness and performance |
+| Check frequency | Every session | Ensure users are always informed |
+| Skills copying | Duplication + sync agent | data/ is source of truth, sync to .ai/skills/ |
+
+## 12. Data-sync agent
+
+### 12.1 Purpose
+
+New agent responsible for:
+1. Synchronizing `data/` → `.ai/skills/`, `AGENTS.md`, etc.
+2. At session start: verifying hash integrity
+3. If hash mismatch: recalculate hash, bump version
+
+### 12.2 Agent specification
+
+```yaml
+name: "data-sync"
+version: "1.0.0"
+description: "Synchronizes data/ to project files and validates integrity"
+category: "core"
+
+triggers:
+  automatic: true  # Runs at session start
+  patterns:
+    - "data/**/*.yaml"
+    - "data/**/*.md"
+  commands:
+    - "/data-sync"
+    - "/sync"
+    - "/integrity-check"
+
+context:
+  files:
+    - "data/manifest.yaml"
+    - "data/rules/rules.yaml"
+    - "data/skills/*.yaml"
+    - "data/prompts/index.yaml"
+  outputs:
+    - ".ai/skills/*.yaml"
+    - "AGENTS.md"
+    - "prompts/**/*.md"  # META blocks
+
+instructions:
+  role: |
+    Tu es l'agent responsable de la synchronisation des données
+    et de l'intégrité du projet Meta-prompt-LLM.
+
+    ## Source de vérité
+
+    `data/` est la source unique de vérité pour :
+    - Règles (data/rules/rules.yaml)
+    - Skills (data/skills/*.yaml)
+    - Index des prompts (data/prompts/index.yaml)
+
+    ## Fichiers générés (outputs)
+
+    - `.ai/skills/*.yaml` : Copie depuis data/skills/
+    - `AGENTS.md` : Généré depuis data/rules/ et data/skills/
+    - `prompts/**/*.md` : Bloc META injecté/mis à jour
+
+  process: |
+    ## Processus au début de session
+
+    ### 1. Vérification d'intégrité
+
+    Pour chaque fichier dans data/ :
+    ```
+    current_hash = sha256(file_content)
+    stored_hash = manifest.items[file_id].hash
+
+    if current_hash != stored_hash:
+        # Fichier modifié manuellement
+        report_change(file_id, stored_hash, current_hash)
+    ```
+
+    ### 2. Si changements détectés
+
+    ```
+    🔄 Changements détectés dans data/
+
+    | Fichier | Action requise |
+    |---------|----------------|
+    | data/skills/new-skill.yaml | Nouveau fichier |
+    | data/rules/rules.yaml | Hash modifié |
+
+    Actions proposées :
+    1. Recalculer les hash dans manifest.yaml
+    2. Incrémenter les versions concernées
+    3. Synchroniser vers .ai/skills/ et AGENTS.md
+    4. Mettre à jour les blocs META des prompts
+
+    Procéder ? [Oui / Non / Détails]
+    ```
+
+    ### 3. Synchronisation (si validé)
+
+    1. **Skills** : data/skills/*.yaml → .ai/skills/*.yaml
+    2. **Rules** : data/rules/rules.yaml → AGENTS.md (via generate.sh)
+    3. **Prompts** : Mettre à jour les blocs META avec nouvelles versions
+    4. **Manifest** : Mettre à jour hash et timestamps
+
+    ### 4. Versioning automatique
+
+    Règles de bump de version :
+    - Nouveau fichier : 1.0.0
+    - Hash changé (contenu modifié) : bump patch (1.0.0 → 1.0.1)
+    - Structure changée : bump minor (1.0.0 → 1.1.0)
+    - Breaking change : bump major (1.0.0 → 2.0.0, manuel)
+
+  output_format: |
+    ## Rapport de synchronisation
+
+    ```
+    ✅ Synchronisation data-sync terminée
+
+    ### Fichiers vérifiés
+    - data/rules/rules.yaml: ✅ Intègre
+    - data/skills/inclusivity-reviewer.yaml: ⚠️ Modifié
+    - data/skills/new-skill.yaml: 🆕 Nouveau
+
+    ### Actions effectuées
+    - [x] Hash recalculé pour inclusivity-reviewer
+    - [x] Version bump: 1.0.0 → 1.0.1
+    - [x] Copié vers .ai/skills/inclusivity-reviewer.yaml
+    - [x] new-skill.yaml ajouté (v1.0.0)
+    - [x] AGENTS.md régénéré
+    - [x] manifest.yaml mis à jour
+
+    ### Commit suggéré
+    feat(data): sync data changes to project
+
+    @future-self: data-sync completed, all hashes verified.
+    ```
+
+constraints:
+  must:
+    - "TOUJOURS vérifier l'intégrité avant synchronisation"
+    - "TOUJOURS proposer avant de synchroniser"
+    - "TOUJOURS mettre à jour le manifest après modification"
+    - "TOUJOURS utiliser le versioning sémantique"
+  must_not:
+    - "JAMAIS modifier data/ sans validation utilisateur"
+    - "JAMAIS écraser des modifications locales sans confirmation"
+    - "JAMAIS synchroniser si les hash ne sont pas vérifiés"
+```
+
+### 12.3 Integrity verification flow
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Session Start                            │
+└─────────────────────────────┬───────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  data-sync: Read manifest.yaml                              │
+│  Extract stored hashes for all files                        │
+└─────────────────────────────┬───────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  For each file in data/:                                    │
+│    current_hash = sha256(file)                              │
+│    if current_hash != stored_hash:                          │
+│      mark as MODIFIED                                       │
+└─────────────────────────────┬───────────────────────────────┘
+                              │
+              ┌───────────────┴───────────────┐
+              │                               │
+              ▼                               ▼
+┌─────────────────────────┐     ┌─────────────────────────────┐
+│  No changes detected    │     │  Changes detected           │
+│  ✅ Continue normally   │     │  Propose sync actions       │
+└─────────────────────────┘     └──────────────┬──────────────┘
+                                               │
+                                               ▼
+                                ┌─────────────────────────────┐
+                                │  User validates?            │
+                                │  [Yes] → Execute sync       │
+                                │  [No]  → Skip, warn         │
+                                └─────────────────────────────┘
+```
+
+### 12.4 Manifest with hashes
+
+Updated manifest structure to include content hashes:
+
+```yaml
+# data/manifest.yaml
+
+schema_version: "1.0.0"
+last_updated: "2026-02-01T12:00:00Z"
+last_sync: "2026-02-01T12:00:00Z"
+
+# Integrity hashes for all data files
+integrity:
+  "data/rules/rules.yaml":
+    hash: "sha256:abc123..."
+    version: "1.0.0"
+    last_modified: "2026-02-01T12:00:00Z"
+
+  "data/skills/inclusivity-reviewer.yaml":
+    hash: "sha256:def456..."
+    version: "1.0.0"
+    last_modified: "2026-02-01T12:00:00Z"
+
+  "data/skills/prompt-validator.yaml":
+    hash: "sha256:ghi789..."
+    version: "1.0.0"
+    last_modified: "2026-02-01T12:00:00Z"
+
+# ... rest of manifest (rules, skills, prompts sections)
+```
+
+## 13. Updated architecture
+
+### 13.1 Complete data flow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         data/ (Source of Truth)                     │
+├─────────────────────────────────────────────────────────────────────┤
+│  manifest.yaml ◄─── Contains hashes + versions                      │
+│  rules/rules.yaml                                                   │
+│  skills/*.yaml                                                      │
+│  prompts/index.yaml                                                 │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │
+                                │ data-sync agent
+                                │ (verifies hashes, syncs)
+                                │
+        ┌───────────────────────┼───────────────────────┐
+        │                       │                       │
+        ▼                       ▼                       ▼
+┌───────────────┐     ┌─────────────────┐     ┌─────────────────────┐
+│ .ai/skills/   │     │   AGENTS.md     │     │  prompts/**/*.md    │
+│ *.yaml        │     │   (generated)   │     │  (META blocks)      │
+│ (copies)      │     │                 │     │                     │
+└───────────────┘     └─────────────────┘     └─────────────────────┘
+                                │
+                                │ GitHub raw URL
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │  External LLM         │
+                    │  Fetches manifest     │
+                    │  Checks versions      │
+                    └───────────────────────┘
+```
+
+### 13.2 Agent responsibilities
+
+| Agent | Responsibility |
+|-------|---------------|
+| **data-sync** | Integrity check, sync data/ → outputs |
+| **self-improver** | Detect rule/skill changes, propose propagation |
+| **generate.sh** | Generate AGENTS.md from data/ |
+
+### 13.3 Session start sequence
+
+```
+1. memory-keeper --load     # Load context
+2. data-sync --check        # Verify integrity, sync if needed
+3. self-improver --check    # Check for rule/skill propagation
+4. [normal session]
+```
+
+## 14. Updated implementation checklist
+
+- [ ] Create `data/` directory structure
+- [ ] Create `data/manifest.yaml` with integrity hashes
+- [ ] Create `data/rules/rules.yaml` from AGENTS.md
+- [ ] Copy skills to `data/skills/`
+- [ ] Create `data/prompts/index.yaml`
+- [ ] **Create `data-sync` skill in `.ai/skills/data-sync.yaml`**
+- [ ] **Update `workflow-orchestrator` to include data-sync**
+- [ ] Add rule-13 to AGENTS.md (version check)
+- [ ] Update `generate.sh` to read from data/
+- [ ] Add `<!-- META -->` to prompt template
+- [ ] Inject META blocks into existing prompts
+- [ ] Create CHANGELOGs
+- [ ] Update README.md with new architecture
+- [ ] Update README.fr.md (translation)
+- [ ] Test integrity check with modified file
+- [ ] Test version check with sample prompt
 
 ---
 
-*Document version: 0.1.0 - Draft for validation*
+*Document version: 0.2.0 - Updated with design decisions and data-sync agent*
