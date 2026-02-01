@@ -4,7 +4,7 @@
 > This project is under development. Structure and APIs may change.
 
 > [!NOTE]
-> This project has been developed from the ground up with LLMs.
+> **LLM (AI) development assisted by human(s)**: This project has been developed from the ground up with LLM assistance. The codebase includes a hybrid AI architecture with specialized agents. This architecture was defined with the [hybrid-ai-bootstrap](./prompts/en/metaprompts/hybrid-ai-bootstrap) prompt.
 
 # Meta-prompt-LLM
 
