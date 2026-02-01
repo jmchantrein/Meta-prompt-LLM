@@ -7,7 +7,7 @@
 
 version: "1.0.0"
 source_directory: ".ai/skills/"
-last_indexed: "2026-02-01T12:00:00Z"
+last_indexed: "2026-02-01T14:30:00Z"
 
 skills:
   - id: "inclusivity-reviewer"
@@ -47,6 +47,17 @@ skills:
     impacts:
       - "prompts/**/*.md"
 
+  - id: "self-improver"
+    file: "self-improver.yaml"
+    version: "1.0.0"
+    category: "core"
+    hash: "sha256:e4bee012ee5275a7fab6f196c2b6fabd31db5247f7a89b75c0f0b61914e7cab7"
+    description: "Agent d'auto-amélioration du projet Meta-prompt-LLM"
+    impacts:
+      - "AGENTS.md"
+      - ".ai/skills/*.yaml"
+      - "prompts/**/*.md"
+
   - id: "translator"
     file: "translator.yaml"
     version: "1.0.0"
@@ -61,9 +72,9 @@ skills:
 
   - id: "workflow-orchestrator"
     file: "workflow-orchestrator.yaml"
-    version: "1.0.0"
+    version: "1.1.0"
     category: "core"
-    hash: "sha256:607d673d4618e58e158c5c51bedb51da09d6c98bc748e31926468707e4bf7ccb"
+    hash: "sha256:966aeed22d0fe58e675b2868a2468b7ac81f94fe7167014b6b67b598081d0b68"
     description: "Orchestrates multi-agent workflows and validation sequences"
     impacts:
       - ".ai/skills/*.yaml"

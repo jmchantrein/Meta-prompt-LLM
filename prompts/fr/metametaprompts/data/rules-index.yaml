@@ -7,8 +7,8 @@
 
 version: "1.0.0"
 source_file: "AGENTS.md"
-source_hash: "sha256:cbf35429c01295141aeb01dbcfc67b3dd4ace494cbd1219722d0c9af77b4f464"
-last_indexed: "2026-02-01T12:00:00Z"
+source_hash: "sha256:6d3bb9432369899e35a2680d5945881c35adf1dd5222185a80af8d3b94113fe9"
+last_indexed: "2026-02-01T14:30:00Z"
 
 rules:
   - id: "rule-0"
@@ -160,13 +160,3 @@ rules:
       - french
       - cross-reference
 
-  - id: "rule-15"
-    name: "post-review actions"
-    description: "Actions après review: MEMORY.md, sync docs, todo list"
-    line_start: 96
-    line_end: 103
-    keywords:
-      - post-review
-      - review
-      - session
-      - synchronize

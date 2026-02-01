@@ -6,7 +6,7 @@
 # Voir AGENTS.md pour les règles complètes
 
 version: "1.0.0"
-last_updated: "2026-02-01T12:00:00Z"
+last_updated: "2026-02-01T14:30:00Z"
 
 # Dépendances des règles AGENTS.md
 rules:
@@ -90,15 +90,6 @@ rules:
         reason: "Tous les prompts ont des versions bilingues"
       - pattern: "docs/**/*.md"
         reason: "Documentation bilingue"
-
-  rule-15:
-    name: "post-review actions"
-    description: "Actions post-review"
-    impacts:
-      - pattern: ".ai/skills/*.yaml"
-        reason: "Skills invoqués dans post-review"
-      - file: ".ai/MEMORY.md"
-        reason: "Mémoire mise à jour post-review"
 
 # Dépendances des skills
 skills:
