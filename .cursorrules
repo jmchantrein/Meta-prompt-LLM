@@ -9,6 +9,11 @@
 
 ## Available skills
 
+### data-sync
+
+Synchronizes data/ to project files and validates integrity
+
+
 ### inclusivity-reviewer
 
 Reviews content for inclusive writing and modern terminology

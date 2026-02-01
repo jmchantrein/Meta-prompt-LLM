@@ -18,6 +18,8 @@ A framework for creating, modifying, and maintaining prompt collections with hyb
 - **Workflow orchestration** for automated validation
 - **Bilingual documentation** (English/French) with cross-references
 - **Inclusive writing** enforcement for French content
+- **Version check system**: Prompts can self-check for updates via GitHub raw URLs
+- **Data source of truth**: All rules, skills, and prompts managed in `data/`
 
 ## Quick start
 
@@ -69,11 +71,14 @@ All AI agent configurations are defined once in `.ai/skills/*.yaml`. The `genera
 
 | Skill | Purpose |
 |-------|---------|
+| `data-sync` | Synchronizes data/ to project files and validates integrity |
 | `inclusivity-reviewer` | Inclusive writing validation |
+| `link-checker` | Validates internal links in markdown |
 | `memory-keeper` | Persistent memory management |
-| `workflow-orchestrator` | Multi-agent orchestration |
-| `translator` | EN/FR translation and sync |
 | `prompt-validator` | Prompt schema validation |
+| `self-improver` | Project self-improvement agent |
+| `translator` | EN/FR translation and sync |
+| `workflow-orchestrator` | Multi-agent orchestration |
 
 ### Workflow
 
@@ -128,6 +133,30 @@ All AI agent configurations are defined once in `.ai/skills/*.yaml`. The `genera
    ```bash
    # Use prompt-validator skill
    ```
+
+## Version check system
+
+Prompts from this collection include a `<!-- META -->` block that enables:
+
+- **Self-checking**: Prompts verify if updates are available at session start
+- **Copy-paste friendly**: Mini-prompts for update checking in deployed prompts
+- **User control**: Updates are proposed, never forced
+
+### How it works
+
+Each prompt contains metadata pointing to its source:
+
+```markdown
+<!-- META
+prompt_id: "my-prompt"
+version: "1.0.0"
+source_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/..."
+-->
+```
+
+At session start, the LLM can fetch the source and compare versions.
+
+For more details, see [Version Check System Specification](./docs/en/specs/version-check-system.md).
 
 ## Documentation
 

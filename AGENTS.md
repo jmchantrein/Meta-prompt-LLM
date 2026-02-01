@@ -93,12 +93,23 @@ Format: `[ ]` to do, `[x]` done, `[~]` in progress, `[!]` blocked
 - Documentation: English (main) with French translation
 - Cross-reference links between EN/FR docs
 
+## Rule 13: version check
+
+At session start, if this prompt has a META block:
+
+1. Read \`source_url\` and \`version\` from META
+2. Fetch source (if web access available)
+3. Compare local version with remote version
+4. If remote is newer: inform user, show changelog, propose update
+5. If same or no web access: continue normally
+
 ---
 
 ## Available skills
 
 | Skill | Description | Category |
 |-------|-------------|----------|
+| data-sync | Synchronizes data/ to project files and validates integrity | core |
 | inclusivity-reviewer | Reviews content for inclusive writing and modern terminology | validation |
 | link-checker | Validates internal links and paths in markdown files | validation |
 | memory-keeper | Manages persistent project memory between sessions | core |

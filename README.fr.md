@@ -10,14 +10,16 @@
 
 Un framework pour creer, modifier et maintenir des collections de prompts avec support d'architecture IA hybride.
 
-## Fonctionnalites
+## Fonctionnalités
 
-- **Definitions de skills centralisees** au format YAML
-- **Generation multi-plateforme** pour Claude Code, Cursor, Ollama, OpenCode, Aider, Continue.dev, Codex, et plus
-- **Memoire persistante** entre les sessions IA
+- **Définitions de skills centralisées** au format YAML
+- **Génération multi-plateforme** pour Claude Code, Cursor, Ollama, OpenCode, Aider, Continue.dev, Codex, et plus
+- **Mémoire persistante** entre les sessions IA
 - **Orchestration de workflows** pour la validation automatique
-- **Documentation bilingue** (anglais/francais) avec references croisees
-- **Ecriture inclusive** obligatoire pour le contenu francais
+- **Documentation bilingue** (anglais/français) avec références croisées
+- **Écriture inclusive** obligatoire pour le contenu français
+- **Système de vérification de version** : Les prompts peuvent vérifier les mises à jour via URLs GitHub raw
+- **Source de vérité data/** : Toutes les règles, skills et prompts gérés dans `data/`
 
 ## Demarrage rapide
 
@@ -69,11 +71,14 @@ Toutes les configurations d'agents IA sont definies une seule fois dans `.ai/ski
 
 | Skill | Objectif |
 |-------|----------|
-| `inclusivity-reviewer` | Validation de l'ecriture inclusive |
-| `memory-keeper` | Gestion de la memoire persistante |
-| `workflow-orchestrator` | Orchestration multi-agents |
+| `data-sync` | Synchronise data/ vers les fichiers projet et valide l'intégrité |
+| `inclusivity-reviewer` | Validation de l'écriture inclusive |
+| `link-checker` | Validation des liens internes dans les markdown |
+| `memory-keeper` | Gestion de la mémoire persistante |
+| `prompt-validator` | Validation du schéma des prompts |
+| `self-improver` | Agent d'auto-amélioration du projet |
 | `translator` | Traduction et synchronisation EN/FR |
-| `prompt-validator` | Validation du schema des prompts |
+| `workflow-orchestrator` | Orchestration multi-agents |
 
 ### Workflow
 
@@ -129,10 +134,34 @@ Toutes les configurations d'agents IA sont definies une seule fois dans `.ai/ski
    # Utiliser le skill prompt-validator
    ```
 
+## Système de vérification de version
+
+Les prompts de cette collection incluent un bloc `<!-- META -->` qui permet :
+
+- **Auto-vérification** : Les prompts vérifient si des mises à jour sont disponibles au démarrage de session
+- **Copier-coller friendly** : Mini-prompts pour la vérification de mise à jour dans les prompts déployés
+- **Contrôle utilisateur·ice** : Les mises à jour sont proposées, jamais forcées
+
+### Comment ça marche
+
+Chaque prompt contient des métadonnées pointant vers sa source :
+
+```markdown
+<!-- META
+prompt_id: "mon-prompt"
+version: "1.0.0"
+source_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/..."
+-->
+```
+
+Au démarrage de session, le LLM peut récupérer la source et comparer les versions.
+
+Pour plus de détails, voir [Spécification du système de vérification de version](./docs/fr/specs/version-check-system.md).
+
 ## Documentation
 
 - [Documentation anglaise](./docs/en/)
-- [Documentation francaise](./docs/fr/)
+- [Documentation française](./docs/fr/)
 
 ## Contribuer
 
