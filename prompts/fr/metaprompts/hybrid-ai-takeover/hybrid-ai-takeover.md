@@ -263,6 +263,7 @@ Cree AGENTS.md a la racine avec toutes les regles fusionnees, incluant :
 - Regle 12 : memoire persistante
 - Regle 13 : langue et traduction
 - Regle 14 : workflows de communication
+- Regle 15 : actions post-revue (OBLIGATOIRE)
 
 ### Phase 9 : creation de MEMORY.md (pre-rempli)
 

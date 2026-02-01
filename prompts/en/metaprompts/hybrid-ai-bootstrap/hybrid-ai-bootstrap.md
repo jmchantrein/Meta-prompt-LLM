@@ -238,6 +238,13 @@ The **translator** agent must ALWAYS keep up to date:
 - AI -> AI: delegate to appropriate skills via subagents
 - AI -> Human: clear summaries, signal risks
 - Human -> AI: can interrupt and modify at any time
+
+## Rule 15: post-review actions (MANDATORY)
+After every code review or significant work session:
+1. Update MEMORY.md via memory-keeper
+2. Synchronize documentation (translator --check-sync)
+3. Mark completed tasks in todo list
+4. Use session notes template (.ai/templates/session-notes.md)
 ```
 
 #### 4.2 - MEMORY.md

@@ -238,6 +238,13 @@ L'agent **translator** doit TOUJOURS maintenir a jour :
 - IA → IA : deleguer aux skills appropries via subagents
 - IA → Humain : resumes clairs, signaler les risques
 - Humain → IA : peut interrompre et modifier a tout moment
+
+## Regle 15 : actions post-revue (OBLIGATOIRE)
+Apres chaque revue de code ou session de travail significative :
+1. Mettre a jour MEMORY.md via memory-keeper
+2. Synchroniser la documentation (translator --check-sync)
+3. Marquer les taches terminees dans la todo list
+4. Utiliser le template de notes de session (.ai/templates/session-notes.md)
 ```
 
 #### 4.2 - MEMORY.md

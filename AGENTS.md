@@ -93,6 +93,14 @@ Format: `[ ]` to do, `[x]` done, `[~]` in progress, `[!]` blocked
 - Documentation: English (main) with French translation
 - Cross-reference links between EN/FR docs
 
+## Rule 15: post-review actions (MANDATORY)
+
+After every code review or significant work session:
+1. Update MEMORY.md via memory-keeper
+2. Synchronize documentation (translator --check-sync)
+3. Mark completed tasks in todo list
+4. Use session notes template (.ai/templates/session-notes.md)
+
 ---
 
 ## Available skills

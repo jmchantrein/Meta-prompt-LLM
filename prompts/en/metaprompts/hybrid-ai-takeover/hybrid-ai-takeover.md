@@ -263,6 +263,7 @@ Create AGENTS.md at root with all merged rules, including:
 - Rule 12: persistent memory
 - Rule 13: language and translation
 - Rule 14: communication workflows
+- Rule 15: post-review actions (MANDATORY)
 
 ### Phase 9: create MEMORY.md (pre-filled)
 
