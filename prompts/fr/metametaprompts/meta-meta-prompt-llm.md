@@ -224,6 +224,19 @@ ce workflow. Il est déclenché :
 - [hybrid-ai-bootstrap](../metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md) - Initialisation IA hybride
 - [hybrid-ai-takeover](../metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md) - Reprise de session
 
+## Output format
+
+Ce prompt n'est pas destiné à être exécuté seul. Il sert de documentation
+pour le skill `self-improver` qui produit :
+
+| Sortie | Description |
+|--------|-------------|
+| Rapport d'analyse | Hash comparés, changements détectés |
+| Scope d'impact | Liste des prompts à vérifier |
+| Proposition | Action suggérée (toujours avec validation) |
+| Index mis à jour | Nouveaux hash après modifications |
+| Message de commit | Avec convention @future-self |
+
 ## Contraintes critiques
 
 | Contrainte | Description |

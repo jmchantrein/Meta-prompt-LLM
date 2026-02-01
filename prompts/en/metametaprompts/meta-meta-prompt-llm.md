@@ -223,6 +223,19 @@ this workflow. It is triggered:
 - [hybrid-ai-bootstrap](../metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md) - Hybrid AI initialization
 - [hybrid-ai-takeover](../metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md) - Session takeover
 
+## Output format
+
+This prompt is not meant to be executed alone. It serves as documentation
+for the `self-improver` skill which produces:
+
+| Output | Description |
+|--------|-------------|
+| Analysis report | Compared hashes, detected changes |
+| Impact scope | List of prompts to verify |
+| Proposal | Suggested action (always with validation) |
+| Updated indexes | New hashes after modifications |
+| Commit message | With @future-self convention |
+
 ## Critical Constraints
 
 | Constraint | Description |

@@ -255,6 +255,14 @@ workflows:
       - skill: "memory-keeper"
         condition: "important_decision"
 
+  session-start:
+    description: "Checks at session start (rule propagation)"
+    steps:
+      - skill: "memory-keeper"
+        args: ["--load"]
+      - skill: "self-improver"
+        args: ["--check"]
+
   full-validation:
     description: "Complete validation of all content"
     steps:
@@ -268,11 +276,15 @@ workflows:
         args: ["--check-sync", "--all"]
       - skill: "link-checker"
         args: ["--all"]
+      - skill: "self-improver"
+        args: ["--verify-indexes"]
 
   release:
     description: "Pre-release validation"
     steps:
       - workflow: "full-validation"
+      - skill: "self-improver"
+        args: ["--update-indexes"]
       - skill: "memory-keeper"
         args: ["--record-release"]
 
@@ -296,6 +308,11 @@ validation:
 # ----------------------------------------------------------------------------
 meta:
   changelog:
+    - version: "1.2.0"
+      date: "2026-02-01"
+      changes:
+        - "Added self-improver to full-validation and release workflows"
+        - "Added session-start workflow for rule propagation checks"
     - version: "1.1.0"
       date: "2026-01-31"
       changes:
@@ -310,4 +327,5 @@ meta:
     - "translator"
     - "prompt-validator"
     - "link-checker"
+    - "self-improver"
   documentation: "docs/en/skills/workflow-orchestrator.md"
