@@ -174,8 +174,8 @@ sessions:
     summary: "Package-manager skill, MEMORY/hooks/commands refactor, unified internal/external architecture"
   - date: "2026-02-02"
     id: "9ytxa"
-    commits: "4405e84→78d539e"
-    summary: "Hooks/skills/commands integration audit, Stop hooks reorder fix"
+    commits: "4405e84→ae26782"
+    summary: "Full hooks/skills integration (100%), prompt-engineer + codebase-analyst skills, Rule 14, workflow-orchestrator at SessionStart"
 
 # ----------------------------------------------------------------------------
 # LESSONS LEARNED
