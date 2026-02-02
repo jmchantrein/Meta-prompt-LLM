@@ -169,6 +169,10 @@ sessions:
     id: "3jXvo"
     commits: "8c8da0b→a93e7df"
     summary: "Package-manager skill, MEMORY/hooks/commands refactor, unified internal/external architecture"
+  - date: "2026-02-02"
+    id: "9ytxa"
+    commits: "pending"
+    summary: "Hooks/skills/commands integration audit - all references valid (8/8), 1 cosmetic fix"
 
 # ----------------------------------------------------------------------------
 # LESSONS LEARNED
@@ -216,6 +220,9 @@ lessons:
   - date: "2026-02-02"
     lesson: "License audit before install"
     context: "MIT collections OK (fetch), Anthropic Commercial (reference only)"
+  - date: "2026-02-02"
+    lesson: "Naming consistency in visual feedback"
+    context: "Agent labels in hooks must match skill names exactly (e.g. [inclusivity-reviewer] not [inclusivity])"
 
 # ----------------------------------------------------------------------------
 # CURRENT CONTEXT
@@ -428,7 +435,7 @@ visual_feedback:
     agent: "[consistency-check]"
     purpose: "Vérification post-réponse"
   - emoji: "🔍"
-    agent: "[inclusivity]"
+    agent: "[inclusivity-reviewer]"
     purpose: "Écriture inclusive"
   - emoji: "🌍"
     agent: "[translator]"
