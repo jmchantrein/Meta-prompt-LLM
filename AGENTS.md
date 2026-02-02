@@ -110,6 +110,7 @@ At session start, if this prompt has a META block:
 | Skill | Description | Category |
 |-------|-------------|----------|
 | data-sync | Synchronizes data/ to project files and validates integrity | core |
+| hooks-manager | Manages LLM hooks knowledge base and multi-platform hook generation | core |
 | inclusivity-reviewer | Reviews content for inclusive writing and modern terminology | validation |
 | link-checker | Validates internal links and paths in markdown files | validation |
 | memory-keeper | Manages persistent project memory between sessions | core |

@@ -33,6 +33,10 @@ Thumbs.db
 # .opencode/
 # .codex/
 
+# Local settings (machine-specific, generated)
+.claude/settings.local.json
+.ai/audit.log
+
 # Environment and secrets
 .env
 .env.local

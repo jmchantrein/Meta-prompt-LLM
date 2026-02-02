@@ -6,6 +6,10 @@
       "description": "Synchronizes data/ to project files and validates integrity"
     },
     {
+      "name": "hooks-manager",
+      "description": "Manages LLM hooks knowledge base and multi-platform hook generation"
+    },
+    {
       "name": "inclusivity-reviewer",
       "description": "Reviews content for inclusive writing and modern terminology"
     },

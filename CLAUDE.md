@@ -18,6 +18,7 @@ cat .ai/MEMORY.md
 ```
 
 ## Available skills- **data-sync**: Synchronizes data/ to project files and validates integrity
+- **hooks-manager**: Manages LLM hooks knowledge base and multi-platform hook generation
 - **inclusivity-reviewer**: Reviews content for inclusive writing and modern terminology
 - **link-checker**: Validates internal links and paths in markdown files
 - **memory-keeper**: Manages persistent project memory between sessions
