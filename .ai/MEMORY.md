@@ -77,7 +77,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | 2026-02-02 | PR #5 | fc1c3db→c1e0b88 | Workflow-documenter, architecture docs |
 | 2026-02-02 | PR #6 (bq507) | 5c703b4→a5cfb24 | Complete hooks lifecycle, multi-platform generation, platform detection (branche nommée "french-support" par erreur) |
 | 2026-02-02 | 4fPY2 | 5b04efe→825b6b5 | Clarified 6 inconsistencies, session-status skill, coherence-check hook, visual-feedback hooks |
-| 2026-02-02 | 3jXvo | - | Research: identified 40+ recognized missing skills across 10 categories |
+| 2026-02-02 | 3jXvo | 8c8da0b→ | Research: 40+ missing skills; architectural inconsistencies found |
 
 ## Lessons learned
 
@@ -97,6 +97,8 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | 2026-02-02 | VERSION file ≠ project version | .ai/VERSION is hash for generate.sh change detection, not semver |
 | 2026-02-02 | User hooks can extend project hooks | ~/.claude/ hooks (like git-check) add to project .claude/settings.json |
 | 2026-02-02 | Visual feedback via PostToolUse | Hooks can show context (🧠/📦/🔧) based on file patterns |
+| 2026-02-02 | MEMORY.md inconsistent | .ai/MEMORY.md violates "source of truth = data/" rule - needs refactor |
+| 2026-02-02 | External skills need installer | Cannot manually maintain 626+ skills - need package-manager agent |
 
 ## Current context
 
@@ -108,10 +110,12 @@ A framework for creating, modifying, and maintaining prompt collections with:
 - **[DONE]** Platform detection at SessionStart with capabilities/limitations
 - **[DONE]** Self-improver skill functional with dependencies.yaml
 - GitHub Pages setup for data access
+- **[TODO]** Move MEMORY.md to data/ source of truth
+- **[TODO]** Create package-manager skill for external installs
 
 ### Pending decisions
 
-- None currently
+- Confirm package-manager architecture (registries.yaml + internal/external split)
 
 ### Blockers
 
@@ -173,6 +177,43 @@ A framework for creating, modifying, and maintaining prompt collections with:
 - [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) - Official Vercel skills
 - [antigravity-awesome-skills](https://github.com/sickn33/antigravity-awesome-skills) - 626+ skills
 - [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills) - Community skills
+
+## Architectural inconsistencies discovered
+
+> Identified 2026-02-02 session 3jXvo. Requires refactoring.
+
+| Issue | Current state | Target state | Priority |
+|-------|---------------|--------------|----------|
+| MEMORY.md not in data/ | `.ai/MEMORY.md` edited directly | `data/memory/MEMORY.yaml` as source | HIGH |
+| No external skill install | Manual copy of external skills | `package-manager` skill with registries | HIGH |
+| No external hook install | N/A | Same system as skills | MEDIUM |
+| No command management | N/A | Same system as skills/hooks | MEDIUM |
+
+### Proposed architecture
+
+```
+data/
+├── memory/
+│   └── MEMORY.yaml           # Source of truth (structured YAML)
+├── skills/
+│   ├── internal/             # Project skills
+│   └── external/             # Installed from registries
+├── hooks/
+│   ├── internal/
+│   └── external/
+├── commands/                 # NEW
+│   ├── internal/
+│   └── external/
+├── registries.yaml           # External sources (Vercel, Antigravity, etc.)
+└── manifest.yaml             # Central index with versions
+```
+
+### New skill needed: package-manager
+
+- `@package-manager install vercel/react-best-practices`
+- `@package-manager update` (check all registries)
+- `@package-manager list` (installed skills/hooks/commands)
+- `@package-manager remove <id>`
 
 ## Notes
 
@@ -251,4 +292,4 @@ A framework for creating, modifying, and maintaining prompt collections with:
 
 ---
 
-*Last updated: 2026-02-02 by memory-keeper (session 3jXvo: research missing skills, roadmap added)*
+*Last updated: 2026-02-02 by memory-keeper (session 3jXvo: architectural inconsistencies, package-manager proposal)*
