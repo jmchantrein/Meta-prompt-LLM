@@ -77,6 +77,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | 2026-02-02 | PR #5 | fc1c3db→c1e0b88 | Workflow-documenter, architecture docs |
 | 2026-02-02 | PR #6 (bq507) | 5c703b4→a5cfb24 | Complete hooks lifecycle, multi-platform generation, platform detection (branche nommée "french-support" par erreur) |
 | 2026-02-02 | 4fPY2 | 5b04efe→825b6b5 | Clarified 6 inconsistencies, session-status skill, coherence-check hook, visual-feedback hooks |
+| 2026-02-02 | 3jXvo | - | Research: identified 40+ recognized missing skills across 10 categories |
 
 ## Lessons learned
 
@@ -137,6 +138,41 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | translator | EN/FR translation, sync | Active |
 | workflow-documenter | Generates workflow documentation | Active |
 | workflow-orchestrator | Multi-agent orchestration | Active |
+
+## Missing recognized skills roadmap
+
+> Identified 2026-02-02 via research on Vercel, Antigravity, VoltAgent, GitHub collections.
+
+### Priority 1 (industry consensus)
+
+| Skill | Category | Sources |
+|-------|----------|---------|
+| security-auditor | Security | Snyk, OWASP, all collections |
+| test-generator | Testing | Qodo, TDD patterns, Superpowers |
+| code-reviewer | Quality | CodeRabbit, Qodo Merge, all collections |
+
+### Priority 2 (high demand)
+
+| Skill | Category | Sources |
+|-------|----------|---------|
+| api-documenter | Documentation | OpenAPI/Swagger ecosystem |
+| debugger | Troubleshooting | JetBrains, all IDEs |
+| react-best-practices | Framework | Vercel official (40+ rules) |
+
+### Priority 3 (nice to have)
+
+| Skill | Category | Sources |
+|-------|----------|---------|
+| changelog-generator | Documentation | Conventional Commits |
+| dependency-checker | Security | npm audit, Snyk |
+| migration-assistant | Refactoring | AWS Transform, ModLogix |
+| tdd-workflow | Testing | Superpowers, Builder.io |
+
+### Reference collections
+
+- [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) - Official Vercel skills
+- [antigravity-awesome-skills](https://github.com/sickn33/antigravity-awesome-skills) - 626+ skills
+- [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills) - Community skills
 
 ## Notes
 
@@ -215,4 +251,4 @@ A framework for creating, modifying, and maintaining prompt collections with:
 
 ---
 
-*Last updated: 2026-02-02 by memory-keeper (session 4fPY2: 6 inconsistencies fixed, session-status, coherence-check, visual-feedback hooks)*
+*Last updated: 2026-02-02 by memory-keeper (session 3jXvo: research missing skills, roadmap added)*
