@@ -579,63 +579,12 @@ PostToolUse:
 # ============================================================================
 # STOP - Quand Claude finit de répondre
 # ============================================================================
-# Ce hook vérifie si des actions de consistance sont nécessaires.
-# Si oui, il retourne { "ok": false, "reason": "..." } pour continuer.
+# IMPORTANT: session-status s'exécute EN PREMIER pour toujours afficher le résumé,
+# puis consistency-check peut décider si on continue ou pas.
 
 Stop:
-  - name: "consistency-check"
-    description: "Check if memory or consistency actions are needed"
-    enabled: true
-    hooks:
-      - type: "agent"
-        timeout: 60
-        prompt: |
-          Tu es l'agent de vérification de consistance du projet Meta-prompt-LLM.
-
-          ## Contexte
-
-          Tu es appelé à la fin de chaque réponse de Claude pour vérifier
-          si des actions de consistance sont nécessaires.
-
-          ## Ta mission
-
-          1. Lis le transcript de la session via $ARGUMENTS
-          2. Détermine si cette session a impliqué:
-             - Des décisions techniques importantes
-             - Des modifications de règles ou skills
-             - Des leçons apprises
-             - Des changements de contexte projet
-
-          3. Si OUI à l'un de ces points:
-             - Retourne { "ok": false, "reason": "🧠 [memory-keeper] Mise à jour de .ai/MEMORY.md recommandée: [résumé des changements]" }
-
-          4. Si NON (conversation simple, pas de décision):
-             - Retourne { "ok": true }
-
-          ## Critères de décision
-
-          METTRE À JOUR MEMORY.MD si:
-          - Nouvelle décision technique prise
-          - Nouveau skill créé ou modifié
-          - Nouvelle règle ou convention adoptée
-          - Problème résolu qui constitue une leçon
-          - Changement de contexte projet
-
-          NE PAS METTRE À JOUR si:
-          - Simple question/réponse
-          - Lecture de fichiers sans modification
-          - Exécution de commandes routinières
-          - Correction de typos mineurs
-
-          ## Format de réponse
-
-          Retourne UNIQUEMENT un objet JSON:
-          { "ok": true }
-          ou
-          { "ok": false, "reason": "🧠 [memory-keeper] [description de ce qui doit être ajouté à MEMORY.md]" }
-
   # ----------------------------
-  # Session status summary (after consistency-check)
+  # Session status summary (FIRST - always displays)
   # ----------------------------
   - name: "session-status-summary"
     description: "Display visual summary of skills, hooks, and commands"
@@ -691,7 +640,7 @@ Stop:
           echo "              ├─ 🔧 generate-check"
           echo "              ├─ 🧠 load-memory"
           echo "              ├─ 🔄 self-improver"
-          echo "              └─ 🔍 coherence-check ← NEW"
+          echo "              └─ 🔍 coherence-check"
           echo "      ↓"
           echo "UserPromptSubmit ── 📋 context-reminder"
           echo "      ↓"
@@ -702,8 +651,8 @@ Stop:
           echo "              ├─ 🔍 inclusivity     │ (protected)"
           echo "              └─ 🌍 translator      │"
           echo "      ↓                              │"
-          echo "Stop ─────────┬─ ✅ consistency [AGENT]"
-          echo "              └─ 📊 session-status [CMD]"
+          echo "Stop ─────────┬─ 📊 session-status [CMD] ← FIRST"
+          echo "              └─ ✅ consistency [AGENT]"
           echo "      ↓"
           echo "SessionEnd ───── 📝 final-reminder"
           echo "\`\`\`"
@@ -718,6 +667,60 @@ Stop:
           echo ""
           echo "**Légende**: Hook=✅ (automatique) | Hook=❌ (manuel)"
           echo ""
+
+  # ----------------------------
+  # Consistency check (SECOND - can interrupt if needed)
+  # ----------------------------
+  - name: "consistency-check"
+    description: "Check if memory or consistency actions are needed"
+    enabled: true
+    hooks:
+      - type: "agent"
+        timeout: 60
+        prompt: |
+          Tu es l'agent de vérification de consistance du projet Meta-prompt-LLM.
+
+          ## Contexte
+
+          Tu es appelé à la fin de chaque réponse de Claude pour vérifier
+          si des actions de consistance sont nécessaires.
+
+          ## Ta mission
+
+          1. Lis le transcript de la session via $ARGUMENTS
+          2. Détermine si cette session a impliqué:
+             - Des décisions techniques importantes
+             - Des modifications de règles ou skills
+             - Des leçons apprises
+             - Des changements de contexte projet
+
+          3. Si OUI à l'un de ces points:
+             - Retourne { "ok": false, "reason": "🧠 [memory-keeper] Mise à jour de .ai/MEMORY.md recommandée: [résumé des changements]" }
+
+          4. Si NON (conversation simple, pas de décision):
+             - Retourne { "ok": true }
+
+          ## Critères de décision
+
+          METTRE À JOUR MEMORY.MD si:
+          - Nouvelle décision technique prise
+          - Nouveau skill créé ou modifié
+          - Nouvelle règle ou convention adoptée
+          - Problème résolu qui constitue une leçon
+          - Changement de contexte projet
+
+          NE PAS METTRE À JOUR si:
+          - Simple question/réponse
+          - Lecture de fichiers sans modification
+          - Exécution de commandes routinières
+          - Correction de typos mineurs
+
+          ## Format de réponse
+
+          Retourne UNIQUEMENT un objet JSON:
+          { "ok": true }
+          ou
+          { "ok": false, "reason": "🧠 [memory-keeper] [description de ce qui doit être ajouté à MEMORY.md]" }
 
 # ============================================================================
 # SESSION END - Quand la session se termine

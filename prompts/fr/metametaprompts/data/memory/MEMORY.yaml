@@ -223,6 +223,9 @@ lessons:
   - date: "2026-02-02"
     lesson: "Naming consistency in visual feedback"
     context: "Agent labels in hooks must match skill names exactly (e.g. [inclusivity-reviewer] not [inclusivity])"
+  - date: "2026-02-02"
+    lesson: "Stop hook order matters"
+    context: "session-status (cmd) must run BEFORE consistency-check (agent), otherwise it never displays when agent returns ok:false"
 
 # ----------------------------------------------------------------------------
 # CURRENT CONTEXT
