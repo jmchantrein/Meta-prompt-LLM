@@ -1,13 +1,13 @@
 ---
 name: "hybrid-ai-bootstrap"
-version: "2.1.0"
+version: "2.2.0"
 category: "metaprompts"
 description: "Prompt d'initialisation pour architecture IA hybride multi-plateforme"
 
-tags: ["bootstrap", "architecture", "multi-platform", "metaprompts", "initialization"]
+tags: ["bootstrap", "architecture", "multi-platform", "metaprompts", "initialization", "RISEN"]
 author: "Meta-prompt-LLM"
 created: "2026-01-31"
-updated: "2026-01-31"
+updated: "2026-02-02"
 
 language: "fr"
 difficulty: "advanced"
@@ -20,16 +20,16 @@ model_hints:
 
 <!-- META
 prompt_id: "hybrid-ai-bootstrap"
-version: "2.1.0"
+version: "2.2.0"
 source_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md"
 applicable_rules: ["rule-0", "rule-1", "rule-2", "rule-4", "rule-8", "rule-10"]
-applicable_skills: ["prompt-validator", "inclusivity-reviewer", "translator"]
+applicable_skills: ["prompt-validator", "inclusivity-reviewer", "translator", "prompt-engineer"]
 
 # --- PROMPTS COPIER-COLLER ---
 use_prompt: "Récupère et applique le prompt depuis : https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md"
 update_prompt: |
   Vérifie si mon prompt est à jour :
-  - Ma version : 2.1.0
+  - Ma version : 2.2.0
   - Source : https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md
   Compare les versions et informe-moi des changements.
 -->
@@ -39,6 +39,32 @@ update_prompt: |
 # Bootstrap d'architecture IA hybride
 
 > Prompt de demarrage pour initialiser un nouveau projet avec une architecture IA hybride (cloud + local), incluant memoire persistante et orchestration automatique des agents.
+
+---
+
+## Role (RISEN Framework)
+
+Tu es un·e **architecte specialise·e en systemes IA hybrides**. Tu maitrises :
+- Les standards d'agents IA (AGENTS.md, MCP)
+- La generation multi-plateforme (Claude Code, Cursor, Ollama, etc.)
+- L'ecriture inclusive et les bonnes pratiques de documentation
+- L'orchestration de workflows multi-agents
+
+**Ton objectif** : creer une architecture IA robuste, maintenable et evoluee pour le projet.
+
+---
+
+## Objectif final
+
+A la fin de ce prompt, le projet doit avoir :
+- [ ] Structure `.ai/` complete avec skills YAML
+- [ ] Script `generate.sh` fonctionnel et idempotent
+- [ ] AGENTS.md avec regles fondamentales
+- [ ] MEMORY.md pour la persistance entre sessions
+- [ ] Documentation bilingue (EN/FR) avec liens croises
+- [ ] Skills obligatoires : inclusivity-reviewer, memory-keeper, workflow-orchestrator, translator
+
+---
 
 ## Contexte
 
@@ -347,6 +373,7 @@ A la fin, fournir :
 
 <!--
 HISTORIQUE DES VERSIONS :
+- v2.2.0 (2026-02-02) : Optimisation via prompt-engineer (RISEN framework), ajout role explicite et objectif final
 - v2.1.0 (2026-01-31) : Ajout regles inclusivite detaillees, regle 13 langue/traduction, liens croises docs
 - v2.0.0 (2026-01-31) : Ajout memoire persistante, workflow-orchestrator, structure prompts/
 - v1.0.0 (2026-01-31) : Version initiale
