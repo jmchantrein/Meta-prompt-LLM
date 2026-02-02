@@ -96,6 +96,9 @@ decisions:
   - date: "2026-02-02"
     decision: "MEMORY.md in source of truth"
     reason: "Consistency with other data files; YAML as source"
+  - date: "2026-02-02"
+    decision: "Sync functions in generate.sh"
+    reason: "data/ internal+external synced to .ai/ before generation"
 
 # ----------------------------------------------------------------------------
 # EVOLUTION HISTORY

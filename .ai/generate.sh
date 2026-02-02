@@ -56,6 +56,15 @@ readonly CLAUDE_SETTINGS="${PROJECT_ROOT}/.claude/settings.json"
 readonly MEMORY_YAML="${PROJECT_ROOT}/prompts/fr/metametaprompts/data/memory/MEMORY.yaml"
 readonly MEMORY_MD="${SCRIPT_DIR}/MEMORY.md"
 
+# Data source paths (source of truth)
+readonly DATA_DIR="${PROJECT_ROOT}/prompts/fr/metametaprompts/data"
+readonly DATA_HOOKS_INTERNAL="${DATA_DIR}/hooks/internal"
+readonly DATA_HOOKS_EXTERNAL="${DATA_DIR}/hooks/external"
+readonly DATA_SKILLS_INTERNAL="${DATA_DIR}/skills/internal"
+readonly DATA_SKILLS_EXTERNAL="${DATA_DIR}/skills/external"
+readonly DATA_COMMANDS_INTERNAL="${DATA_DIR}/commands/internal"
+readonly DATA_COMMANDS_EXTERNAL="${DATA_DIR}/commands/external"
+
 # Options
 FORCE=false
 CHECK_ONLY=false
@@ -251,6 +260,106 @@ needs_regeneration() {
         return 0  # Needs regeneration
     fi
     return 1  # Up to date
+}
+
+# ----------------------------------------------------------------------------
+# Sync functions (copy from data/ to .ai/)
+# ----------------------------------------------------------------------------
+
+# Sync skills from data/skills/internal + external to .ai/skills/
+sync_skills() {
+    log_info "Syncing skills from data/..."
+    ensure_dir "${SKILLS_DIR}"
+
+    # Copy internal skills
+    if [[ -d "${DATA_SKILLS_INTERNAL}" ]]; then
+        for file in "${DATA_SKILLS_INTERNAL}"/*.yaml; do
+            if [[ -f "${file}" ]]; then
+                cp "${file}" "${SKILLS_DIR}/"
+            fi
+        done
+    fi
+
+    # Copy external skills (if any)
+    if [[ -d "${DATA_SKILLS_EXTERNAL}" ]]; then
+        for file in "${DATA_SKILLS_EXTERNAL}"/*.yaml; do
+            if [[ -f "${file}" ]]; then
+                cp "${file}" "${SKILLS_DIR}/"
+            fi
+        done
+    fi
+
+    log_success "Synced skills"
+}
+
+# Sync hooks from data/hooks/internal + external to .ai/hooks/
+sync_hooks() {
+    log_info "Syncing hooks from data/..."
+    ensure_dir "${SCRIPT_DIR}/hooks"
+
+    local output_file="${SCRIPT_DIR}/hooks/hooks.yaml"
+    local content="# ${GENERATED_MARKER}"$'\n'
+    content+="# Merged from data/hooks/internal/ + external/"$'\n\n'
+
+    # Append internal hooks (main hooks.yaml)
+    if [[ -f "${DATA_HOOKS_INTERNAL}/hooks.yaml" ]]; then
+        # Skip the first lines if they're comments and add the rest
+        content+="# === Internal hooks ==="$'\n'
+        cat "${DATA_HOOKS_INTERNAL}/hooks.yaml" >> /dev/null  # Validate file exists
+        content+=$(cat "${DATA_HOOKS_INTERNAL}/hooks.yaml")
+        content+=$'\n\n'
+    fi
+
+    # Append external hooks (individual YAML files)
+    if [[ -d "${DATA_HOOKS_EXTERNAL}" ]]; then
+        local has_external=false
+        for file in "${DATA_HOOKS_EXTERNAL}"/*.yaml; do
+            if [[ -f "${file}" && "$(basename "${file}")" != ".gitkeep" ]]; then
+                if [[ "${has_external}" == "false" ]]; then
+                    content+="# === External hooks ==="$'\n'
+                    has_external=true
+                fi
+                content+="# From: $(basename "${file}")"$'\n'
+                content+=$(cat "${file}")
+                content+=$'\n\n'
+            fi
+        done
+    fi
+
+    if [[ "${DRY_RUN}" == "true" ]]; then
+        log_info "Would write hooks to: ${output_file}"
+    else
+        echo "${content}" > "${output_file}"
+    fi
+
+    log_success "Synced hooks"
+}
+
+# Sync commands from data/commands/internal + external to .ai/commands/
+sync_commands() {
+    log_info "Syncing commands from data/..."
+    local commands_dir="${SCRIPT_DIR}/commands"
+    ensure_dir "${commands_dir}"
+
+    # Copy internal commands
+    if [[ -d "${DATA_COMMANDS_INTERNAL}" ]]; then
+        for file in "${DATA_COMMANDS_INTERNAL}"/*.yaml; do
+            if [[ -f "${file}" && "$(basename "${file}")" != ".gitkeep" ]]; then
+                cp "${file}" "${commands_dir}/"
+            fi
+        done
+    fi
+
+    # Copy external commands (if any)
+    if [[ -d "${DATA_COMMANDS_EXTERNAL}" ]]; then
+        for file in "${DATA_COMMANDS_EXTERNAL}"/*.yaml; do
+            if [[ -f "${file}" && "$(basename "${file}")" != ".gitkeep" ]]; then
+                cp "${file}" "${commands_dir}/"
+            fi
+        done
+    fi
+
+    log_success "Synced commands"
 }
 
 # ----------------------------------------------------------------------------
@@ -1320,6 +1429,11 @@ main() {
         log_warn "Regeneration needed"
         exit 1
     fi
+
+    # Sync from data/ source of truth
+    sync_skills
+    sync_hooks
+    sync_commands
 
     # Run all generators
     generate_memory_md
