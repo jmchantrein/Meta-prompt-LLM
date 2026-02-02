@@ -45,6 +45,7 @@ context:
     - "prompts/fr/metametaprompts/data/manifest.yaml"
     - "prompts/fr/metametaprompts/data/registries.yaml"
     - "prompts/fr/metametaprompts/data/rules/rules.yaml"
+    - "prompts/fr/metametaprompts/data/memory/MEMORY.yaml"
     - "prompts/fr/metametaprompts/data/skills/internal/*.yaml"
     - "prompts/fr/metametaprompts/data/skills/external/*.yaml"
     - "prompts/fr/metametaprompts/data/hooks/internal/*.yaml"
@@ -53,6 +54,7 @@ context:
     - "prompts/fr/metametaprompts/data/commands/external/*.yaml"
     - "prompts/fr/metametaprompts/data/prompts/**/*.md"
   outputs:
+    - ".ai/MEMORY.md"  # Generated from data/memory/MEMORY.yaml
     - ".ai/skills/*.yaml"  # Flattened from internal/ + external/
     - ".ai/hooks/*.yaml"
     - ".ai/commands/*.yaml"
@@ -71,6 +73,7 @@ instructions:
     ## Source de vérité
 
     `prompts/fr/metametaprompts/data/` est la source unique de vérité pour :
+    - Mémoire projet (data/memory/MEMORY.yaml)
     - Règles (data/rules/rules.yaml)
     - Skills internes (data/skills/internal/*.yaml)
     - Skills externes (data/skills/external/*.yaml) - installés via package-manager
@@ -83,6 +86,7 @@ instructions:
 
     ## Fichiers générés (outputs)
 
+    - `.ai/MEMORY.md` : Généré depuis data/memory/MEMORY.yaml
     - `.ai/skills/*.yaml` : Aplati depuis data/skills/internal/ + external/
     - `.ai/hooks/*.yaml` : Aplati depuis data/hooks/internal/ + external/
     - `.ai/commands/*.yaml` : Aplati depuis data/commands/internal/ + external/

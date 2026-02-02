@@ -53,6 +53,8 @@ readonly CODEX_AGENTS_DIR="${PROJECT_ROOT}/.codex/agents"
 readonly CODEX_CONFIG="${PROJECT_ROOT}/codex.toml"
 readonly HOOKS_FILE="${SCRIPT_DIR}/hooks/hooks.yaml"
 readonly CLAUDE_SETTINGS="${PROJECT_ROOT}/.claude/settings.json"
+readonly MEMORY_YAML="${PROJECT_ROOT}/prompts/fr/metametaprompts/data/memory/MEMORY.yaml"
+readonly MEMORY_MD="${SCRIPT_DIR}/MEMORY.md"
 
 # Options
 FORCE=false
@@ -1130,6 +1132,111 @@ save_hook_to_event() {
     log_verbose "Added hook to ${current_event}: type=${hook_type}"
 }
 
+# Generate MEMORY.md from MEMORY.yaml
+generate_memory_md() {
+    log_info "Generating MEMORY.md..."
+
+    if [[ ! -f "${MEMORY_YAML}" ]]; then
+        log_warn "MEMORY.yaml not found: ${MEMORY_YAML}"
+        return 0
+    fi
+
+    local content="# Project memory"$'\n\n'
+    content+="> Persistent memory for AI agents. Read at session start, update via \`memory-keeper\`."$'\n'
+    content+="> **Source of truth**: \`prompts/fr/metametaprompts/data/memory/MEMORY.yaml\`"$'\n\n'
+
+    # Extract identity
+    local name type created main_lang paradigm
+    name=$(yaml_get "${MEMORY_YAML}" "  name")
+    type=$(yaml_get "${MEMORY_YAML}" "  type")
+    created=$(yaml_get "${MEMORY_YAML}" "  created")
+    main_lang=$(yaml_get "${MEMORY_YAML}" "  main_language")
+    paradigm=$(yaml_get "${MEMORY_YAML}" "  paradigm")
+
+    content+="## Project identity"$'\n\n'
+    content+="| Property | Value |"$'\n'
+    content+="|----------|-------|"$'\n'
+    content+="| Name | ${name:-Meta-prompt-LLM} |"$'\n'
+    content+="| Type | ${type:-Prompt framework} |"$'\n'
+    content+="| Created | ${created:-2026-01-31} |"$'\n'
+    content+="| Main language | ${main_lang:-English} |"$'\n'
+    content+="| Paradigm | ${paradigm:-Doc-driven} |"$'\n\n'
+
+    # Description
+    content+="## Description"$'\n\n'
+    local desc
+    desc=$(yaml_get_block "${MEMORY_YAML}" "description")
+    if [[ -n "${desc}" ]]; then
+        content+="${desc}"$'\n'
+    fi
+
+    # User preferences
+    content+="## User preferences"$'\n\n'
+    content+="| Preference | Value |"$'\n'
+    content+="|------------|-------|"$'\n'
+    local pref_lang pref_code inc_writing shell_std ai_cov summary
+    pref_lang=$(yaml_get "${MEMORY_YAML}" "  language_interface")
+    pref_code=$(yaml_get "${MEMORY_YAML}" "  language_code_docs")
+    inc_writing=$(yaml_get "${MEMORY_YAML}" "  inclusive_writing")
+    shell_std=$(yaml_get "${MEMORY_YAML}" "  shell_standard")
+    ai_cov=$(yaml_get "${MEMORY_YAML}" "  ai_tools_coverage")
+    summary=$(yaml_get "${MEMORY_YAML}" "  end_of_response_summary")
+    content+="| Language (interface) | ${pref_lang:-French} |"$'\n'
+    content+="| Language (code/docs) | ${pref_code:-English} |"$'\n'
+    content+="| Inclusive writing | ${inc_writing:-true} |"$'\n'
+    content+="| Shell standard | ${shell_std:-Bash} |"$'\n'
+    content+="| AI tools coverage | ${ai_cov:-Maximum} |"$'\n'
+    content+="| End-of-response summary | ${summary:-true} |"$'\n\n'
+
+    # Available skills
+    content+="## Available skills"$'\n\n'
+    content+="| Skill | Purpose | Status |"$'\n'
+    content+="|-------|---------|--------|"$'\n'
+
+    local skill_file
+    for skill_file in $(get_skill_files); do
+        local skill_name skill_desc
+        skill_name=$(yaml_get "${skill_file}" "name")
+        skill_desc=$(yaml_get "${skill_file}" "description")
+        if [[ -n "${skill_name}" ]]; then
+            content+="| ${skill_name} | ${skill_desc:-No description} | Active |"$'\n'
+        fi
+    done
+    content+=$'\n'
+
+    # Notes section
+    content+="## Notes"$'\n\n'
+    content+="- All prompts must follow \`prompts/_TEMPLATE.md\`"$'\n'
+    content+="- Run \`generate.sh\` after any skill modification"$'\n'
+    content+="- French content must use inclusive writing"$'\n'
+    content+="- **Source of truth**: \`prompts/fr/metametaprompts/data/\`"$'\n'
+    content+="- **Generated files**: \`.ai/\` (never edit directly)"$'\n'
+    content+="- Use \`@future-self\` in commits to leave notes for future sessions"$'\n\n'
+
+    # Platform support matrix
+    content+="## Platform Support Matrix"$'\n\n'
+    content+="| Platform | Rating | Limitations |"$'\n'
+    content+="|----------|--------|-------------|"$'\n'
+    content+="| Claude Code | ★★★★★ | None - all 6 events + agent hooks |"$'\n'
+    content+="| Cursor | ★★★★☆ | No SessionStart, no agent hooks |"$'\n'
+    content+="| OpenCode | ★★★☆☆ | Requires oh-my-opencode plugin |"$'\n'
+    content+="| Codex CLI | ★★☆☆☆ | Only notify on agent-turn-complete |"$'\n'
+    content+="| Aider | ★☆☆☆☆ | No hooks, only auto_lint/test_cmd |"$'\n'
+    content+="| Continue.dev | ★☆☆☆☆ | Data events only, no command hooks |"$'\n\n'
+
+    # Footer
+    local updated updated_by session
+    updated=$(yaml_get "${MEMORY_YAML}" "updated")
+    updated_by=$(yaml_get "${MEMORY_YAML}" "updated_by")
+    session=$(yaml_get "${MEMORY_YAML}" "session")
+    content+="---"$'\n\n'
+    content+="*Last updated: ${updated:-unknown} by ${updated_by:-unknown} (session ${session:-unknown})*"$'\n'
+    content+="*Generated from: prompts/fr/metametaprompts/data/memory/MEMORY.yaml*"$'\n'
+
+    write_file "${MEMORY_MD}" "${content}"
+    log_success "Generated MEMORY.md"
+}
+
 # Update VERSION file
 update_version() {
     local skills_hash
@@ -1215,6 +1322,7 @@ main() {
     fi
 
     # Run all generators
+    generate_memory_md
     generate_agents_md
     generate_claude_md
     generate_claude_agents
