@@ -5,7 +5,13 @@
 # FLUX DE DONNÉES:
 #   1. Ce fichier (data/hooks/hooks.yaml) = Source de vérité
 #   2. data-sync copie vers .ai/hooks/hooks.yaml
-#   3. generate.sh génère .claude/settings.json
+#   3. generate.sh génère les configs pour TOUTES les plateformes:
+#      - .claude/settings.json (Claude Code)
+#      - .cursor/hooks.json (Cursor)
+#      - .opencode/hooks/*.sh (OpenCode)
+#      - codex.toml (Codex CLI)
+#      - .aider.conf.yml (Aider - limité)
+#      - .continuerc.json (Continue.dev - limité)
 #
 # LIFECYCLE EVENTS (ordre d'exécution):
 #   1. SessionStart     - Avant toute interaction utilisateur·ice
@@ -28,9 +34,21 @@
 #   ✅ [consistency-check] - Vérification de consistance
 #   📊 [workflow-orchestrator] - Orchestrateur
 #
+# PLATFORM SUPPORT MATRIX:
+#   ┌─────────────┬──────────────┬─────────────────────────────────────────┐
+#   │ Platform    │ Hooks Level  │ Limitations                             │
+#   ├─────────────┼──────────────┼─────────────────────────────────────────┤
+#   │ Claude Code │ ★★★★★ Full   │ None - all 6 events + agent hooks       │
+#   │ Cursor      │ ★★★★☆ Good   │ No SessionStart, no agent hooks         │
+#   │ OpenCode    │ ★★★☆☆ Medium │ Requires oh-my-opencode plugin          │
+#   │ Codex CLI   │ ★★☆☆☆ Basic  │ Only notify on agent-turn-complete      │
+#   │ Aider       │ ★☆☆☆☆ Minimal│ No hooks, only auto_lint/test_cmd       │
+#   │ Continue    │ ★☆☆☆☆ Minimal│ Data events only, no command hooks      │
+#   └─────────────┴──────────────┴─────────────────────────────────────────┘
+#
 # ============================================================================
 
-version: "2.0.0"
+version: "2.1.0"
 updated: "2026-02-02"
 
 # ============================================================================
@@ -40,6 +58,91 @@ updated: "2026-02-02"
 # Output goes to additionalContext for Claude to see.
 
 SessionStart:
+  # ----------------------------
+  # 0. Platform detection and limitations display
+  # ----------------------------
+  - name: "init-platform-detect"
+    description: "Detect LLM platform and show capabilities/limitations"
+    enabled: true
+    hooks:
+      - type: "command"
+        timeout: 5
+        command: |
+          echo ""
+          echo "╔═══════════════════════════════════════════════════════════════╗"
+          echo "║              META-PROMPT-LLM - Platform Detection             ║"
+          echo "╚═══════════════════════════════════════════════════════════════╝"
+          echo ""
+
+          # Detect platform based on environment variables and config files
+          PLATFORM="unknown"
+          PLATFORM_LEVEL="?"
+          LIMITATIONS=""
+
+          # Claude Code detection
+          if [ -n "$CLAUDE_CODE_VERSION" ] || [ -f ".claude/settings.json" ]; then
+            PLATFORM="Claude Code"
+            PLATFORM_LEVEL="★★★★★ Full"
+            LIMITATIONS="Aucune - support complet (6 events + agent hooks)"
+          # Cursor detection
+          elif [ -n "$CURSOR_VERSION" ] || [ -f ".cursor/hooks.json" ]; then
+            PLATFORM="Cursor"
+            PLATFORM_LEVEL="★★★★☆ Good"
+            LIMITATIONS="Pas de SessionStart, pas de hooks agent"
+          # OpenCode detection
+          elif [ -n "$OPENCODE_VERSION" ] || [ -d ".opencode" ]; then
+            PLATFORM="OpenCode"
+            PLATFORM_LEVEL="★★★☆☆ Medium"
+            LIMITATIONS="Nécessite plugin oh-my-opencode pour hooks complets"
+          # Codex detection
+          elif [ -n "$CODEX_VERSION" ] || [ -f "codex.toml" ]; then
+            PLATFORM="Codex CLI"
+            PLATFORM_LEVEL="★★☆☆☆ Basic"
+            LIMITATIONS="Seul event: agent-turn-complete (notify)"
+          # Aider detection
+          elif [ -n "$AIDER_VERSION" ] || [ -f ".aider.conf.yml" ]; then
+            PLATFORM="Aider"
+            PLATFORM_LEVEL="★☆☆☆☆ Minimal"
+            LIMITATIONS="Pas de hooks, seulement auto_lint et test_cmd"
+          # Continue detection
+          elif [ -n "$CONTINUE_VERSION" ] || [ -f ".continuerc.json" ]; then
+            PLATFORM="Continue.dev"
+            PLATFORM_LEVEL="★☆☆☆☆ Minimal"
+            LIMITATIONS="Data events HTTP uniquement, pas de hooks commande"
+          # Fallback - try to detect from running process
+          elif [ -n "$TERM_PROGRAM" ]; then
+            case "$TERM_PROGRAM" in
+              *cursor*|*Cursor*)
+                PLATFORM="Cursor"
+                PLATFORM_LEVEL="★★★★☆ Good"
+                LIMITATIONS="Pas de SessionStart, pas de hooks agent"
+                ;;
+              *)
+                PLATFORM="Terminal ($TERM_PROGRAM)"
+                PLATFORM_LEVEL="? Unknown"
+                LIMITATIONS="Plateforme non reconnue - fonctionnalités limitées possibles"
+                ;;
+            esac
+          fi
+
+          echo "🖥️  Plateforme détectée: $PLATFORM"
+          echo "📊 Niveau de support:   $PLATFORM_LEVEL"
+          echo ""
+
+          if [ "$PLATFORM" != "Claude Code" ]; then
+            echo "⚠️  LIMITATIONS:"
+            echo "   $LIMITATIONS"
+            echo ""
+            echo "💡 Pour un support complet des hooks, utilisez Claude Code."
+            echo "   https://claude.ai/code"
+          else
+            echo "✅ Support complet des hooks activé"
+          fi
+
+          echo ""
+          echo "───────────────────────────────────────────────────────────────────"
+          echo ""
+
   # ----------------------------
   # 1. Data sync check
   # ----------------------------
