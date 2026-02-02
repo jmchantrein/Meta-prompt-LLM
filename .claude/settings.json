@@ -1,0 +1,135 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '.ai/MEMORY.md' ]; then echo '📋 Remember to read .ai/MEMORY.md for project context'; fi"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '.ai/generate.sh' ]; then .ai/generate.sh --check 2>/dev/null || echo '⚠️ Skills may need regeneration: .ai/generate.sh'; fi"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write(.env*)",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "⚠️ You are about to write to an environment file. This may contain secrets. Continue?"
+          }
+        ]
+      },
+      {
+        "matcher": "Write(*credential*)",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "⚠️ Writing to a credentials file. Are you sure this is intentional?"
+          }
+        ]
+      },
+      {
+        "matcher": "Write(*secret*)",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "⚠️ Writing to a secrets file. Confirm this is intentional?"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(git config*)",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Modifying git configuration. Is this intended?"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(rm *)",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "This command will delete files. Are you sure?"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(git push*--force*)",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "⚠️ Force push can overwrite remote history. Confirm?"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(git reset --hard*)",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "⚠️ Hard reset will discard all uncommitted changes. Continue?"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(git clean*)",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "⚠️ Git clean will remove untracked files. Continue?"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write(.ai/skills/*.yaml)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '📦 Skill modified. Running generate.sh...' && .ai/generate.sh 2>/dev/null || echo '⚠️ generate.sh failed'"
+          }
+        ]
+      },
+      {
+        "matcher": "Write(**/fr/**/*.md)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '🔍 French content modified. Remember: inclusive writing rules apply.'"
+          }
+        ]
+      },
+      {
+        "matcher": "Write(docs/en/*.md)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '🌍 English doc modified. Remember to update French translation in docs/fr/'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '📝 Session ending. Consider updating .ai/MEMORY.md with important decisions.'"
+          }
+        ]
+      }
+    ]
+  }
+}
