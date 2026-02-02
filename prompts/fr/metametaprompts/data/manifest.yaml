@@ -5,7 +5,7 @@
 # https://github.com/jmchantrein/Meta-prompt-LLM
 
 schema_version: "1.0.0"
-last_updated: "2026-02-01T15:00:00Z"
+last_updated: "2026-02-02T12:00:00Z"
 repository: "https://github.com/jmchantrein/Meta-prompt-LLM"
 
 base_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data"
@@ -56,6 +56,16 @@ integrity:
     hash: "sha256:55432e3f88f1c3fa6cec6c8f0431397975af828b6ef8847260e74465433556bf"
     version: "1.0.0"
     last_modified: "2026-02-01"
+
+  "skills/hooks-manager.yaml":
+    hash: "sha256:29fe43534e6d711237dafd363078afebab18e4a6edbb5a6c9418b8849f0ed2d0"
+    version: "1.0.0"
+    last_modified: "2026-02-02"
+
+  "hooks/hooks.yaml":
+    hash: "sha256:2015e5a54587224e5e4050ce806ed5a7c0cadd2609771d874ae47fd74ef126f4"
+    version: "1.0.0"
+    last_modified: "2026-02-02"
 
   "prompts/socratic-tutor/socratic-tutor.en.md":
     hash: "sha256:8e92b4d159ebcfebf43df8ad92d2bb3655a81428a3da3ddac25046b74372fee9"
@@ -125,6 +135,22 @@ skills:
       category: "core"
       url: "{base_url}/skills/data-sync.yaml"
       description: "Synchronizes data/ to project files and validates integrity"
+
+    - id: "hooks-manager"
+      version: "1.0.0"
+      category: "core"
+      url: "{base_url}/skills/hooks-manager.yaml"
+      description: "Manages LLM hooks knowledge base and multi-platform hook generation"
+
+# Hooks
+hooks:
+  version: "1.0.0"
+  changelog_url: "{base_url}/hooks/CHANGELOG.md"
+  items:
+    - id: "hooks"
+      version: "1.0.0"
+      url: "{base_url}/hooks/hooks.yaml"
+      description: "Project hooks configuration (guardrails, automation, audit)"
 
 # Prompts
 prompts:

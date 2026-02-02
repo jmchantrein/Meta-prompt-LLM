@@ -1,0 +1,487 @@
+# Hooks Manager - LLM Lifecycle Hooks Knowledge Base & Manager
+# ============================================================================
+# This skill provides comprehensive knowledge about LLM hooks across platforms
+# and manages the hooks source of truth for multi-platform generation.
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# METADATA
+# ----------------------------------------------------------------------------
+name: "hooks-manager"
+version: "1.0.0"
+description: "Manages LLM hooks knowledge base and multi-platform hook generation"
+
+author: "Meta-prompt-LLM"
+created: "2026-02-02"
+updated: "2026-02-02"
+
+category: "core"
+tags:
+  - "hooks"
+  - "lifecycle"
+  - "guardrails"
+  - "automation"
+  - "multi-platform"
+  - "enforcement"
+
+# ----------------------------------------------------------------------------
+# ACTIVATION
+# ----------------------------------------------------------------------------
+triggers:
+  patterns:
+    - ".ai/hooks/**/*"
+    - "**/hooks.yaml"
+    - "**/.claude/settings.json"
+  keywords:
+    - "hook"
+    - "guardrail"
+    - "lifecycle"
+    - "pre-commit"
+    - "post-tool"
+    - "enforcement"
+  commands:
+    - "/hooks"
+    - "/hooks-manager"
+  automatic: false
+
+# ----------------------------------------------------------------------------
+# CONTEXT
+# ----------------------------------------------------------------------------
+context:
+  files:
+    - ".ai/hooks/hooks.yaml"
+    - ".ai/MEMORY.md"
+    - "AGENTS.md"
+  dependencies:
+    - "workflow-orchestrator"
+
+# ----------------------------------------------------------------------------
+# KNOWLEDGE BASE - LLM HOOKS
+# ----------------------------------------------------------------------------
+knowledge_base:
+  # ==========================================================================
+  # HOOK FUNDAMENTALS
+  # ==========================================================================
+  fundamentals:
+    definition: |
+      Hooks are callbacks that execute at specific points in an LLM session lifecycle.
+      They enable automation, guardrails, and enforcement of rules without relying
+      on the LLM to remember to do something.
+
+    why_hooks_matter: |
+      LLMs don't reliably follow all rules all the time. Hooks provide:
+      - **Enforcement**: Actions happen automatically, not by LLM choice
+      - **Guardrails**: Prevent dangerous operations before they execute
+      - **Automation**: Reduce repetitive prompting
+      - **Consistency**: Same behavior every session
+
+    hook_philosophy: |
+      "Trust but verify" - Use hooks to:
+      1. Verify LLM actions before execution (PreToolUse)
+      2. Log and audit after execution (PostToolUse)
+      3. Initialize context automatically (UserPromptSubmit)
+      4. Ensure cleanup on session end (Stop)
+
+  # ==========================================================================
+  # HOOK TYPES (Claude Code Reference)
+  # ==========================================================================
+  hook_types:
+    command_hooks:
+      description: "Execute shell commands and use exit code for control"
+      use_cases:
+        - "Run linters before code changes"
+        - "Execute tests after modifications"
+        - "Sync files or generate configs"
+        - "Log actions to audit file"
+      example: |
+        hooks:
+          PreToolUse:
+            - matcher: "Write"
+              hooks:
+                - type: "command"
+                  command: "echo 'Writing to: $CLAUDE_FILE_PATH' >> .ai/audit.log"
+
+    prompt_hooks:
+      description: "Ask yes/no question, block on 'no'"
+      use_cases:
+        - "Confirm destructive operations"
+        - "Require approval for sensitive files"
+        - "Gate access to production systems"
+      example: |
+        hooks:
+          PreToolUse:
+            - matcher: "Bash(rm *)"
+              hooks:
+                - type: "prompt"
+                  prompt: "This will delete files. Are you sure?"
+
+    agent_hooks:
+      description: "Spawn a subagent to process/validate"
+      use_cases:
+        - "Run security review on code changes"
+        - "Validate against style guides"
+        - "Check inclusive language"
+      example: |
+        hooks:
+          PostToolUse:
+            - matcher: "Write(*.md)"
+              hooks:
+                - type: "agent"
+                  agent: "inclusivity-reviewer"
+                  prompt: "Review this content for inclusive language"
+
+  # ==========================================================================
+  # LIFECYCLE EVENTS
+  # ==========================================================================
+  lifecycle_events:
+    PreToolUse:
+      description: "Fires BEFORE a tool executes"
+      timing: "Blocking - can prevent execution"
+      env_vars:
+        - "CLAUDE_TOOL_NAME: Name of the tool"
+        - "CLAUDE_TOOL_INPUT: JSON of tool parameters"
+        - "CLAUDE_FILE_PATH: For file operations"
+      best_practices:
+        - "Use for guardrails and validation"
+        - "Keep fast - blocks user experience"
+        - "Log blocked actions for audit"
+      examples:
+        - "Block writes to .env files"
+        - "Require confirmation for git push"
+        - "Validate JSON schema before write"
+
+    PostToolUse:
+      description: "Fires AFTER a tool completes"
+      timing: "Non-blocking by default"
+      env_vars:
+        - "CLAUDE_TOOL_NAME: Name of the tool"
+        - "CLAUDE_TOOL_INPUT: JSON of tool parameters"
+        - "CLAUDE_TOOL_OUTPUT: Result of tool execution"
+      best_practices:
+        - "Use for logging and auditing"
+        - "Trigger follow-up validations"
+        - "Update memory/state files"
+      examples:
+        - "Log all file modifications"
+        - "Run tests after code changes"
+        - "Update MEMORY.md after decisions"
+
+    UserPromptSubmit:
+      description: "Fires when user submits a prompt"
+      timing: "Before LLM processes the message"
+      env_vars:
+        - "CLAUDE_USER_PROMPT: The user's message"
+      best_practices:
+        - "Initialize session context"
+        - "Load memory files"
+        - "Check for required context"
+      examples:
+        - "Auto-load .ai/MEMORY.md"
+        - "Remind about active workflows"
+        - "Check version updates"
+
+    Stop:
+      description: "Fires when session ends"
+      timing: "After LLM stops responding"
+      env_vars:
+        - "CLAUDE_STOP_REASON: Why session ended"
+      best_practices:
+        - "Save session state"
+        - "Update memory with decisions"
+        - "Run cleanup tasks"
+      examples:
+        - "Append session notes to MEMORY.md"
+        - "Commit pending changes"
+        - "Generate session summary"
+
+    Notification:
+      description: "Fires on system notifications"
+      timing: "When background tasks complete"
+      use_cases:
+        - "Handle async task completion"
+        - "Process external updates"
+
+  # ==========================================================================
+  # MATCHERS (Pattern Matching)
+  # ==========================================================================
+  matchers:
+    tool_matchers:
+      description: "Match specific tools or tool patterns"
+      syntax:
+        - "ToolName: Exact tool name match"
+        - "ToolName(*): Tool with any arguments"
+        - "ToolName(pattern*): Tool with glob pattern"
+      examples:
+        - "Write: Any write operation"
+        - "Write(*.py): Write to Python files"
+        - "Bash(git push*): Git push commands"
+        - "Bash(rm *): Delete operations"
+        - "Read(.env*): Reading env files"
+
+    file_matchers:
+      patterns:
+        - "*.md: All markdown files"
+        - "**/*.yaml: YAML files in any directory"
+        - ".env*: Environment files"
+        - "src/**/*.ts: TypeScript in src/"
+
+  # ==========================================================================
+  # MULTI-PLATFORM PATTERNS
+  # ==========================================================================
+  platforms:
+    claude_code:
+      config_location: ".claude/settings.json or ~/.claude/settings.json"
+      format: "JSON with hooks object"
+      features:
+        - "Full hook types support (command, prompt, agent)"
+        - "All lifecycle events"
+        - "Rich environment variables"
+        - "Subagent spawning"
+      example: |
+        {
+          "hooks": {
+            "PreToolUse": [
+              {
+                "matcher": "Write(.env*)",
+                "hooks": [
+                  {
+                    "type": "prompt",
+                    "prompt": "Writing to env file. Confirm?"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+
+    cursor:
+      config_location: ".cursor/hooks/ or settings"
+      notes: "Limited hook support compared to Claude Code"
+      workaround: "Use .cursorrules with explicit instructions"
+
+    opencode:
+      config_location: ".opencode/config.yaml"
+      notes: "Check current documentation for hook support"
+
+    aider:
+      config_location: ".aider.conf.yml"
+      notes: "Uses pre/post commit hooks via git"
+      workaround: "Leverage git hooks for automation"
+
+    ollama:
+      notes: "No native hook support"
+      workaround: "Wrap in shell script with pre/post processing"
+
+    continue_dev:
+      config_location: ".continuerc.json"
+      notes: "Limited lifecycle hooks"
+
+  # ==========================================================================
+  # BEST PRACTICES
+  # ==========================================================================
+  best_practices:
+    guardrails:
+      - name: "Protect sensitive files"
+        description: "Block writes to .env, credentials, secrets"
+        implementation: |
+          PreToolUse:
+            - matcher: "Write(.env*)"
+              hooks:
+                - type: "prompt"
+                  prompt: "⚠️ Writing to sensitive file. Confirm?"
+
+      - name: "Confirm destructive operations"
+        description: "Require confirmation for rm, git reset, etc."
+        implementation: |
+          PreToolUse:
+            - matcher: "Bash(rm *)"
+              hooks:
+                - type: "prompt"
+                  prompt: "This will delete files. Are you sure?"
+
+      - name: "Block production access"
+        description: "Prevent accidental production changes"
+        implementation: |
+          PreToolUse:
+            - matcher: "Bash(*production*)"
+              hooks:
+                - type: "prompt"
+                  prompt: "⚠️ Production command detected. Confirm?"
+
+    automation:
+      - name: "Session initialization"
+        description: "Auto-load context at session start"
+        implementation: |
+          UserPromptSubmit:
+            - hooks:
+                - type: "command"
+                  command: "cat .ai/MEMORY.md"
+
+      - name: "Auto-validation"
+        description: "Run validators after changes"
+        implementation: |
+          PostToolUse:
+            - matcher: "Write(*.md)"
+              hooks:
+                - type: "command"
+                  command: "node scripts/validate-markdown.js $CLAUDE_FILE_PATH"
+
+      - name: "Auto-sync"
+        description: "Keep generated files in sync"
+        implementation: |
+          PostToolUse:
+            - matcher: "Write(.ai/skills/*.yaml)"
+              hooks:
+                - type: "command"
+                  command: ".ai/generate.sh"
+
+    enforcement:
+      - name: "Rule reminders"
+        description: "Inject rule reminders in prompts"
+        implementation: |
+          UserPromptSubmit:
+            - hooks:
+                - type: "command"
+                  command: "echo 'Remember: Read AGENTS.md rules'"
+
+      - name: "Audit logging"
+        description: "Log all tool uses for review"
+        implementation: |
+          PostToolUse:
+            - hooks:
+                - type: "command"
+                  command: "echo \"$(date): $CLAUDE_TOOL_NAME\" >> .ai/audit.log"
+
+    organization:
+      - name: "Centralized hooks"
+        description: "Keep hooks in source of truth"
+        recommendation: "Define hooks in .ai/hooks/hooks.yaml, generate platform configs"
+
+      - name: "Hook documentation"
+        description: "Document each hook's purpose"
+        recommendation: "Add comments explaining why each hook exists"
+
+      - name: "Testing hooks"
+        description: "Verify hooks work as expected"
+        recommendation: "Test hooks manually before relying on them"
+
+  # ==========================================================================
+  # COMMON PATTERNS
+  # ==========================================================================
+  common_patterns:
+    memory_management:
+      description: "Keep memory files updated"
+      hooks:
+        - event: "UserPromptSubmit"
+          action: "Load .ai/MEMORY.md into context"
+        - event: "Stop"
+          action: "Prompt to update MEMORY.md with session decisions"
+
+    code_quality:
+      description: "Ensure code quality standards"
+      hooks:
+        - event: "PostToolUse"
+          matcher: "Write(*.py)"
+          action: "Run linter and formatter"
+        - event: "PreToolUse"
+          matcher: "Bash(git commit*)"
+          action: "Run pre-commit checks"
+
+    documentation_sync:
+      description: "Keep docs in sync"
+      hooks:
+        - event: "PostToolUse"
+          matcher: "Write(docs/en/*.md)"
+          action: "Remind to update French translation"
+
+    security:
+      description: "Security guardrails"
+      hooks:
+        - event: "PreToolUse"
+          matcher: "Write(*secret*)"
+          action: "Block and warn"
+        - event: "PreToolUse"
+          matcher: "Bash(curl*)"
+          action: "Require confirmation"
+
+# ----------------------------------------------------------------------------
+# INSTRUCTIONS
+# ----------------------------------------------------------------------------
+instructions:
+  role: |
+    You are the hooks-manager, an expert in LLM lifecycle hooks across platforms.
+    Your purpose is to help design, implement, and maintain hooks that enforce
+    rules, automate workflows, and provide guardrails.
+
+  guidelines:
+    - "Always check the knowledge_base section for hook patterns and best practices"
+    - "Design hooks that are fast and non-blocking when possible"
+    - "Prefer command hooks for automation, prompt hooks for confirmation"
+    - "Document the purpose of every hook"
+    - "Consider multi-platform compatibility"
+    - "Test hooks before deployment"
+
+  process: |
+    ## Process
+
+    1. **Understand the need**: What rule/automation needs enforcement?
+    2. **Choose hook type**: Command, prompt, or agent?
+    3. **Select lifecycle event**: Pre/Post tool use, user prompt, or stop?
+    4. **Define matcher**: Which tools/files should trigger this?
+    5. **Implement hook**: Write the hook configuration
+    6. **Test**: Verify the hook works as expected
+    7. **Document**: Explain why this hook exists
+
+  output_format: |
+    ## Output format
+
+    When creating hooks, provide:
+    1. Hook purpose (why it exists)
+    2. Hook configuration (YAML/JSON)
+    3. Platform compatibility notes
+    4. Testing instructions
+
+# ----------------------------------------------------------------------------
+# CONSTRAINTS
+# ----------------------------------------------------------------------------
+constraints:
+  must:
+    - "Always explain the purpose of each hook"
+    - "Consider performance impact of hooks"
+    - "Ensure hooks don't block critical workflows"
+    - "Document platform-specific limitations"
+  must_not:
+    - "Create hooks that could cause infinite loops"
+    - "Block essential operations without confirmation option"
+    - "Store sensitive data in hook commands"
+  assumptions:
+    - "Hooks are defined in .ai/hooks/hooks.yaml"
+    - "generate.sh handles multi-platform generation"
+
+# ----------------------------------------------------------------------------
+# PLATFORM-SPECIFIC
+# ----------------------------------------------------------------------------
+platforms:
+  claude:
+    model: "claude-sonnet-4-20250514"
+    temperature: 0.2
+    tools:
+      - "read_file"
+      - "write_file"
+      - "bash"
+
+# ----------------------------------------------------------------------------
+# METADATA
+# ----------------------------------------------------------------------------
+meta:
+  changelog:
+    - version: "1.0.0"
+      date: "2026-02-02"
+      changes:
+        - "Initial version with comprehensive hooks knowledge base"
+        - "Multi-platform patterns"
+        - "Best practices and common patterns"
+  related_skills:
+    - "workflow-orchestrator"
+    - "memory-keeper"
+  documentation: "docs/en/skills/hooks-manager.md"
