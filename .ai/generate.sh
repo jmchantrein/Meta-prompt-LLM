@@ -43,11 +43,14 @@ readonly AGENTS_MD="${PROJECT_ROOT}/AGENTS.md"
 readonly CLAUDE_MD="${PROJECT_ROOT}/CLAUDE.md"
 readonly CLAUDE_AGENTS_DIR="${PROJECT_ROOT}/.claude/agents"
 readonly CURSOR_RULES="${PROJECT_ROOT}/.cursorrules"
+readonly CURSOR_HOOKS="${PROJECT_ROOT}/.cursor/hooks.json"
 readonly CONTINUE_RC="${PROJECT_ROOT}/.continuerc.json"
 readonly AIDER_CONF="${PROJECT_ROOT}/.aider.conf.yml"
 readonly OLLAMA_DIR="${PROJECT_ROOT}/ollama"
 readonly OPENCODE_AGENTS_DIR="${PROJECT_ROOT}/.opencode/agents"
+readonly OPENCODE_HOOKS_DIR="${PROJECT_ROOT}/.opencode/hooks"
 readonly CODEX_AGENTS_DIR="${PROJECT_ROOT}/.codex/agents"
+readonly CODEX_CONFIG="${PROJECT_ROOT}/codex.toml"
 readonly HOOKS_FILE="${SCRIPT_DIR}/hooks/hooks.yaml"
 readonly CLAUDE_SETTINGS="${PROJECT_ROOT}/.claude/settings.json"
 
@@ -527,6 +530,150 @@ generate_cursorrules() {
 
     write_file "${CURSOR_RULES}" "${content}"
     log_success "Generated .cursorrules"
+}
+
+# Generate Cursor hooks configuration
+# Cursor hooks format: https://cursor.com/docs/agent/hooks
+# Events: beforeSubmitPrompt, beforeShellExecution, beforeMCPExecution, beforeReadFile, afterFileEdit, stop
+generate_cursor_hooks() {
+    log_info "Generating Cursor hooks..."
+
+    if [[ ! -f "${HOOKS_FILE}" ]]; then
+        log_warn "Hooks file not found: ${HOOKS_FILE}"
+        log_warn "Skipping Cursor hooks generation"
+        return 0
+    fi
+
+    ensure_dir "$(dirname "${CURSOR_HOOKS}")"
+
+    # Map Claude Code events to Cursor events
+    # Claude Code -> Cursor:
+    #   UserPromptSubmit -> beforeSubmitPrompt
+    #   PreToolUse (Bash) -> beforeShellExecution
+    #   PreToolUse (Read) -> beforeReadFile
+    #   PostToolUse (Write/Edit) -> afterFileEdit
+    #   Stop -> stop
+
+    local hooks_json='{"$schema":"https://unpkg.com/cursor-hooks@latest/schema/hooks.schema.json","version":1,"hooks":{'
+    local first_event=true
+
+    # beforeSubmitPrompt - from UserPromptSubmit
+    local beforeSubmit=""
+    beforeSubmit=$(grep -A 50 "^UserPromptSubmit:" "${HOOKS_FILE}" 2>/dev/null | grep -E "command:" | head -1 | sed 's/.*command:[[:space:]]*//' | sed 's/^|.*//' | tr -d '"' | head -c 200)
+    if [[ -n "${beforeSubmit}" && "${beforeSubmit}" != "|" ]]; then
+        hooks_json+='"beforeSubmitPrompt":[{"command":"echo \"📋 Cursor: Prompt submitted\""}]'
+        first_event=false
+    fi
+
+    # beforeShellExecution - from PreToolUse Bash
+    if grep -q 'matcher:.*Bash' "${HOOKS_FILE}" 2>/dev/null; then
+        [[ "${first_event}" != "true" ]] && hooks_json+=","
+        hooks_json+='"beforeShellExecution":[{"command":"echo \"🔒 Cursor: Shell execution check\""}]'
+        first_event=false
+    fi
+
+    # afterFileEdit - from PostToolUse Write
+    if grep -q 'matcher:.*Write' "${HOOKS_FILE}" 2>/dev/null; then
+        [[ "${first_event}" != "true" ]] && hooks_json+=","
+        hooks_json+='"afterFileEdit":[{"command":"echo \"📝 Cursor: File edited\""}]'
+        first_event=false
+    fi
+
+    # stop - from Stop event
+    if grep -q "^Stop:" "${HOOKS_FILE}" 2>/dev/null; then
+        [[ "${first_event}" != "true" ]] && hooks_json+=","
+        hooks_json+='"stop":[{"command":"echo \"✅ Cursor: Task completed\""}]'
+        first_event=false
+    fi
+
+    hooks_json+='}}'
+
+    # Format JSON if jq is available
+    if command_exists jq; then
+        hooks_json=$(echo "${hooks_json}" | jq '.' 2>/dev/null) || true
+    fi
+
+    write_file "${CURSOR_HOOKS}" "${hooks_json}"
+    log_success "Generated Cursor hooks"
+}
+
+# Generate OpenCode hooks scripts
+# OpenCode uses shell scripts in .opencode/hooks/ directory
+generate_opencode_hooks() {
+    log_info "Generating OpenCode hooks..."
+
+    if [[ ! -f "${HOOKS_FILE}" ]]; then
+        log_warn "Hooks file not found: ${HOOKS_FILE}"
+        log_warn "Skipping OpenCode hooks generation"
+        return 0
+    fi
+
+    ensure_dir "${OPENCODE_HOOKS_DIR}"
+
+    # Create a general hook script for OpenCode
+    local hook_script='#!/usr/bin/env bash
+# '"${GENERATED_MARKER}"'
+# OpenCode hook script - runs on various lifecycle events
+# Place in .opencode/hooks/ and configure in oh-my-opencode.json
+
+HOOK_EVENT="${1:-unknown}"
+
+case "$HOOK_EVENT" in
+    "chat.message")
+        echo "📋 [OpenCode] Message received"
+        ;;
+    "session.create")
+        echo "🚀 [OpenCode] Session started"
+        cat .ai/MEMORY.md 2>/dev/null || echo "No memory file found"
+        ;;
+    "session.error")
+        echo "❌ [OpenCode] Session error"
+        ;;
+    *)
+        echo "ℹ️ [OpenCode] Event: $HOOK_EVENT"
+        ;;
+esac
+'
+
+    write_file "${OPENCODE_HOOKS_DIR}/lifecycle.sh" "${hook_script}"
+
+    # Make executable
+    if [[ "${DRY_RUN}" != "true" ]]; then
+        chmod +x "${OPENCODE_HOOKS_DIR}/lifecycle.sh" 2>/dev/null || true
+    fi
+
+    log_success "Generated OpenCode hooks"
+}
+
+# Generate Codex CLI configuration with notify
+# Codex uses config.toml with notify option
+generate_codex_config() {
+    log_info "Generating Codex config..."
+
+    local content='# '"${GENERATED_MARKER}"'
+# Codex CLI configuration
+# https://developers.openai.com/codex/config-reference/
+
+[agent]
+# Model configuration
+model = "gpt-4"
+
+[notifications]
+# Notify on agent turn complete
+# Currently the only supported event
+notify = ["bash", "-c", "echo \"✅ [Codex] Agent turn completed\""]
+
+[context]
+# Load project memory
+auto_context = [".ai/MEMORY.md", "AGENTS.md"]
+
+[sandbox]
+# Enable sandbox mode for safety
+enabled = true
+'
+
+    write_file "${CODEX_CONFIG}" "${content}"
+    log_success "Generated Codex config"
 }
 
 # Generate .continuerc.json
@@ -1073,11 +1220,14 @@ main() {
     generate_claude_agents
     generate_claude_hooks
     generate_cursorrules
+    generate_cursor_hooks
     generate_continuerc
     generate_aider_conf
     generate_ollama_modelfiles
     generate_opencode_agents
+    generate_opencode_hooks
     generate_codex_agents
+    generate_codex_config
 
     # Update version
     update_version
