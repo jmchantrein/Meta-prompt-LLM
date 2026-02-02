@@ -49,6 +49,11 @@ Agent d'auto-amélioration du projet Meta-prompt-LLM
 Manages EN/FR translation and documentation synchronization
 
 
+### workflow-documenter
+
+Génère et maintient la documentation des workflows agents/skills/hooks
+
+
 ### workflow-orchestrator
 
 Orchestrates multi-agent workflows and validation sequences

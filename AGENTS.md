@@ -117,6 +117,7 @@ At session start, if this prompt has a META block:
 | prompt-validator | Validates prompts against schema and quality standards | validation |
 | self-improver | Agent d'auto-amélioration du projet Meta-prompt-LLM | core |
 | translator | Manages EN/FR translation and documentation synchronization | translation |
+| workflow-documenter | Génère et maintient la documentation des workflows agents/skills/hooks | documentation |
 | workflow-orchestrator | Orchestrates multi-agent workflows and validation sequences | core |
 
 ---

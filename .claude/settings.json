@@ -128,6 +128,33 @@
             "command": "echo \"📝 Session ending. Consider updating .ai/MEMORY.md with important decisions.\""
           }
         ]
+      },
+      {
+        "matcher": "Write(prompts/fr/metametaprompts/data/skills/*.yaml)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"📊 Skill modified. Remember to update workflow documentation:\"\necho \"   - Run /update-workflows or invoke workflow-documenter\"\necho \"   - Update docs/*/workflows.md\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write(prompts/fr/metametaprompts/data/hooks/*.yaml)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"📊 Hooks modified. Remember to update workflow documentation:\"\necho \"   - Run /update-workflows or invoke workflow-documenter\"\necho \"   - Update docs/*/workflows.md\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write(prompts/**/*.md)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"📋 Prompt modified. Ensure META block includes dependencies_urls:\"\necho \"   - skills: URLs to required skills\"\necho \"   - hooks: URL to hooks.yaml\"\necho \"   - rules: URL to AGENTS.md\""
+          }
+        ]
       }
     ]
   }

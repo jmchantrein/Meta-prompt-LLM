@@ -63,6 +63,25 @@ model_hints:
   temperature: 0.3
 ---
 
+<!-- META
+prompt_id: "prompt-name"
+version: "1.0.0"
+source_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/en/[category]/[prompt-name]/[prompt-name].md"
+applicable_rules: ["rule-0", "rule-1"]
+applicable_skills: ["prompt-validator"]
+
+# URLs to dependencies (source of truth)
+dependencies_urls:
+  skills:
+    - "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/skills/prompt-validator.yaml"
+  hooks:
+    - "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/hooks/hooks.yaml"
+  rules:
+    - "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/AGENTS.md"
+  related_prompts:
+    - "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/en/[category]/related-prompt/related-prompt.md"
+-->
+
 > [Version française](../../../fr/[category]/[prompt-name]/[prompt-name].md)
 
 # Prompt name

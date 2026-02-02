@@ -216,3 +216,45 @@ validation:
         - type: "agent"
           agent: "link-checker"
           prompt: "Check internal links in the modified file"
+
+# ----------------------------------------------------------------------------
+# WORKFLOW DOCUMENTATION HOOKS
+# ----------------------------------------------------------------------------
+workflow_documentation:
+  PostToolUse:
+    # Update workflow docs when skills change
+    - name: "update-workflows-on-skill-change"
+      description: "Trigger workflow documentation update when skills are modified"
+      enabled: true
+      matcher: "Write(prompts/fr/metametaprompts/data/skills/*.yaml)"
+      hooks:
+        - type: "command"
+          command: |
+            echo "📊 Skill modified. Remember to update workflow documentation:"
+            echo "   - Run /update-workflows or invoke workflow-documenter"
+            echo "   - Update docs/*/workflows.md"
+
+    # Update workflow docs when hooks change
+    - name: "update-workflows-on-hooks-change"
+      description: "Trigger workflow documentation update when hooks are modified"
+      enabled: true
+      matcher: "Write(prompts/fr/metametaprompts/data/hooks/*.yaml)"
+      hooks:
+        - type: "command"
+          command: |
+            echo "📊 Hooks modified. Remember to update workflow documentation:"
+            echo "   - Run /update-workflows or invoke workflow-documenter"
+            echo "   - Update docs/*/workflows.md"
+
+    # Remind to add dependencies_urls when prompts are modified
+    - name: "check-dependencies-urls"
+      description: "Remind to add dependencies_urls in prompt META blocks"
+      enabled: true
+      matcher: "Write(prompts/**/*.md)"
+      hooks:
+        - type: "command"
+          command: |
+            echo "📋 Prompt modified. Ensure META block includes dependencies_urls:"
+            echo "   - skills: URLs to required skills"
+            echo "   - hooks: URL to hooks.yaml"
+            echo "   - rules: URL to AGENTS.md"
