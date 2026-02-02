@@ -49,6 +49,9 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | 2026-02-02 | SessionStart hook needed | Initialize session BEFORE user input |
 | 2026-02-02 | Stop hook for consistency | Agent-based check after each Claude response |
 | 2026-02-02 | Visual feedback for agents | Show agent hierarchy/nesting during session |
+| 2026-02-02 | Multi-platform hook generation | generate.sh creates configs for all supported LLMs |
+| 2026-02-02 | Platform detection at SessionStart | Show LLM capabilities/limitations automatically |
+| 2026-02-02 | Maximize LLM support rule | Always implement for ALL platforms, not just Claude |
 
 ## Evolution history
 
@@ -69,6 +72,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | 2026-02-01 | - | 15bd248→0fa9ba7 | Socratic-tutor prompt, audit fixes |
 | 2026-02-02 | PR #4 | 2994926→d1876f9 | KISS refactor, hooks-manager skill |
 | 2026-02-02 | PR #5 | fc1c3db→c1e0b88 | Workflow-documenter, architecture docs |
+| 2026-02-02 | bq507 | 5c703b4→a5cfb24 | Complete hooks lifecycle, multi-platform generation, platform detection |
 
 ## Lessons learned
 
@@ -82,6 +86,8 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | 2026-02-02 | SessionStart exists | Hook event runs BEFORE user input, not just UserPromptSubmit |
 | 2026-02-02 | Stop hook for consistency | Agent-type hook can validate and continue if needed |
 | 2026-02-02 | MEMORY.md not auto-updated | Sessions without memory-keeper invocation lose context |
+| 2026-02-02 | Maximize LLM support always | Never implement for one platform only; always all supported LLMs |
+| 2026-02-02 | Platform detection proactive | Detect LLM at session start, show limitations without asking |
 
 ## Current context
 
@@ -89,7 +95,9 @@ A framework for creating, modifying, and maintaining prompt collections with:
 
 - **[DONE]** Complete hooks lifecycle (SessionStart, Stop, SessionEnd)
 - **[DONE]** Visual feedback system for agent hierarchy
-- **[IN PROGRESS]** Make self-improver fully functional
+- **[DONE]** Multi-platform hook generation (Cursor, OpenCode, Codex)
+- **[DONE]** Platform detection at SessionStart with capabilities/limitations
+- **[DONE]** Self-improver skill functional with dependencies.yaml
 - GitHub Pages setup for data access
 
 ### Pending decisions
@@ -128,6 +136,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 
 ```
 ┌─ SessionStart ─────────────────────────────────────────────┐
+│  📋 [platform-detect] Détecte LLM et affiche limitations  │
 │  🔧 [data-sync] Vérifie synchronisation data/ → .ai/      │
 │  🔧 [generate] Vérifie si régénération nécessaire         │
 │  🧠 [memory-keeper] Charge .ai/MEMORY.md dans le contexte │
@@ -158,6 +167,17 @@ A framework for creating, modifying, and maintaining prompt collections with:
 │  📝 Rappel final de mise à jour mémoire                   │
 └────────────────────────────────────────────────────────────┘
 ```
+
+## Platform Support Matrix
+
+| Platform | Rating | Limitations |
+|----------|--------|-------------|
+| Claude Code | ★★★★★ | None - all 6 events + agent hooks |
+| Cursor | ★★★★☆ | No SessionStart, no agent hooks |
+| OpenCode | ★★★☆☆ | Requires oh-my-opencode plugin |
+| Codex CLI | ★★☆☆☆ | Only notify on agent-turn-complete |
+| Aider | ★☆☆☆☆ | No hooks, only auto_lint/test_cmd |
+| Continue.dev | ★☆☆☆☆ | Data events only, no command hooks |
 
 ## Visual Feedback Convention
 
