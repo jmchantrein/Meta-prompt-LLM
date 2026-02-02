@@ -30,6 +30,10 @@
       "description": "Agent d'auto-amélioration du projet Meta-prompt-LLM"
     },
     {
+      "name": "session-status",
+      "description": "Generates end-of-response visual summary of skills, hooks, and commands"
+    },
+    {
       "name": "translator",
       "description": "Manages EN/FR translation and documentation synchronization"
     },

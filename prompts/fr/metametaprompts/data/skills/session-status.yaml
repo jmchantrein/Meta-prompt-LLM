@@ -1,0 +1,144 @@
+# Session Status Skill
+# ============================================================================
+# Generates visual summary of available skills, hooks, and commands
+# at the end of each Claude response.
+#
+# This skill is triggered by a Stop hook to provide consistent visibility
+# into the system's capabilities.
+# ============================================================================
+
+name: "session-status"
+version: "1.0.0"
+description: "Generates end-of-response visual summary of skills, hooks, and commands"
+
+author: "Claude"
+created: "2026-02-02"
+updated: "2026-02-02"
+
+category: "core"
+tags:
+  - "visibility"
+  - "summary"
+  - "hooks"
+  - "skills"
+
+# ----------------------------------------------------------------------------
+# ACTIVATION
+# ----------------------------------------------------------------------------
+triggers:
+  patterns: []
+  keywords:
+    - "status"
+    - "synthese"
+    - "summary"
+  commands:
+    - "/status"
+  automatic: false  # Triggered by Stop hook, not automatically
+
+# ----------------------------------------------------------------------------
+# CONTEXT
+# ----------------------------------------------------------------------------
+context:
+  files:
+    - ".ai/MEMORY.md"
+    - ".ai/skills/*.yaml"
+    - ".ai/hooks/hooks.yaml"
+  environment: []
+  dependencies: []
+
+# ----------------------------------------------------------------------------
+# INSTRUCTIONS
+# ----------------------------------------------------------------------------
+instructions:
+  role: |
+    Tu es l'agent de synthese visuelle du projet Meta-prompt-LLM.
+    Ton role est d'afficher un resume clair et compact des capacites du systeme.
+
+  guidelines:
+    - "Toujours afficher la synthese dans un format compact et lisible"
+    - "Utiliser des emojis pour faciliter le scan visuel"
+    - "Grouper les informations par categorie (skills, hooks, commandes)"
+    - "Garder la synthese courte (max 30 lignes)"
+
+  process: |
+    ## Process
+
+    1. Lister les skills disponibles depuis .ai/skills/
+    2. Resumer le lifecycle des hooks
+    3. Afficher les commandes utiles
+    4. Formater en markdown compact
+
+  output_format: |
+    ## Format de sortie
+
+    ```
+    ## 📊 SYNTHESE SYSTEME META-PROMPT-LLM
+
+    ### 🎯 Skills (N)
+    | Skill | Description |
+    |-------|-------------|
+    | name  | description |
+
+    ### 🔄 Hooks Lifecycle
+    [Diagramme compact ASCII]
+
+    ### 📋 Commandes
+    [Liste des commandes utiles]
+    ```
+
+  examples: []
+
+# ----------------------------------------------------------------------------
+# CONSTRAINTS
+# ----------------------------------------------------------------------------
+constraints:
+  must:
+    - "Toujours afficher apres le separateur ---"
+    - "Garder le format compact et consistent"
+    - "Inclure les 3 sections: Skills, Hooks, Commandes"
+  must_not:
+    - "Ne jamais depasser 40 lignes"
+    - "Ne jamais inclure de details techniques complexes"
+  assumptions:
+    - "Les fichiers .ai/skills/*.yaml sont a jour"
+
+# ----------------------------------------------------------------------------
+# PLATFORM-SPECIFIC
+# ----------------------------------------------------------------------------
+platforms:
+  claude:
+    model: "claude-sonnet-4-20250514"
+    max_tokens: 1024
+    temperature: 0
+    tools:
+      - "Glob"
+      - "Read"
+
+# ----------------------------------------------------------------------------
+# HOOK INTEGRATION
+# ----------------------------------------------------------------------------
+# This skill is designed to be called by a Stop hook.
+# The hook should:
+# 1. Run AFTER consistency-check
+# 2. Output the summary to additionalContext
+# 3. Never block the session (always return ok: true)
+
+hook_integration:
+  event: "Stop"
+  type: "command"  # Use command for performance (not agent)
+  order: 2  # After consistency-check (order 1)
+  blocking: false
+
+# ----------------------------------------------------------------------------
+# METADATA
+# ----------------------------------------------------------------------------
+meta:
+  changelog:
+    - version: "1.0.0"
+      date: "2026-02-02"
+      changes:
+        - "Initial version - visual summary at end of response"
+  related_skills:
+    - "memory-keeper"
+    - "workflow-orchestrator"
+  documentation: null

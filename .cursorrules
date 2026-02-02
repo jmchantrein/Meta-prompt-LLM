@@ -44,6 +44,11 @@ Validates prompts against schema and quality standards
 Agent d'auto-amélioration du projet Meta-prompt-LLM
 
 
+### session-status
+
+Generates end-of-response visual summary of skills, hooks, and commands
+
+
 ### translator
 
 Manages EN/FR translation and documentation synchronization

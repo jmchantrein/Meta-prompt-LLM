@@ -116,6 +116,7 @@ At session start, if this prompt has a META block:
 | memory-keeper | Manages persistent project memory between sessions | core |
 | prompt-validator | Validates prompts against schema and quality standards | validation |
 | self-improver | Agent d'auto-amélioration du projet Meta-prompt-LLM | core |
+| session-status | Generates end-of-response visual summary of skills, hooks, and commands | core |
 | translator | Manages EN/FR translation and documentation synchronization | translation |
 | workflow-documenter | Génère et maintient la documentation des workflows agents/skills/hooks | documentation |
 | workflow-orchestrator | Orchestrates multi-agent workflows and validation sequences | core |
