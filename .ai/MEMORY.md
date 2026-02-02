@@ -76,6 +76,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | 2026-02-02 | PR #4 | 2994926→d1876f9 | KISS refactor, hooks-manager skill |
 | 2026-02-02 | PR #5 | fc1c3db→c1e0b88 | Workflow-documenter, architecture docs |
 | 2026-02-02 | PR #6 (bq507) | 5c703b4→a5cfb24 | Complete hooks lifecycle, multi-platform generation, platform detection (branche nommée "french-support" par erreur) |
+| 2026-02-02 | 4fPY2 | 5b04efe→ae3f644 | Clarified 6 MEMORY.md inconsistencies, added session-status skill + Stop hook |
 
 ## Lessons learned
 
@@ -131,6 +132,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | memory-keeper | Persistent memory management | Active |
 | prompt-validator | Prompt validation against schema | Active |
 | self-improver | Project self-improvement and rule propagation | Active |
+| session-status | End-of-response visual summary via Stop hook | Active |
 | translator | EN/FR translation, sync | Active |
 | workflow-documenter | Generates workflow documentation | Active |
 | workflow-orchestrator | Multi-agent orchestration | Active |
@@ -173,6 +175,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 ┌─ Stop ─────────────────────────────────────────────────────┐
 │  ✅ [consistency-check] Agent vérifie si MEMORY.md        │
 │     doit être mis à jour. Si oui, continue la session.    │
+│  📊 [session-status] Affiche synthèse skills/hooks/cmds   │
 │  Note: hooks utilisateur (~/.claude/) peuvent s'ajouter   │
 └────────────────────────────────────────────────────────────┘
                             ↓
@@ -210,4 +213,4 @@ A framework for creating, modifying, and maintaining prompt collections with:
 
 ---
 
-*Last updated: 2026-02-02 by memory-keeper (session 4fPY2: clarified 6 inconsistencies, added end-of-response summary preference)*
+*Last updated: 2026-02-02 by memory-keeper (session 4fPY2: clarified 6 inconsistencies, session-status skill + Stop hook)*
