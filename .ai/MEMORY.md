@@ -76,7 +76,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | 2026-02-02 | PR #4 | 2994926→d1876f9 | KISS refactor, hooks-manager skill |
 | 2026-02-02 | PR #5 | fc1c3db→c1e0b88 | Workflow-documenter, architecture docs |
 | 2026-02-02 | PR #6 (bq507) | 5c703b4→a5cfb24 | Complete hooks lifecycle, multi-platform generation, platform detection (branche nommée "french-support" par erreur) |
-| 2026-02-02 | 4fPY2 | 5b04efe→ae3f644 | Clarified 6 MEMORY.md inconsistencies, added session-status skill + Stop hook |
+| 2026-02-02 | 4fPY2 | 5b04efe→825b6b5 | Clarified 6 inconsistencies, session-status skill, coherence-check hook, visual-feedback hooks |
 
 ## Lessons learned
 
@@ -95,6 +95,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | 2026-02-02 | Skill vs Agent terminology | Skill = YAML source file, Agent = Claude Code runtime. Interchangeable. |
 | 2026-02-02 | VERSION file ≠ project version | .ai/VERSION is hash for generate.sh change detection, not semver |
 | 2026-02-02 | User hooks can extend project hooks | ~/.claude/ hooks (like git-check) add to project .claude/settings.json |
+| 2026-02-02 | Visual feedback via PostToolUse | Hooks can show context (🧠/📦/🔧) based on file patterns |
 
 ## Current context
 
@@ -214,4 +215,4 @@ A framework for creating, modifying, and maintaining prompt collections with:
 
 ---
 
-*Last updated: 2026-02-02 by memory-keeper (session 4fPY2: clarified 6 inconsistencies, session-status skill + Stop hook)*
+*Last updated: 2026-02-02 by memory-keeper (session 4fPY2: 6 inconsistencies fixed, session-status, coherence-check, visual-feedback hooks)*
