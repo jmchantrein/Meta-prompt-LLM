@@ -148,6 +148,43 @@ SessionStart:
           echo ""
 
   # ----------------------------
+  # 0b. Workflow orchestrator - Session driver
+  # ----------------------------
+  - name: "init-workflow-orchestrator"
+    description: "Orchestrate session startup workflow"
+    enabled: true
+    matcher: "startup"
+    hooks:
+      - type: "agent"
+        timeout: 30
+        prompt: |
+          Tu es le workflow-orchestrator du projet Meta-prompt-LLM.
+
+          ## Contexte de démarrage
+
+          Cette session vient de démarrer. Analyse rapidement le contexte
+          et détermine le workflow approprié.
+
+          ## Actions immédiates
+
+          1. Vérifie si des changements non commités existent (git status)
+          2. Vérifie si des skills ont été modifiés depuis la dernière session
+          3. Détermine si un workflow spécifique est nécessaire
+
+          ## Réponse
+
+          Retourne un JSON indiquant le workflow détecté:
+
+          {
+            "workflow": "normal|pre-commit|resume-work",
+            "context": "[description courte]",
+            "pending_tasks": ["task1", "task2"]
+          }
+
+          Si tout est normal, retourne:
+          { "workflow": "normal", "context": "Session prête", "pending_tasks": [] }
+
+  # ----------------------------
   # 1. Data sync check
   # ----------------------------
   - name: "init-data-sync"
@@ -285,7 +322,7 @@ SessionStart:
           done
 
           # Skills referenced in hooks (by name pattern)
-          HOOKED_SKILLS="data-sync memory-keeper self-improver session-status inclusivity-reviewer translator"
+          HOOKED_SKILLS="data-sync memory-keeper self-improver session-status inclusivity-reviewer translator link-checker prompt-validator workflow-documenter hooks-manager package-manager prompt-engineer workflow-orchestrator codebase-analyst"
 
           # Find orphans
           ORPHANS=""
@@ -497,7 +534,7 @@ PostToolUse:
           FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
 
           if echo "$FILE_PATH" | grep -qE '/fr/.*\.md$'; then
-            echo "🔍 [inclusivity] Contenu FR modifié. Rappel: écriture inclusive requise."
+            echo "🔍 [inclusivity-reviewer] Contenu FR modifié. Rappel: écriture inclusive requise."
           fi
 
   # ----------------------------
@@ -547,7 +584,7 @@ PostToolUse:
               echo "📋 [config] Lecture configuration"
               ;;
             */fr/*.md)
-              echo "🔍 [inclusivity] Lecture contenu FR"
+              echo "🔍 [inclusivity-reviewer] Lecture contenu FR"
               ;;
             */en/*.md)
               echo "🌍 [translator] Lecture contenu EN"
@@ -580,13 +617,214 @@ PostToolUse:
               ;;
           esac
 
+  # ----------------------------
+  # Link checker reminder
+  # ----------------------------
+  - name: "link-checker-reminder"
+    description: "Remind to check links when markdown files are modified"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          # Check if markdown file with potential links
+          if echo "$FILE_PATH" | grep -qE '\.(md|markdown)$'; then
+            # Exclude generated files
+            if ! echo "$FILE_PATH" | grep -qE '^\.ai/|^\.claude/|^\.cursor/'; then
+              echo "🔗 [link-checker] Fichier markdown modifié. Pensez à /lint pour vérifier les liens."
+            fi
+          fi
+
+  # ----------------------------
+  # Prompt validator reminder
+  # ----------------------------
+  - name: "prompt-validator-reminder"
+    description: "Remind to validate prompts when modified"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          if echo "$FILE_PATH" | grep -qE '^prompts/.*/.*\.md$'; then
+            # Exclude template
+            if ! echo "$FILE_PATH" | grep -qE '_TEMPLATE\.md$'; then
+              echo "✅ [prompt-validator] Prompt modifié. Pensez à /validate pour vérifier le format."
+            fi
+          fi
+
+  # ----------------------------
+  # Workflow documenter reminder
+  # ----------------------------
+  - name: "workflow-documenter-reminder"
+    description: "Remind to update workflow docs when skills/hooks change"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          if echo "$FILE_PATH" | grep -qE '(skills|hooks)/.*\.yaml$'; then
+            echo "📊 [workflow-documenter] Skills/hooks modifiés. Documentation workflow à mettre à jour."
+          fi
+
+  # ----------------------------
+  # Hooks manager reminder
+  # ----------------------------
+  - name: "hooks-manager-reminder"
+    description: "Remind about hooks manager when hooks are modified"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          if echo "$FILE_PATH" | grep -qE 'hooks/.*\.yaml$'; then
+            echo "🔧 [hooks-manager] Hooks modifiés. Multi-platform configs seront régénérés."
+          fi
+
+  # ----------------------------
+  # Package manager reminder (on external install)
+  # ----------------------------
+  - name: "package-manager-reminder"
+    description: "Remind about package manager for external skills"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          if echo "$FILE_PATH" | grep -qE 'data/(skills|hooks|commands)/external/'; then
+            echo "📦 [package-manager] Package externe modifié. Utilisez /pm-list pour voir les packages installés."
+          fi
+
+  # ----------------------------
+  # Prompt engineer suggestion
+  # ----------------------------
+  - name: "prompt-engineer-suggestion"
+    description: "Suggest prompt optimization for new/modified prompts"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          # Check if creating/modifying a prompt file
+          if echo "$FILE_PATH" | grep -qE '^prompts/[^/]+/[^/]+/[^/]+/[^/]+\.md$'; then
+            # Exclude templates and READMEs
+            if ! echo "$FILE_PATH" | grep -qE '(_TEMPLATE|README)\.md$'; then
+              echo "🎯 [prompt-engineer] Prompt créé/modifié. Utilisez /optimize-prompt pour améliorer sa structure."
+            fi
+          fi
+
 # ============================================================================
 # STOP - Quand Claude finit de répondre
 # ============================================================================
-# Ce hook vérifie si des actions de consistance sont nécessaires.
-# Si oui, il retourne { "ok": false, "reason": "..." } pour continuer.
+# IMPORTANT: session-status s'exécute EN PREMIER pour toujours afficher le résumé,
+# puis consistency-check peut décider si on continue ou pas.
 
 Stop:
+  # ----------------------------
+  # Session status summary (FIRST - always displays)
+  # ----------------------------
+  - name: "session-status-summary"
+    description: "Display visual summary of skills, hooks, and commands"
+    enabled: true
+    hooks:
+      - type: "command"
+        timeout: 15
+        command: |
+          # Session Status Summary - Generated by session-status skill
+          # This provides visibility into the system's capabilities
+
+          echo ""
+          echo "---"
+          echo ""
+          echo "## 📊 SYNTHÈSE SYSTÈME META-PROMPT-LLM"
+          echo ""
+
+          SKILLS_DIR=".ai/skills"
+          HOOKED_SKILLS="data-sync memory-keeper self-improver session-status inclusivity-reviewer translator link-checker prompt-validator workflow-documenter hooks-manager package-manager prompt-engineer workflow-orchestrator codebase-analyst"
+
+          # Count skills
+          SKILL_COUNT=$(find "$SKILLS_DIR" -name "*.yaml" ! -name "_TEMPLATE.yaml" 2>/dev/null | wc -l)
+
+          echo "### 🎯 Skills ($SKILL_COUNT)"
+          echo ""
+          echo "| Skill | Description | Hook |"
+          echo "|-------|-------------|------|"
+
+          if [ -d "$SKILLS_DIR" ]; then
+            for skill_file in "$SKILLS_DIR"/*.yaml; do
+              [ -f "$skill_file" ] || continue
+              [ "$(basename "$skill_file")" = "_TEMPLATE.yaml" ] && continue
+
+              skill_name=$(grep -m1 '^name:' "$skill_file" | sed 's/name:[[:space:]]*"\?\([^"]*\)"\?/\1/')
+              skill_desc=$(grep -m1 '^description:' "$skill_file" | sed 's/description:[[:space:]]*"\?\([^"]*\)"\?/\1/' | cut -c1-35)
+
+              # Check if hooked
+              is_hooked="❌"
+              for h in $HOOKED_SKILLS; do
+                [ "$skill_name" = "$h" ] && is_hooked="✅" && break
+              done
+
+              [ -n "$skill_name" ] && echo "| \`$skill_name\` | $skill_desc | $is_hooked |"
+            done
+          fi
+
+          echo ""
+          echo "### 🔄 Hooks Lifecycle"
+          echo ""
+          echo "\`\`\`"
+          echo "SessionStart ─┬─ 📋 platform-detect"
+          echo "              ├─ 🔧 data-sync"
+          echo "              ├─ 🔧 generate-check"
+          echo "              ├─ 🧠 load-memory"
+          echo "              ├─ 🔄 self-improver"
+          echo "              └─ 🔍 coherence-check"
+          echo "      ↓"
+          echo "UserPromptSubmit ── 📋 context-reminder"
+          echo "      ↓"
+          echo "PreToolUse ───── 🛡️ guardrails (.env/secrets/git/rm)"
+          echo "      ↓"
+          echo "PostToolUse ──┬─ 📦 auto-generate ←──┐"
+          echo "              ├─ 🔧 auto-sync    ←──┤ loop risk"
+          echo "              ├─ 🔍 inclusivity     │ (protected)"
+          echo "              └─ 🌍 translator      │"
+          echo "      ↓                              │"
+          echo "Stop ─────────┬─ 📊 session-status [CMD] ← FIRST"
+          echo "              └─ ✅ consistency [AGENT]"
+          echo "      ↓"
+          echo "SessionEnd ───── 📝 final-reminder"
+          echo "\`\`\`"
+          echo ""
+          echo "### 📋 Commandes"
+          echo ""
+          echo "\`\`\`bash"
+          echo ".ai/generate.sh          # Régénère tout"
+          echo ".ai/generate.sh --check  # Vérifie"
+          echo "cat .ai/MEMORY.md        # Mémoire"
+          echo "\`\`\`"
+          echo ""
+          echo "**Légende**: Hook=✅ (automatique) | Hook=❌ (manuel)"
+          echo ""
+
+  # ----------------------------
+  # Consistency check (SECOND - can interrupt if needed)
+  # ----------------------------
   - name: "consistency-check"
     description: "Check if memory or consistency actions are needed"
     enabled: true
@@ -637,91 +875,6 @@ Stop:
           { "ok": true }
           ou
           { "ok": false, "reason": "🧠 [memory-keeper] [description de ce qui doit être ajouté à MEMORY.md]" }
-
-  # ----------------------------
-  # Session status summary (after consistency-check)
-  # ----------------------------
-  - name: "session-status-summary"
-    description: "Display visual summary of skills, hooks, and commands"
-    enabled: true
-    hooks:
-      - type: "command"
-        timeout: 15
-        command: |
-          # Session Status Summary - Generated by session-status skill
-          # This provides visibility into the system's capabilities
-
-          echo ""
-          echo "---"
-          echo ""
-          echo "## 📊 SYNTHÈSE SYSTÈME META-PROMPT-LLM"
-          echo ""
-
-          SKILLS_DIR=".ai/skills"
-          HOOKED_SKILLS="data-sync memory-keeper self-improver session-status inclusivity-reviewer translator"
-
-          # Count skills
-          SKILL_COUNT=$(find "$SKILLS_DIR" -name "*.yaml" ! -name "_TEMPLATE.yaml" 2>/dev/null | wc -l)
-
-          echo "### 🎯 Skills ($SKILL_COUNT)"
-          echo ""
-          echo "| Skill | Description | Hook |"
-          echo "|-------|-------------|------|"
-
-          if [ -d "$SKILLS_DIR" ]; then
-            for skill_file in "$SKILLS_DIR"/*.yaml; do
-              [ -f "$skill_file" ] || continue
-              [ "$(basename "$skill_file")" = "_TEMPLATE.yaml" ] && continue
-
-              skill_name=$(grep -m1 '^name:' "$skill_file" | sed 's/name:[[:space:]]*"\?\([^"]*\)"\?/\1/')
-              skill_desc=$(grep -m1 '^description:' "$skill_file" | sed 's/description:[[:space:]]*"\?\([^"]*\)"\?/\1/' | cut -c1-35)
-
-              # Check if hooked
-              is_hooked="❌"
-              for h in $HOOKED_SKILLS; do
-                [ "$skill_name" = "$h" ] && is_hooked="✅" && break
-              done
-
-              [ -n "$skill_name" ] && echo "| \`$skill_name\` | $skill_desc | $is_hooked |"
-            done
-          fi
-
-          echo ""
-          echo "### 🔄 Hooks Lifecycle"
-          echo ""
-          echo "\`\`\`"
-          echo "SessionStart ─┬─ 📋 platform-detect"
-          echo "              ├─ 🔧 data-sync"
-          echo "              ├─ 🔧 generate-check"
-          echo "              ├─ 🧠 load-memory"
-          echo "              ├─ 🔄 self-improver"
-          echo "              └─ 🔍 coherence-check ← NEW"
-          echo "      ↓"
-          echo "UserPromptSubmit ── 📋 context-reminder"
-          echo "      ↓"
-          echo "PreToolUse ───── 🛡️ guardrails (.env/secrets/git/rm)"
-          echo "      ↓"
-          echo "PostToolUse ──┬─ 📦 auto-generate ←──┐"
-          echo "              ├─ 🔧 auto-sync    ←──┤ loop risk"
-          echo "              ├─ 🔍 inclusivity     │ (protected)"
-          echo "              └─ 🌍 translator      │"
-          echo "      ↓                              │"
-          echo "Stop ─────────┬─ ✅ consistency [AGENT]"
-          echo "              └─ 📊 session-status [CMD]"
-          echo "      ↓"
-          echo "SessionEnd ───── 📝 final-reminder"
-          echo "\`\`\`"
-          echo ""
-          echo "### 📋 Commandes"
-          echo ""
-          echo "\`\`\`bash"
-          echo ".ai/generate.sh          # Régénère tout"
-          echo ".ai/generate.sh --check  # Vérifie"
-          echo "cat .ai/MEMORY.md        # Mémoire"
-          echo "\`\`\`"
-          echo ""
-          echo "**Légende**: Hook=✅ (automatique) | Hook=❌ (manuel)"
-          echo ""
 
 # ============================================================================
 # SESSION END - Quand la session se termine
@@ -774,7 +927,7 @@ SessionEnd:
 #   [memory-keeper]      - Gestion mémoire
 #   [self-improver]      - Auto-amélioration
 #   [consistency-check]  - Vérification post-réponse
-#   [inclusivity]        - Écriture inclusive
+#   [inclusivity-reviewer] - Écriture inclusive
 #   [translator]         - Synchronisation EN/FR
 #
 # IMBRICATION (THREAD LEVEL):

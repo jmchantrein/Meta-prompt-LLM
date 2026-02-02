@@ -17,12 +17,14 @@ cat .ai/MEMORY.md
 .ai/generate.sh
 ```
 
-## Available skills- **data-sync**: Synchronizes data/ to project files and validates integrity
+## Available skills- **codebase-analyst**: Deep codebase analysis for refactoring and architecture review
+- **data-sync**: Synchronizes data/ to project files and validates integrity
 - **hooks-manager**: Manages LLM hooks knowledge base and multi-platform hook generation
 - **inclusivity-reviewer**: Reviews content for inclusive writing and modern terminology
 - **link-checker**: Validates internal links and paths in markdown files
 - **memory-keeper**: Manages persistent project memory between sessions
 - **package-manager**: Manages external skills, hooks, and commands from registries
+- **prompt-engineer**: Transforms and optimizes prompts using research-backed frameworks
 - **prompt-validator**: Validates prompts against schema and quality standards
 - **self-improver**: Agent d'auto-amélioration du projet Meta-prompt-LLM
 - **session-status**: Generates end-of-response visual summary of skills, hooks, and commands

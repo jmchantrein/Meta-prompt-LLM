@@ -105,6 +105,9 @@ decisions:
   - date: "2026-02-02"
     decision: "Slash commands generation"
     reason: "commands.yaml generates .claude/commands/*.md for Claude Code"
+  - date: "2026-02-02"
+    decision: "Stop hooks order: cmd before agent"
+    reason: "session-status (cmd) must run before consistency-check (agent) to always display"
 
 # ----------------------------------------------------------------------------
 # EVOLUTION HISTORY
@@ -169,6 +172,10 @@ sessions:
     id: "3jXvo"
     commits: "8c8da0b→a93e7df"
     summary: "Package-manager skill, MEMORY/hooks/commands refactor, unified internal/external architecture"
+  - date: "2026-02-02"
+    id: "9ytxa"
+    commits: "4405e84→ae26782"
+    summary: "Full hooks/skills integration (100%), prompt-engineer + codebase-analyst skills, Rule 14, workflow-orchestrator at SessionStart"
 
 # ----------------------------------------------------------------------------
 # LESSONS LEARNED
@@ -216,6 +223,12 @@ lessons:
   - date: "2026-02-02"
     lesson: "License audit before install"
     context: "MIT collections OK (fetch), Anthropic Commercial (reference only)"
+  - date: "2026-02-02"
+    lesson: "Naming consistency in visual feedback"
+    context: "Agent labels in hooks must match skill names exactly (e.g. [inclusivity-reviewer] not [inclusivity])"
+  - date: "2026-02-02"
+    lesson: "Stop hook order matters"
+    context: "session-status (cmd) must run BEFORE consistency-check (agent), otherwise it never displays when agent returns ok:false"
 
 # ----------------------------------------------------------------------------
 # CURRENT CONTEXT
@@ -293,6 +306,14 @@ skills:
     - name: "workflow-orchestrator"
       purpose: "Multi-agent orchestration"
       status: "active"
+    - name: "prompt-engineer"
+      purpose: "Prompt optimization with research-backed frameworks"
+      status: "active"
+      source: "external (MIT)"
+    - name: "codebase-analyst"
+      purpose: "Deep codebase analysis for refactoring and architecture review"
+      status: "active"
+      source: "external (MIT)"
 
 # ----------------------------------------------------------------------------
 # MISSING SKILLS ROADMAP
@@ -428,7 +449,7 @@ visual_feedback:
     agent: "[consistency-check]"
     purpose: "Vérification post-réponse"
   - emoji: "🔍"
-    agent: "[inclusivity]"
+    agent: "[inclusivity-reviewer]"
     purpose: "Écriture inclusive"
   - emoji: "🌍"
     agent: "[translator]"

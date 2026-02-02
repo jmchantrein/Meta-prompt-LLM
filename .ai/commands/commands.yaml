@@ -177,6 +177,30 @@ workflow:
     claude: true
 
 # ----------------------------------------------------------------------------
+# COMMANDES DE PROMPT ENGINEERING
+# ----------------------------------------------------------------------------
+
+optimize-prompt:
+  name: "optimize-prompt"
+  description: "Optimise un prompt avec des frameworks éprouvés"
+  skill: "prompt-engineer"
+  allowed_tools:
+    - "Read"
+    - "Write"
+  platforms:
+    claude: true
+
+improve-prompt:
+  name: "improve-prompt"
+  description: "Alias pour optimize-prompt"
+  skill: "prompt-engineer"
+  allowed_tools:
+    - "Read"
+    - "Write"
+  platforms:
+    claude: true
+
+# ----------------------------------------------------------------------------
 # COMMANDES D'AIDE
 # ----------------------------------------------------------------------------
 
@@ -208,6 +232,10 @@ help:
 
     ### Workflow
     - `/workflow` - Lance validation complète
+
+    ### Prompt Engineering
+    - `/optimize-prompt` - Optimise un prompt avec frameworks
+    - `/improve-prompt` - Alias pour optimize-prompt
   platforms:
     claude: true
     cursor: true
@@ -218,7 +246,7 @@ help:
 # ----------------------------------------------------------------------------
 
 _meta:
-  total_commands: 14
+  total_commands: 16
   categories:
     - generation
     - validation
@@ -226,8 +254,14 @@ _meta:
     - package-manager
     - translation
     - workflow
+    - prompt-engineering
     - help
   changelog:
+    - version: "1.1.0"
+      date: "2026-02-02"
+      changes:
+        - "Added prompt-engineer commands"
+        - "16 total commands"
     - version: "1.0.0"
       date: "2026-02-02"
       changes:

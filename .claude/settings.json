@@ -15,6 +15,16 @@
         "matcher": "startup",
         "hooks": [
           {
+            "type": "agent",
+            "timeout": 30,
+            "prompt": "Tu es le workflow-orchestrator du projet Meta-prompt-LLM.\n\n## Contexte de démarrage\n\nCette session vient de démarrer. Analyse rapidement le contexte\net détermine le workflow approprié.\n\n## Actions immédiates\n\n1. Vérifie si des changements non commités existent (git status)\n2. Vérifie si des skills ont été modifiés depuis la dernière session\n3. Détermine si un workflow spécifique est nécessaire\n\n## Réponse\n\nRetourne un JSON indiquant le workflow détecté:\n\n{\n  \"workflow\": \"normal|pre-commit|resume-work\",\n  \"context\": \"[description courte]\",\n  \"pending_tasks\": [\"task1\", \"task2\"]\n}\n\nSi tout est normal, retourne:\n{ \"workflow\": \"normal\", \"context\": \"Session prête\", \"pending_tasks\": [] }\n"
+          }
+        ]
+      },
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
             "type": "command",
             "timeout": 30,
             "command": "echo \"🔧 [data-sync] Vérification de synchronisation...\"\n\nDATA_DIR=\"prompts/fr/metametaprompts/data\"\nAI_DIR=\".ai\"\n\n# Check if data/ has changes not in .ai/\nif [ -d \"$DATA_DIR/skills\" ] && [ -d \"$AI_DIR/skills\" ]; then\n  DATA_HASH=$(find \"$DATA_DIR/skills\" -name \"*.yaml\" -exec cat {} \\; 2>/dev/null | md5sum | cut -d' ' -f1)\n  AI_HASH=$(find \"$AI_DIR/skills\" -name \"*.yaml\" -exec cat {} \\; 2>/dev/null | md5sum | cut -d' ' -f1)\n\n  if [ \"$DATA_HASH\" != \"$AI_HASH\" ]; then\n    echo \"⚠️ [data-sync] Changements détectés dans data/, synchronisation nécessaire\"\n    echo \"   Exécutez: cp -r $DATA_DIR/skills/* $AI_DIR/skills/\"\n  else\n    echo \"✅ [data-sync] Skills synchronisés\"\n  fi\nfi\n\n# Check hooks sync\nif [ -f \"$DATA_DIR/hooks/hooks.yaml\" ] && [ -f \"$AI_DIR/hooks/hooks.yaml\" ]; then\n  DATA_HOOKS_HASH=$(md5sum \"$DATA_DIR/hooks/hooks.yaml\" | cut -d' ' -f1)\n  AI_HOOKS_HASH=$(md5sum \"$AI_DIR/hooks/hooks.yaml\" | cut -d' ' -f1)\n\n  if [ \"$DATA_HOOKS_HASH\" != \"$AI_HOOKS_HASH\" ]; then\n    echo \"⚠️ [data-sync] hooks.yaml désynchronisé, copie...\"\n    cp \"$DATA_DIR/hooks/hooks.yaml\" \"$AI_DIR/hooks/hooks.yaml\"\n    echo \"✅ [data-sync] hooks.yaml synchronisé\"\n  fi\nfi\n"
@@ -55,7 +65,7 @@
           {
             "type": "command",
             "timeout": 15,
-            "command": "echo \"🔍 [coherence-check] Analyse des relations skills/hooks...\"\n\nSKILLS_DIR=\".ai/skills\"\nHOOKS_FILE=\".ai/hooks/hooks.yaml\"\n\n# List all skills\nALL_SKILLS=\"\"\nfor f in \"$SKILLS_DIR\"/*.yaml; do\n  [ -f \"$f\" ] || continue\n  [ \"$(basename \"$f\")\" = \"_TEMPLATE.yaml\" ] && continue\n  skill=$(grep -m1 '^name:' \"$f\" | sed 's/name:[[:space:]]*\"\\?\\([^\"]*\\)\"\\?/\\1/')\n  [ -n \"$skill\" ] && ALL_SKILLS=\"$ALL_SKILLS $skill\"\ndone\n\n# Skills referenced in hooks (by name pattern)\nHOOKED_SKILLS=\"data-sync memory-keeper self-improver session-status inclusivity-reviewer translator\"\n\n# Find orphans\nORPHANS=\"\"\nfor skill in $ALL_SKILLS; do\n  is_hooked=false\n  for hooked in $HOOKED_SKILLS; do\n    [ \"$skill\" = \"$hooked\" ] && is_hooked=true && break\n  done\n  [ \"$is_hooked\" = false ] && ORPHANS=\"$ORPHANS $skill\"\ndone\n\nif [ -n \"$ORPHANS\" ]; then\n  echo \"📋 [coherence-check] Skills orphelins (invocables manuellement):\"\n  for orphan in $ORPHANS; do\n    echo \"   └── $orphan\"\n  done\nelse\n  echo \"✅ [coherence-check] Tous les skills sont liés à des hooks\"\nfi\n\n# Check for potential loops (skills that might trigger hooks)\necho \"🔄 [coherence-check] Analyse des boucles potentielles...\"\nLOOP_RISKS=\"\"\n\n# Skills that write to data/ or .ai/ could trigger PostToolUse hooks\nfor skill in $ALL_SKILLS; do\n  skill_file=\"$SKILLS_DIR/${skill}.yaml\"\n  [ -f \"$skill_file\" ] || continue\n\n  # Check if skill mentions writing to data/ or .ai/\n  if grep -qE 'write|edit|modify|sync' \"$skill_file\" 2>/dev/null; then\n    if grep -qE 'data/|\\.ai/' \"$skill_file\" 2>/dev/null; then\n      LOOP_RISKS=\"$LOOP_RISKS $skill\"\n    fi\n  fi\ndone\n\nif [ -n \"$LOOP_RISKS\" ]; then\n  echo \"⚠️ [coherence-check] Skills avec risque de boucle (écrivent dans data/.ai/):\"\n  for risk in $LOOP_RISKS; do\n    echo \"   └── $risk → PostToolUse:auto-sync/auto-generate\"\n  done\n  echo \"   Note: Protégé par PreToolUse guardrails\"\nelse\n  echo \"✅ [coherence-check] Pas de risque de boucle détecté\"\nfi\n"
+            "command": "echo \"🔍 [coherence-check] Analyse des relations skills/hooks...\"\n\nSKILLS_DIR=\".ai/skills\"\nHOOKS_FILE=\".ai/hooks/hooks.yaml\"\n\n# List all skills\nALL_SKILLS=\"\"\nfor f in \"$SKILLS_DIR\"/*.yaml; do\n  [ -f \"$f\" ] || continue\n  [ \"$(basename \"$f\")\" = \"_TEMPLATE.yaml\" ] && continue\n  skill=$(grep -m1 '^name:' \"$f\" | sed 's/name:[[:space:]]*\"\\?\\([^\"]*\\)\"\\?/\\1/')\n  [ -n \"$skill\" ] && ALL_SKILLS=\"$ALL_SKILLS $skill\"\ndone\n\n# Skills referenced in hooks (by name pattern)\nHOOKED_SKILLS=\"data-sync memory-keeper self-improver session-status inclusivity-reviewer translator link-checker prompt-validator workflow-documenter hooks-manager package-manager prompt-engineer workflow-orchestrator codebase-analyst\"\n\n# Find orphans\nORPHANS=\"\"\nfor skill in $ALL_SKILLS; do\n  is_hooked=false\n  for hooked in $HOOKED_SKILLS; do\n    [ \"$skill\" = \"$hooked\" ] && is_hooked=true && break\n  done\n  [ \"$is_hooked\" = false ] && ORPHANS=\"$ORPHANS $skill\"\ndone\n\nif [ -n \"$ORPHANS\" ]; then\n  echo \"📋 [coherence-check] Skills orphelins (invocables manuellement):\"\n  for orphan in $ORPHANS; do\n    echo \"   └── $orphan\"\n  done\nelse\n  echo \"✅ [coherence-check] Tous les skills sont liés à des hooks\"\nfi\n\n# Check for potential loops (skills that might trigger hooks)\necho \"🔄 [coherence-check] Analyse des boucles potentielles...\"\nLOOP_RISKS=\"\"\n\n# Skills that write to data/ or .ai/ could trigger PostToolUse hooks\nfor skill in $ALL_SKILLS; do\n  skill_file=\"$SKILLS_DIR/${skill}.yaml\"\n  [ -f \"$skill_file\" ] || continue\n\n  # Check if skill mentions writing to data/ or .ai/\n  if grep -qE 'write|edit|modify|sync' \"$skill_file\" 2>/dev/null; then\n    if grep -qE 'data/|\\.ai/' \"$skill_file\" 2>/dev/null; then\n      LOOP_RISKS=\"$LOOP_RISKS $skill\"\n    fi\n  fi\ndone\n\nif [ -n \"$LOOP_RISKS\" ]; then\n  echo \"⚠️ [coherence-check] Skills avec risque de boucle (écrivent dans data/.ai/):\"\n  for risk in $LOOP_RISKS; do\n    echo \"   └── $risk → PostToolUse:auto-sync/auto-generate\"\n  done\n  echo \"   Note: Protégé par PreToolUse guardrails\"\nelse\n  echo \"✅ [coherence-check] Pas de risque de boucle détecté\"\nfi\n"
           }
         ]
       }
@@ -132,7 +142,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "INPUT=$(cat)\nFILE_PATH=$(echo \"$INPUT\" | grep -o '\"file_path\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' | sed 's/.*\"file_path\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/')\n\nif echo \"$FILE_PATH\" | grep -qE '/fr/.*\\.md$'; then\n  echo \"🔍 [inclusivity] Contenu FR modifié. Rappel: écriture inclusive requise.\"\nfi\n"
+            "command": "INPUT=$(cat)\nFILE_PATH=$(echo \"$INPUT\" | grep -o '\"file_path\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' | sed 's/.*\"file_path\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/')\n\nif echo \"$FILE_PATH\" | grep -qE '/fr/.*\\.md$'; then\n  echo \"🔍 [inclusivity-reviewer] Contenu FR modifié. Rappel: écriture inclusive requise.\"\nfi\n"
           }
         ]
       },
@@ -150,7 +160,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "INPUT=$(cat)\nFILE_PATH=$(echo \"$INPUT\" | grep -o '\"file_path\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' | sed 's/.*\"file_path\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/')\n\n# Determine context based on file path\ncase \"$FILE_PATH\" in\n  *MEMORY.md)\n    echo \"🧠 [memory-keeper] Lecture mémoire\"\n    ;;\n  *skills/*.yaml)\n    SKILL=$(basename \"$FILE_PATH\" .yaml)\n    echo \"📦 [skill:$SKILL] Lecture définition\"\n    ;;\n  *hooks/*.yaml|*hooks.yaml)\n    echo \"🔧 [hooks-manager] Lecture hooks\"\n    ;;\n  *AGENTS.md|*CLAUDE.md)\n    echo \"📋 [config] Lecture configuration\"\n    ;;\n  */fr/*.md)\n    echo \"🔍 [inclusivity] Lecture contenu FR\"\n    ;;\n  */en/*.md)\n    echo \"🌍 [translator] Lecture contenu EN\"\n    ;;\nesac\n"
+            "command": "INPUT=$(cat)\nFILE_PATH=$(echo \"$INPUT\" | grep -o '\"file_path\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' | sed 's/.*\"file_path\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/')\n\n# Determine context based on file path\ncase \"$FILE_PATH\" in\n  *MEMORY.md)\n    echo \"🧠 [memory-keeper] Lecture mémoire\"\n    ;;\n  *skills/*.yaml)\n    SKILL=$(basename \"$FILE_PATH\" .yaml)\n    echo \"📦 [skill:$SKILL] Lecture définition\"\n    ;;\n  *hooks/*.yaml|*hooks.yaml)\n    echo \"🔧 [hooks-manager] Lecture hooks\"\n    ;;\n  *AGENTS.md|*CLAUDE.md)\n    echo \"📋 [config] Lecture configuration\"\n    ;;\n  */fr/*.md)\n    echo \"🔍 [inclusivity-reviewer] Lecture contenu FR\"\n    ;;\n  */en/*.md)\n    echo \"🌍 [translator] Lecture contenu EN\"\n    ;;\nesac\n"
           }
         ]
       },
@@ -162,24 +172,78 @@
             "command": "INPUT=$(cat)\nFILE_PATH=$(echo \"$INPUT\" | grep -o '\"file_path\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' | sed 's/.*\"file_path\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/')\n\ncase \"$FILE_PATH\" in\n  *MEMORY.md)\n    echo \"🧠 [memory-keeper] Modification mémoire\"\n    ;;\n  *skills/*.yaml)\n    SKILL=$(basename \"$FILE_PATH\" .yaml)\n    echo \"📦 [skill:$SKILL] Modification skill\"\n    ;;\n  *hooks/*.yaml|*hooks.yaml)\n    echo \"🔧 [hooks-manager] Modification hooks\"\n    ;;\nesac\n"
           }
         ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat)\nFILE_PATH=$(echo \"$INPUT\" | grep -o '\"file_path\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' | sed 's/.*\"file_path\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/')\n\n# Check if markdown file with potential links\nif echo \"$FILE_PATH\" | grep -qE '\\.(md|markdown)$'; then\n  # Exclude generated files\n  if ! echo \"$FILE_PATH\" | grep -qE '^\\.ai/|^\\.claude/|^\\.cursor/'; then\n    echo \"🔗 [link-checker] Fichier markdown modifié. Pensez à /lint pour vérifier les liens.\"\n  fi\nfi\n"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat)\nFILE_PATH=$(echo \"$INPUT\" | grep -o '\"file_path\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' | sed 's/.*\"file_path\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/')\n\nif echo \"$FILE_PATH\" | grep -qE '^prompts/.*/.*\\.md$'; then\n  # Exclude template\n  if ! echo \"$FILE_PATH\" | grep -qE '_TEMPLATE\\.md$'; then\n    echo \"✅ [prompt-validator] Prompt modifié. Pensez à /validate pour vérifier le format.\"\n  fi\nfi\n"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat)\nFILE_PATH=$(echo \"$INPUT\" | grep -o '\"file_path\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' | sed 's/.*\"file_path\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/')\n\nif echo \"$FILE_PATH\" | grep -qE '(skills|hooks)/.*\\.yaml$'; then\n  echo \"📊 [workflow-documenter] Skills/hooks modifiés. Documentation workflow à mettre à jour.\"\nfi\n"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat)\nFILE_PATH=$(echo \"$INPUT\" | grep -o '\"file_path\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' | sed 's/.*\"file_path\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/')\n\nif echo \"$FILE_PATH\" | grep -qE 'hooks/.*\\.yaml$'; then\n  echo \"🔧 [hooks-manager] Hooks modifiés. Multi-platform configs seront régénérés.\"\nfi\n"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat)\nFILE_PATH=$(echo \"$INPUT\" | grep -o '\"file_path\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' | sed 's/.*\"file_path\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/')\n\nif echo \"$FILE_PATH\" | grep -qE 'data/(skills|hooks|commands)/external/'; then\n  echo \"📦 [package-manager] Package externe modifié. Utilisez /pm-list pour voir les packages installés.\"\nfi\n"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat)\nFILE_PATH=$(echo \"$INPUT\" | grep -o '\"file_path\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' | sed 's/.*\"file_path\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/')\n\n# Check if creating/modifying a prompt file\nif echo \"$FILE_PATH\" | grep -qE '^prompts/[^/]+/[^/]+/[^/]+/[^/]+\\.md$'; then\n  # Exclude templates and READMEs\n  if ! echo \"$FILE_PATH\" | grep -qE '(_TEMPLATE|README)\\.md$'; then\n    echo \"🎯 [prompt-engineer] Prompt créé/modifié. Utilisez /optimize-prompt pour améliorer sa structure.\"\n  fi\nfi\n"
+          }
+        ]
       }
     ],
     "Stop": [
       {
         "hooks": [
           {
-            "type": "agent",
-            "timeout": 60,
-            "prompt": "Tu es l'agent de vérification de consistance du projet Meta-prompt-LLM.\n\n## Contexte\n\nTu es appelé à la fin de chaque réponse de Claude pour vérifier\nsi des actions de consistance sont nécessaires.\n\n## Ta mission\n\n1. Lis le transcript de la session via $ARGUMENTS\n2. Détermine si cette session a impliqué:\n   - Des décisions techniques importantes\n   - Des modifications de règles ou skills\n   - Des leçons apprises\n   - Des changements de contexte projet\n\n3. Si OUI à l'un de ces points:\n   - Retourne { \"ok\": false, \"reason\": \"🧠 [memory-keeper] Mise à jour de .ai/MEMORY.md recommandée: [résumé des changements]\" }\n\n4. Si NON (conversation simple, pas de décision):\n   - Retourne { \"ok\": true }\n\n## Critères de décision\n\nMETTRE À JOUR MEMORY.MD si:\n- Nouvelle décision technique prise\n- Nouveau skill créé ou modifié\n- Nouvelle règle ou convention adoptée\n- Problème résolu qui constitue une leçon\n- Changement de contexte projet\n\nNE PAS METTRE À JOUR si:\n- Simple question/réponse\n- Lecture de fichiers sans modification\n- Exécution de commandes routinières\n- Correction de typos mineurs\n\n## Format de réponse\n\nRetourne UNIQUEMENT un objet JSON:\n{ \"ok\": true }\nou\n{ \"ok\": false, \"reason\": \"🧠 [memory-keeper] [description de ce qui doit être ajouté à MEMORY.md]\" }\n"
+            "type": "command",
+            "timeout": 15,
+            "command": "# Session Status Summary - Generated by session-status skill\n# This provides visibility into the system's capabilities\n\necho \"\"\necho \"---\"\necho \"\"\necho \"## 📊 SYNTHÈSE SYSTÈME META-PROMPT-LLM\"\necho \"\"\n\nSKILLS_DIR=\".ai/skills\"\nHOOKED_SKILLS=\"data-sync memory-keeper self-improver session-status inclusivity-reviewer translator link-checker prompt-validator workflow-documenter hooks-manager package-manager prompt-engineer workflow-orchestrator codebase-analyst\"\n\n# Count skills\nSKILL_COUNT=$(find \"$SKILLS_DIR\" -name \"*.yaml\" ! -name \"_TEMPLATE.yaml\" 2>/dev/null | wc -l)\n\necho \"### 🎯 Skills ($SKILL_COUNT)\"\necho \"\"\necho \"| Skill | Description | Hook |\"\necho \"|-------|-------------|------|\"\n\nif [ -d \"$SKILLS_DIR\" ]; then\n  for skill_file in \"$SKILLS_DIR\"/*.yaml; do\n    [ -f \"$skill_file\" ] || continue\n    [ \"$(basename \"$skill_file\")\" = \"_TEMPLATE.yaml\" ] && continue\n\n    skill_name=$(grep -m1 '^name:' \"$skill_file\" | sed 's/name:[[:space:]]*\"\\?\\([^\"]*\\)\"\\?/\\1/')\n    skill_desc=$(grep -m1 '^description:' \"$skill_file\" | sed 's/description:[[:space:]]*\"\\?\\([^\"]*\\)\"\\?/\\1/' | cut -c1-35)\n\n    # Check if hooked\n    is_hooked=\"❌\"\n    for h in $HOOKED_SKILLS; do\n      [ \"$skill_name\" = \"$h\" ] && is_hooked=\"✅\" && break\n    done\n\n    [ -n \"$skill_name\" ] && echo \"| \\`$skill_name\\` | $skill_desc | $is_hooked |\"\n  done\nfi\n\necho \"\"\necho \"### 🔄 Hooks Lifecycle\"\necho \"\"\necho \"\\`\\`\\`\"\necho \"SessionStart ─┬─ 📋 platform-detect\"\necho \"              ├─ 🔧 data-sync\"\necho \"              ├─ 🔧 generate-check\"\necho \"              ├─ 🧠 load-memory\"\necho \"              ├─ 🔄 self-improver\"\necho \"              └─ 🔍 coherence-check\"\necho \"      ↓\"\necho \"UserPromptSubmit ── 📋 context-reminder\"\necho \"      ↓\"\necho \"PreToolUse ───── 🛡️ guardrails (.env/secrets/git/rm)\"\necho \"      ↓\"\necho \"PostToolUse ──┬─ 📦 auto-generate ←──┐\"\necho \"              ├─ 🔧 auto-sync    ←──┤ loop risk\"\necho \"              ├─ 🔍 inclusivity     │ (protected)\"\necho \"              └─ 🌍 translator      │\"\necho \"      ↓                              │\"\necho \"Stop ─────────┬─ 📊 session-status [CMD] ← FIRST\"\necho \"              └─ ✅ consistency [AGENT]\"\necho \"      ↓\"\necho \"SessionEnd ───── 📝 final-reminder\"\necho \"\\`\\`\\`\"\necho \"\"\necho \"### 📋 Commandes\"\necho \"\"\necho \"\\`\\`\\`bash\"\necho \".ai/generate.sh          # Régénère tout\"\necho \".ai/generate.sh --check  # Vérifie\"\necho \"cat .ai/MEMORY.md        # Mémoire\"\necho \"\\`\\`\\`\"\necho \"\"\necho \"**Légende**: Hook=✅ (automatique) | Hook=❌ (manuel)\"\necho \"\"\n"
           }
         ]
       },
       {
         "hooks": [
           {
-            "type": "command",
-            "timeout": 15,
-            "command": "# Session Status Summary - Generated by session-status skill\n# This provides visibility into the system's capabilities\n\necho \"\"\necho \"---\"\necho \"\"\necho \"## 📊 SYNTHÈSE SYSTÈME META-PROMPT-LLM\"\necho \"\"\n\nSKILLS_DIR=\".ai/skills\"\nHOOKED_SKILLS=\"data-sync memory-keeper self-improver session-status inclusivity-reviewer translator\"\n\n# Count skills\nSKILL_COUNT=$(find \"$SKILLS_DIR\" -name \"*.yaml\" ! -name \"_TEMPLATE.yaml\" 2>/dev/null | wc -l)\n\necho \"### 🎯 Skills ($SKILL_COUNT)\"\necho \"\"\necho \"| Skill | Description | Hook |\"\necho \"|-------|-------------|------|\"\n\nif [ -d \"$SKILLS_DIR\" ]; then\n  for skill_file in \"$SKILLS_DIR\"/*.yaml; do\n    [ -f \"$skill_file\" ] || continue\n    [ \"$(basename \"$skill_file\")\" = \"_TEMPLATE.yaml\" ] && continue\n\n    skill_name=$(grep -m1 '^name:' \"$skill_file\" | sed 's/name:[[:space:]]*\"\\?\\([^\"]*\\)\"\\?/\\1/')\n    skill_desc=$(grep -m1 '^description:' \"$skill_file\" | sed 's/description:[[:space:]]*\"\\?\\([^\"]*\\)\"\\?/\\1/' | cut -c1-35)\n\n    # Check if hooked\n    is_hooked=\"❌\"\n    for h in $HOOKED_SKILLS; do\n      [ \"$skill_name\" = \"$h\" ] && is_hooked=\"✅\" && break\n    done\n\n    [ -n \"$skill_name\" ] && echo \"| \\`$skill_name\\` | $skill_desc | $is_hooked |\"\n  done\nfi\n\necho \"\"\necho \"### 🔄 Hooks Lifecycle\"\necho \"\"\necho \"\\`\\`\\`\"\necho \"SessionStart ─┬─ 📋 platform-detect\"\necho \"              ├─ 🔧 data-sync\"\necho \"              ├─ 🔧 generate-check\"\necho \"              ├─ 🧠 load-memory\"\necho \"              ├─ 🔄 self-improver\"\necho \"              └─ 🔍 coherence-check ← NEW\"\necho \"      ↓\"\necho \"UserPromptSubmit ── 📋 context-reminder\"\necho \"      ↓\"\necho \"PreToolUse ───── 🛡️ guardrails (.env/secrets/git/rm)\"\necho \"      ↓\"\necho \"PostToolUse ──┬─ 📦 auto-generate ←──┐\"\necho \"              ├─ 🔧 auto-sync    ←──┤ loop risk\"\necho \"              ├─ 🔍 inclusivity     │ (protected)\"\necho \"              └─ 🌍 translator      │\"\necho \"      ↓                              │\"\necho \"Stop ─────────┬─ ✅ consistency [AGENT]\"\necho \"              └─ 📊 session-status [CMD]\"\necho \"      ↓\"\necho \"SessionEnd ───── 📝 final-reminder\"\necho \"\\`\\`\\`\"\necho \"\"\necho \"### 📋 Commandes\"\necho \"\"\necho \"\\`\\`\\`bash\"\necho \".ai/generate.sh          # Régénère tout\"\necho \".ai/generate.sh --check  # Vérifie\"\necho \"cat .ai/MEMORY.md        # Mémoire\"\necho \"\\`\\`\\`\"\necho \"\"\necho \"**Légende**: Hook=✅ (automatique) | Hook=❌ (manuel)\"\necho \"\"\n"
+            "type": "agent",
+            "timeout": 60,
+            "prompt": "Tu es l'agent de vérification de consistance du projet Meta-prompt-LLM.\n\n## Contexte\n\nTu es appelé à la fin de chaque réponse de Claude pour vérifier\nsi des actions de consistance sont nécessaires.\n\n## Ta mission\n\n1. Lis le transcript de la session via $ARGUMENTS\n2. Détermine si cette session a impliqué:\n   - Des décisions techniques importantes\n   - Des modifications de règles ou skills\n   - Des leçons apprises\n   - Des changements de contexte projet\n\n3. Si OUI à l'un de ces points:\n   - Retourne { \"ok\": false, \"reason\": \"🧠 [memory-keeper] Mise à jour de .ai/MEMORY.md recommandée: [résumé des changements]\" }\n\n4. Si NON (conversation simple, pas de décision):\n   - Retourne { \"ok\": true }\n\n## Critères de décision\n\nMETTRE À JOUR MEMORY.MD si:\n- Nouvelle décision technique prise\n- Nouveau skill créé ou modifié\n- Nouvelle règle ou convention adoptée\n- Problème résolu qui constitue une leçon\n- Changement de contexte projet\n\nNE PAS METTRE À JOUR si:\n- Simple question/réponse\n- Lecture de fichiers sans modification\n- Exécution de commandes routinières\n- Correction de typos mineurs\n\n## Format de réponse\n\nRetourne UNIQUEMENT un objet JSON:\n{ \"ok\": true }\nou\n{ \"ok\": false, \"reason\": \"🧠 [memory-keeper] [description de ce qui doit être ajouté à MEMORY.md]\" }\n"
           }
         ]
       }

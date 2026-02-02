@@ -9,6 +9,11 @@
 
 ## Available skills
 
+### codebase-analyst
+
+Deep codebase analysis for refactoring and architecture review
+
+
 ### data-sync
 
 Synchronizes data/ to project files and validates integrity
@@ -37,6 +42,11 @@ Manages persistent project memory between sessions
 ### package-manager
 
 Manages external skills, hooks, and commands from registries
+
+
+### prompt-engineer
+
+Transforms and optimizes prompts using research-backed frameworks
 
 
 ### prompt-validator

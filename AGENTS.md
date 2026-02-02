@@ -103,18 +103,40 @@ At session start, if this prompt has a META block:
 4. If remote is newer: inform user, show changelog, propose update
 5. If same or no web access: continue normally
 
+## Rule 14: end-of-response summary
+
+At the end of EACH significant response, include a visual summary showing:
+
+1. **Skills used** in this response (with ✅/❌ status)
+2. **Active workflow** if any
+3. **Pending tasks** from todo list
+4. **Commands available** reminder
+
+Format example:
+\`\`\`
+---
+📊 **Session Summary**
+Skills: data-sync ✅ | memory-keeper ✅ | prompt-engineer ❌
+Workflow: normal
+Tasks: 2 completed, 1 pending
+\`\`\`
+
+This is MANDATORY for user visibility. Do NOT rely on Stop hooks for this.
+
 ---
 
 ## Available skills
 
 | Skill | Description | Category |
 |-------|-------------|----------|
+| codebase-analyst | Deep codebase analysis for refactoring and architecture review | analysis |
 | data-sync | Synchronizes data/ to project files and validates integrity | core |
 | hooks-manager | Manages LLM hooks knowledge base and multi-platform hook generation | core |
 | inclusivity-reviewer | Reviews content for inclusive writing and modern terminology | validation |
 | link-checker | Validates internal links and paths in markdown files | validation |
 | memory-keeper | Manages persistent project memory between sessions | core |
 | package-manager | Manages external skills, hooks, and commands from registries | core |
+| prompt-engineer | Transforms and optimizes prompts using research-backed frameworks | ai-tools |
 | prompt-validator | Validates prompts against schema and quality standards | validation |
 | self-improver | Agent d'auto-amélioration du projet Meta-prompt-LLM | core |
 | session-status | Generates end-of-response visual summary of skills, hooks, and commands | core |

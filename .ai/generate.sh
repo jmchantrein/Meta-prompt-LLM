@@ -482,6 +482,26 @@ At session start, if this prompt has a META block:
 4. If remote is newer: inform user, show changelog, propose update
 5. If same or no web access: continue normally
 
+## Rule 14: end-of-response summary
+
+At the end of EACH significant response, include a visual summary showing:
+
+1. **Skills used** in this response (with ✅/❌ status)
+2. **Active workflow** if any
+3. **Pending tasks** from todo list
+4. **Commands available** reminder
+
+Format example:
+\`\`\`
+---
+📊 **Session Summary**
+Skills: data-sync ✅ | memory-keeper ✅ | prompt-engineer ❌
+Workflow: normal
+Tasks: 2 completed, 1 pending
+\`\`\`
+
+This is MANDATORY for user visibility. Do NOT rely on Stop hooks for this.
+
 ---
 
 ## Available skills

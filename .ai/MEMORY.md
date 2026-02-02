@@ -36,12 +36,14 @@ A framework for creating, modifying, and maintaining prompt collections with:
 
 | Skill | Purpose | Status |
 |-------|---------|--------|
+| codebase-analyst | Deep codebase analysis for refactoring and architecture review | Active |
 | data-sync | Synchronizes data/ to project files and validates integrity | Active |
 | hooks-manager | Manages LLM hooks knowledge base and multi-platform hook generation | Active |
 | inclusivity-reviewer | Reviews content for inclusive writing and modern terminology | Active |
 | link-checker | Validates internal links and paths in markdown files | Active |
 | memory-keeper | Manages persistent project memory between sessions | Active |
 | package-manager | Manages external skills, hooks, and commands from registries | Active |
+| prompt-engineer | Transforms and optimizes prompts using research-backed frameworks | Active |
 | prompt-validator | Validates prompts against schema and quality standards | Active |
 | self-improver | Agent d'auto-amélioration du projet Meta-prompt-LLM | Active |
 | session-status | Generates end-of-response visual summary of skills, hooks, and commands | Active |
