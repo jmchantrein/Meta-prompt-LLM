@@ -63,28 +63,41 @@ A framework for creating, modifying, and maintaining prompt collections with:
 
 ### Active work
 
-- Meta-Meta-prompt-LLM system implementation
-- GitHub Pages setup for data access
+- Création du système workflow-documenter (terminé)
+- Documentation workflows globale (terminé)
+- Fichiers d'index pour self-improver (À FAIRE - PRIORITÉ HAUTE)
+- Implémentation dependencies_urls dans prompts (À FAIRE)
 
 ### Pending decisions
 
-- None currently
+- Format exact des fichiers d'index (rules-index.yaml, etc.)
+- Automatisation de la génération des index
 
 ### Blockers
 
-- None currently
+- self-improver partiellement fonctionnel sans fichiers d'index
+
+### Session 2026-02-02 notes
+
+- Analyse approfondie de la codebase effectuée
+- Prompt pour futures sessions créé dans `.ai/future-session-prompt.md`
+- Hooks de documentation workflow ajoutés
+- Skill workflow-documenter créé et déployé
 
 ## Available agents
 
 | Agent | Purpose | Status |
 |-------|---------|--------|
+| data-sync | Data synchronization and integrity | Active |
+| hooks-manager | LLM hooks knowledge base | Active |
 | inclusivity-reviewer | Inclusive writing, non-ableist language | Active |
-| memory-keeper | Persistent memory management | Active |
-| workflow-orchestrator | Multi-agent orchestration | Active |
-| translator | EN/FR translation, sync | Active |
-| prompt-validator | Prompt validation against schema | Active |
-| self-improver | Project self-improvement and rule propagation | Active |
 | link-checker | Internal link validation in markdown | Active |
+| memory-keeper | Persistent memory management | Active |
+| prompt-validator | Prompt validation against schema | Active |
+| self-improver | Project self-improvement and rule propagation | Partial (needs index files) |
+| translator | EN/FR translation, sync | Active |
+| workflow-documenter | Workflow documentation and diagrams | Active |
+| workflow-orchestrator | Multi-agent orchestration | Active |
 
 ## Notes
 
@@ -97,4 +110,4 @@ A framework for creating, modifying, and maintaining prompt collections with:
 
 ---
 
-*Last updated: 2026-02-01 by memory-keeper*
+*Last updated: 2026-02-02 by memory-keeper*
