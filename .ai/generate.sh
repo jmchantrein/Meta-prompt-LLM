@@ -49,7 +49,7 @@ readonly OLLAMA_DIR="${PROJECT_ROOT}/ollama"
 readonly OPENCODE_AGENTS_DIR="${PROJECT_ROOT}/.opencode/agents"
 readonly CODEX_AGENTS_DIR="${PROJECT_ROOT}/.codex/agents"
 readonly HOOKS_FILE="${SCRIPT_DIR}/hooks/hooks.yaml"
-readonly CLAUDE_SETTINGS="${PROJECT_ROOT}/.claude/settings.local.json"
+readonly CLAUDE_SETTINGS="${PROJECT_ROOT}/.claude/settings.json"
 
 # Options
 FORCE=false
@@ -299,7 +299,7 @@ Order: specification -> documentation -> tests -> code -> refactoring
 
 ## Rule 4: DRY and KISS
 
-- Single source of truth (`.ai/skills/*.yaml`)
+- Single source of truth (`prompts/fr/metametaprompts/data/`)
 - Keep things simple
 - Decompose into atomic tasks
 

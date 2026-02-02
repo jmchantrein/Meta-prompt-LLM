@@ -34,7 +34,7 @@ Order: specification -> documentation -> tests -> code -> refactoring
 
 ## Rule 4: DRY and KISS
 
-- Single source of truth (`.ai/skills/*.yaml`)
+- Single source of truth (`prompts/fr/metametaprompts/data/`)
 - Keep things simple
 - Decompose into atomic tasks
 
