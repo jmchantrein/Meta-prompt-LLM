@@ -1,0 +1,21 @@
+{
+  "$schema": "https://unpkg.com/cursor-hooks@latest/schema/hooks.schema.json",
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "echo \"🔒 Cursor: Shell execution check\""
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": "echo \"📝 Cursor: File edited\""
+      }
+    ],
+    "stop": [
+      {
+        "command": "echo \"✅ Cursor: Task completed\""
+      }
+    ]
+  }
+}

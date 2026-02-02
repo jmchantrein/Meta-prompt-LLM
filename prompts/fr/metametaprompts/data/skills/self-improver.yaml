@@ -47,11 +47,9 @@ context:
   files:
     - ".ai/MEMORY.md"
     - "AGENTS.md"
-    - "prompts/fr/metametaprompts/data/rules-index.yaml"
-    - "prompts/fr/metametaprompts/data/skills-index.yaml"
-    - "prompts/fr/metametaprompts/data/prompts-index.yaml"
-    - "prompts/fr/metametaprompts/data/dependencies.yaml"
-    - "prompts/fr/metametaprompts/data/pending-reviews.yaml"
+    - "prompts/fr/metametaprompts/data/manifest.yaml"       # Source of truth for hashes
+    - "prompts/fr/metametaprompts/data/dependencies.yaml"   # Rule/skill to prompt mapping
+    - "prompts/fr/metametaprompts/data/pending-reviews.yaml" # @future-self notes
   dependencies:
     - "memory-keeper"
     - "prompt-validator"
@@ -94,19 +92,21 @@ instructions:
     # Lire les fichiers de données
     cat .ai/MEMORY.md
     cat prompts/fr/metametaprompts/data/pending-reviews.yaml
-    cat prompts/fr/metametaprompts/data/rules-index.yaml
+    cat prompts/fr/metametaprompts/data/manifest.yaml
     ```
 
     ### 2. Détecter les changements (déterministe)
     ```bash
-    # Calculer le hash actuel de AGENTS.md
-    sha256sum AGENTS.md
+    # Calculer le hash actuel des fichiers et comparer avec manifest.yaml
+    # AGENTS.md est généré depuis rules/rules.yaml
 
-    # Comparer avec rules-index.yaml
+    # Hash des skills
+    for skill in .ai/skills/*.yaml; do
+      sha256sum "$skill"
+    done
+
+    # Comparer avec les hash dans manifest.yaml.integrity
     # Si différent → changements détectés
-
-    # Idem pour les skills
-    sha256sum .ai/skills/*.yaml
     ```
 
     ### 3. Si changements ou reviews en attente

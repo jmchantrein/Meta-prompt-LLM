@@ -1,0 +1,159 @@
+# Dependencies Mapping
+# ============================================================================
+# Maps rules and skills to the prompts they impact.
+# Used by self-improver to calculate scope of changes.
+#
+# Structure:
+#   rules:
+#     rule-<n>:
+#       name: "Rule name"
+#       impacts:
+#         - path/to/prompt.md
+#
+#   skills:
+#     skill-name:
+#       impacts:
+#         - path/to/prompt.md
+# ============================================================================
+
+version: "1.0.0"
+updated: "2026-02-02"
+
+# ----------------------------------------------------------------------------
+# RULES DEPENDENCIES
+# ----------------------------------------------------------------------------
+# Each rule lists the prompts that depend on it.
+# When a rule changes, these prompts need review.
+
+rules:
+  rule-0:
+    name: "Honesty"
+    description: "Right to not know, never invent facts"
+    impacts:
+      - "prompts/**/*.md"  # All prompts should follow honesty
+
+  rule-1:
+    name: "State of the art and consensus"
+    description: "Consult documentation, search for consensus"
+    impacts:
+      - "prompts/**/*.md"  # All prompts reference documentation
+
+  rule-2:
+    name: "Directed development"
+    description: "spec -> doc -> tests -> code -> refactor"
+    impacts:
+      - "prompts/fr/metaprompts/**/*.md"
+      - "prompts/en/metaprompts/**/*.md"
+
+  rule-3:
+    name: "Security"
+    description: "Never expose secrets, least privilege"
+    impacts:
+      - "prompts/**/*.md"  # All prompts should be secure
+
+  rule-4:
+    name: "DRY and KISS"
+    description: "Single source of truth, keep it simple"
+    impacts:
+      - "prompts/fr/metametaprompts/**/*.md"
+
+  rule-5:
+    name: "Todo list"
+    description: "Format for tracking tasks"
+    impacts:
+      - "prompts/**/*.md"
+
+  rule-6:
+    name: "File organization"
+    description: "tmp/ for temporary, never at root"
+    impacts: []  # Operational, no prompt impact
+
+  rule-7:
+    name: "Agent management"
+    description: "Signal which agents are used"
+    impacts:
+      - "prompts/fr/metametaprompts/**/*.md"
+
+  rule-8:
+    name: "Self-improvement"
+    description: "Propose updates, signal obsolete instructions"
+    impacts:
+      - "prompts/fr/metametaprompts/data/**/*.yaml"
+
+  rule-9:
+    name: "Checklist before commit"
+    description: "Run validators before commit"
+    impacts: []  # Operational, no prompt impact
+
+  rule-10:
+    name: "Writing conventions and inclusivity"
+    description: "Inclusive writing, modern terminology"
+    impacts:
+      - "prompts/fr/**/*.md"  # All French content
+
+  rule-11:
+    name: "Persistent memory"
+    description: "Read MEMORY.md, update via memory-keeper"
+    impacts:
+      - "prompts/fr/metametaprompts/**/*.md"
+
+  rule-12:
+    name: "Language"
+    description: "Code in English, docs bilingual"
+    impacts:
+      - "prompts/**/*.md"  # Translation references
+
+  rule-13:
+    name: "Version check"
+    description: "Check META block version at session start"
+    impacts:
+      - "prompts/**/*.md"  # All prompts with META blocks
+
+# ----------------------------------------------------------------------------
+# SKILLS DEPENDENCIES
+# ----------------------------------------------------------------------------
+# Each skill lists the prompts that use or reference it.
+
+skills:
+  inclusivity-reviewer:
+    impacts:
+      - "prompts/fr/**/*.md"
+
+  memory-keeper:
+    impacts:
+      - "prompts/fr/metametaprompts/**/*.md"
+
+  prompt-validator:
+    impacts:
+      - "prompts/**/*.md"
+
+  self-improver:
+    impacts:
+      - "prompts/fr/metametaprompts/meta-meta-prompt-llm.md"
+
+  translator:
+    impacts:
+      - "prompts/en/**/*.md"
+      - "prompts/fr/**/*.md"
+
+  link-checker:
+    impacts:
+      - "docs/**/*.md"
+      - "prompts/**/*.md"
+
+  workflow-orchestrator:
+    impacts:
+      - "prompts/fr/metametaprompts/**/*.md"
+
+  data-sync:
+    impacts:
+      - ".ai/**/*"
+
+  hooks-manager:
+    impacts:
+      - "prompts/fr/metametaprompts/data/hooks/*.yaml"
+
+  workflow-documenter:
+    impacts:
+      - "docs/en/workflows.md"
+      - "docs/fr/workflows.md"
