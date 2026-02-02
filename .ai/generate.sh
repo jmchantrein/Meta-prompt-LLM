@@ -756,6 +756,95 @@ esac
     log_success "Generated OpenCode hooks"
 }
 
+# Generate Claude Code custom commands from commands.yaml
+generate_claude_commands() {
+    log_info "Generating Claude Code commands..."
+
+    local commands_dir="${PROJECT_ROOT}/.claude/commands"
+    ensure_dir "${commands_dir}"
+
+    local commands_file="${SCRIPT_DIR}/commands/commands.yaml"
+    if [[ ! -f "${commands_file}" ]]; then
+        log_warn "No commands.yaml found, skipping"
+        return 0
+    fi
+
+    # Read commands from YAML - simplified parsing
+    local cmd_name=""
+    local cmd_desc=""
+    local cmd_command=""
+    local cmd_skill=""
+    local in_output=false
+    local output_content=""
+
+    while IFS= read -r line; do
+        # Skip metadata section
+        [[ "${line}" =~ ^_meta: ]] && break
+
+        # New command definition (root level key)
+        if [[ "${line}" =~ ^([a-z][a-z0-9_-]*):[[:space:]]*$ ]]; then
+            # Save previous command
+            if [[ -n "${cmd_name}" ]]; then
+                local file="${commands_dir}/${cmd_name}.md"
+                local content="# /${cmd_name}"$'\n\n'
+                content+="${cmd_desc:-No description}"$'\n\n'
+
+                if [[ -n "${cmd_command}" ]]; then
+                    content+="Run: \`${cmd_command}\`"$'\n'
+                elif [[ -n "${cmd_skill}" ]]; then
+                    content+="Invoke skill: \`@${cmd_skill}\`"$'\n'
+                fi
+
+                if [[ -n "${output_content}" ]]; then
+                    content+=$'\n'"${output_content}"
+                fi
+
+                echo "${content}" > "${file}"
+            fi
+
+            cmd_name="${BASH_REMATCH[1]}"
+            cmd_desc=""
+            cmd_command=""
+            cmd_skill=""
+            in_output=false
+            output_content=""
+        elif [[ "${line}" =~ ^[[:space:]]+description:[[:space:]]*\"(.*)\" ]]; then
+            cmd_desc="${BASH_REMATCH[1]}"
+        elif [[ "${line}" =~ ^[[:space:]]+command:[[:space:]]*\"(.*)\" ]]; then
+            cmd_command="${BASH_REMATCH[1]}"
+        elif [[ "${line}" =~ ^[[:space:]]+skill:[[:space:]]*\"(.*)\" ]]; then
+            cmd_skill="${BASH_REMATCH[1]}"
+        elif [[ "${line}" =~ ^[[:space:]]+output:[[:space:]]*\| ]]; then
+            in_output=true
+        elif [[ "${in_output}" == "true" && "${line}" =~ ^[[:space:]]{4}(.*)$ ]]; then
+            output_content+="${BASH_REMATCH[1]}"$'\n'
+        elif [[ "${in_output}" == "true" && ! "${line}" =~ ^[[:space:]] ]]; then
+            in_output=false
+        fi
+    done < "${commands_file}"
+
+    # Save last command
+    if [[ -n "${cmd_name}" ]]; then
+        local file="${commands_dir}/${cmd_name}.md"
+        local content="# /${cmd_name}"$'\n\n'
+        content+="${cmd_desc:-No description}"$'\n\n'
+
+        if [[ -n "${cmd_command}" ]]; then
+            content+="Run: \`${cmd_command}\`"$'\n'
+        elif [[ -n "${cmd_skill}" ]]; then
+            content+="Invoke skill: \`@${cmd_skill}\`"$'\n'
+        fi
+
+        if [[ -n "${output_content}" ]]; then
+            content+=$'\n'"${output_content}"
+        fi
+
+        echo "${content}" > "${file}"
+    fi
+
+    log_success "Generated Claude Code commands"
+}
+
 # Generate Codex CLI configuration with notify
 # Codex uses config.toml with notify option
 generate_codex_config() {
@@ -1450,6 +1539,7 @@ main() {
     generate_opencode_hooks
     generate_codex_agents
     generate_codex_config
+    generate_claude_commands
 
     # Update version
     update_version
