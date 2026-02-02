@@ -42,6 +42,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | link-checker | Validates internal links and paths in markdown files | Active |
 | memory-keeper | Manages persistent project memory between sessions | Active |
 | package-manager | Manages external skills, hooks, and commands from registries | Active |
+| prompt-engineer | Transforms and optimizes prompts using research-backed frameworks | Active |
 | prompt-validator | Validates prompts against schema and quality standards | Active |
 | self-improver | Agent d'auto-amélioration du projet Meta-prompt-LLM | Active |
 | session-status | Generates end-of-response visual summary of skills, hooks, and commands | Active |

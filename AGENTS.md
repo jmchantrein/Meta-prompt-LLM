@@ -115,6 +115,7 @@ At session start, if this prompt has a META block:
 | link-checker | Validates internal links and paths in markdown files | validation |
 | memory-keeper | Manages persistent project memory between sessions | core |
 | package-manager | Manages external skills, hooks, and commands from registries | core |
+| prompt-engineer | Transforms and optimizes prompts using research-backed frameworks | ai-tools |
 | prompt-validator | Validates prompts against schema and quality standards | validation |
 | self-improver | Agent d'auto-amélioration du projet Meta-prompt-LLM | core |
 | session-status | Generates end-of-response visual summary of skills, hooks, and commands | core |

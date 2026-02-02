@@ -26,6 +26,10 @@
       "description": "Manages external skills, hooks, and commands from registries"
     },
     {
+      "name": "prompt-engineer",
+      "description": "Transforms and optimizes prompts using research-backed frameworks"
+    },
+    {
       "name": "prompt-validator",
       "description": "Validates prompts against schema and quality standards"
     },

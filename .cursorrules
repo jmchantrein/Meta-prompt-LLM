@@ -39,6 +39,11 @@ Manages persistent project memory between sessions
 Manages external skills, hooks, and commands from registries
 
 
+### prompt-engineer
+
+Transforms and optimizes prompts using research-backed frameworks
+
+
 ### prompt-validator
 
 Validates prompts against schema and quality standards

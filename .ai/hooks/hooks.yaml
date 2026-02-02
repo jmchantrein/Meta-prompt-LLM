@@ -285,7 +285,7 @@ SessionStart:
           done
 
           # Skills referenced in hooks (by name pattern)
-          HOOKED_SKILLS="data-sync memory-keeper self-improver session-status inclusivity-reviewer translator"
+          HOOKED_SKILLS="data-sync memory-keeper self-improver session-status inclusivity-reviewer translator link-checker prompt-validator workflow-documenter hooks-manager package-manager prompt-engineer"
 
           # Find orphans
           ORPHANS=""
@@ -580,6 +580,119 @@ PostToolUse:
               ;;
           esac
 
+  # ----------------------------
+  # Link checker reminder
+  # ----------------------------
+  - name: "link-checker-reminder"
+    description: "Remind to check links when markdown files are modified"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          # Check if markdown file with potential links
+          if echo "$FILE_PATH" | grep -qE '\.(md|markdown)$'; then
+            # Exclude generated files
+            if ! echo "$FILE_PATH" | grep -qE '^\.ai/|^\.claude/|^\.cursor/'; then
+              echo "🔗 [link-checker] Fichier markdown modifié. Pensez à /lint pour vérifier les liens."
+            fi
+          fi
+
+  # ----------------------------
+  # Prompt validator reminder
+  # ----------------------------
+  - name: "prompt-validator-reminder"
+    description: "Remind to validate prompts when modified"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          if echo "$FILE_PATH" | grep -qE '^prompts/.*/.*\.md$'; then
+            # Exclude template
+            if ! echo "$FILE_PATH" | grep -qE '_TEMPLATE\.md$'; then
+              echo "✅ [prompt-validator] Prompt modifié. Pensez à /validate pour vérifier le format."
+            fi
+          fi
+
+  # ----------------------------
+  # Workflow documenter reminder
+  # ----------------------------
+  - name: "workflow-documenter-reminder"
+    description: "Remind to update workflow docs when skills/hooks change"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          if echo "$FILE_PATH" | grep -qE '(skills|hooks)/.*\.yaml$'; then
+            echo "📊 [workflow-documenter] Skills/hooks modifiés. Documentation workflow à mettre à jour."
+          fi
+
+  # ----------------------------
+  # Hooks manager reminder
+  # ----------------------------
+  - name: "hooks-manager-reminder"
+    description: "Remind about hooks manager when hooks are modified"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          if echo "$FILE_PATH" | grep -qE 'hooks/.*\.yaml$'; then
+            echo "🔧 [hooks-manager] Hooks modifiés. Multi-platform configs seront régénérés."
+          fi
+
+  # ----------------------------
+  # Package manager reminder (on external install)
+  # ----------------------------
+  - name: "package-manager-reminder"
+    description: "Remind about package manager for external skills"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          if echo "$FILE_PATH" | grep -qE 'data/(skills|hooks|commands)/external/'; then
+            echo "📦 [package-manager] Package externe modifié. Utilisez /pm-list pour voir les packages installés."
+          fi
+
+  # ----------------------------
+  # Prompt engineer suggestion
+  # ----------------------------
+  - name: "prompt-engineer-suggestion"
+    description: "Suggest prompt optimization for new/modified prompts"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          # Check if creating/modifying a prompt file
+          if echo "$FILE_PATH" | grep -qE '^prompts/[^/]+/[^/]+/[^/]+/[^/]+\.md$'; then
+            # Exclude templates and READMEs
+            if ! echo "$FILE_PATH" | grep -qE '(_TEMPLATE|README)\.md$'; then
+              echo "🎯 [prompt-engineer] Prompt créé/modifié. Utilisez /optimize-prompt pour améliorer sa structure."
+            fi
+          fi
+
 # ============================================================================
 # STOP - Quand Claude finit de répondre
 # ============================================================================
@@ -607,7 +720,7 @@ Stop:
           echo ""
 
           SKILLS_DIR=".ai/skills"
-          HOOKED_SKILLS="data-sync memory-keeper self-improver session-status inclusivity-reviewer translator"
+          HOOKED_SKILLS="data-sync memory-keeper self-improver session-status inclusivity-reviewer translator link-checker prompt-validator workflow-documenter hooks-manager package-manager prompt-engineer"
 
           # Count skills
           SKILL_COUNT=$(find "$SKILLS_DIR" -name "*.yaml" ! -name "_TEMPLATE.yaml" 2>/dev/null | wc -l)

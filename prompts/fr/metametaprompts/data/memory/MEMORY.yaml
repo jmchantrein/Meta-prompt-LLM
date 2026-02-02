@@ -306,6 +306,10 @@ skills:
     - name: "workflow-orchestrator"
       purpose: "Multi-agent orchestration"
       status: "active"
+    - name: "prompt-engineer"
+      purpose: "Prompt optimization with research-backed frameworks"
+      status: "active"
+      source: "external (MIT)"
 
 # ----------------------------------------------------------------------------
 # MISSING SKILLS ROADMAP
