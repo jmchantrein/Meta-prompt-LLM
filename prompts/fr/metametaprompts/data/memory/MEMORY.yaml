@@ -99,6 +99,12 @@ decisions:
   - date: "2026-02-02"
     decision: "Sync functions in generate.sh"
     reason: "data/ internal+external synced to .ai/ before generation"
+  - date: "2026-02-02"
+    decision: "Unified internal/external architecture"
+    reason: "Skills, hooks, commands all use same pattern for internal and external packages"
+  - date: "2026-02-02"
+    decision: "Slash commands generation"
+    reason: "commands.yaml generates .claude/commands/*.md for Claude Code"
 
 # ----------------------------------------------------------------------------
 # EVOLUTION HISTORY
@@ -161,8 +167,8 @@ sessions:
     summary: "Clarified 6 inconsistencies, session-status skill, coherence-check hook"
   - date: "2026-02-02"
     id: "3jXvo"
-    commits: "8c8da0b→89caa40"
-    summary: "Research missing skills, license audit, package-manager, MEMORY.md refactor"
+    commits: "8c8da0b→a93e7df"
+    summary: "Package-manager skill, MEMORY/hooks/commands refactor, unified internal/external architecture"
 
 # ----------------------------------------------------------------------------
 # LESSONS LEARNED
