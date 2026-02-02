@@ -61,11 +61,16 @@ Meta-prompt-LLM/
 
 ### Single source of truth
 
-All AI agent configurations are defined once in `.ai/skills/*.yaml`. The `generate.sh` script then creates platform-specific files:
+All data (rules, skills, hooks, prompts) is defined once in `prompts/fr/metametaprompts/data/`:
 
-| Source | Generated files |
-|--------|-----------------|
-| `.ai/skills/*.yaml` | `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, etc. |
+```
+data/ (SOURCE) → .ai/ (local copy) → generate.sh → platform files
+```
+
+| Source | Synced to | Generated files |
+|--------|-----------|-----------------|
+| `data/skills/*.yaml` | `.ai/skills/*.yaml` | `AGENTS.md`, `.cursorrules`, etc. |
+| `data/hooks/hooks.yaml` | `.ai/hooks/hooks.yaml` | `.claude/settings.json` |
 
 ### Available skills
 
@@ -83,10 +88,11 @@ All AI agent configurations are defined once in `.ai/skills/*.yaml`. The `genera
 ### Workflow
 
 1. **Session start**: Read `.ai/MEMORY.md`
-2. **Modify skills**: Edit YAML files in `.ai/skills/`
-3. **Generate**: Run `.ai/generate.sh`
-4. **Validate**: Pre-commit checks via `workflow-orchestrator`
-5. **Update memory**: Record decisions via `memory-keeper`
+2. **Modify data**: Edit YAML files in `prompts/fr/metametaprompts/data/`
+3. **Sync**: Copy to `.ai/` (via `data-sync` or manually)
+4. **Generate**: Run `.ai/generate.sh`
+5. **Validate**: Pre-commit checks via `workflow-orchestrator`
+6. **Update memory**: Record decisions via `memory-keeper`
 
 ## Usage
 
@@ -108,16 +114,20 @@ All AI agent configurations are defined once in `.ai/skills/*.yaml`. The `genera
 
 ### Add a new skill
 
-1. Copy the template:
+1. Create skill in data/ (source of truth):
    ```bash
-   cp .ai/skills/_TEMPLATE.yaml .ai/skills/my-skill.yaml
+   cp prompts/fr/metametaprompts/data/skills/_TEMPLATE.yaml \
+      prompts/fr/metametaprompts/data/skills/my-skill.yaml
    ```
 
 2. Edit the YAML file with your skill definition
 
-3. Generate configurations:
+3. Update manifest.yaml with hash and version
+
+4. Sync to .ai/ and generate:
    ```bash
-   .ai/generate.sh
+   cp prompts/fr/metametaprompts/data/skills/my-skill.yaml .ai/skills/
+   .ai/generate.sh --force
    ```
 
 ### Add a new prompt

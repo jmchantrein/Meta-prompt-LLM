@@ -9,9 +9,9 @@ Complete rules: see AGENTS.md at the project root.
 
 WARNING FOR LLM CONTRIBUTORS:
 - This project uses a hybrid AI architecture
-- Skills in .ai/skills/*.yaml are the SINGLE SOURCE of truth
-- NEVER modify generated files directly
-- Always run .ai/generate.sh after modifying skills
+- Data in prompts/fr/metametaprompts/data/ is the SINGLE SOURCE of truth
+- NEVER modify .ai/ directly - modify data/ then sync
+- Always run .ai/generate.sh after syncing skills to .ai/
 - Follow inclusive writing conventions (rule 10)
 -->
 
@@ -58,4 +58,4 @@ The `self-improver` skill uses this data to:
 ## See Also
 
 - [AGENTS.md](../../../AGENTS.md) - Project rules
-- [self-improver skill](../../../.ai/skills/self-improver.yaml) - Self-improvement skill
+- [self-improver skill](../../fr/metametaprompts/data/skills/self-improver.yaml) - Self-improvement skill (source of truth)

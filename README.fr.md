@@ -61,11 +61,16 @@ Meta-prompt-LLM/
 
 ### Source unique de vérité
 
-Toutes les configurations d'agents IA sont définies une seule fois dans `.ai/skills/*.yaml`. Le script `generate.sh` crée ensuite les fichiers spécifiques à chaque plateforme :
+Toutes les données (règles, skills, hooks, prompts) sont définies une seule fois dans `prompts/fr/metametaprompts/data/` :
 
-| Source | Fichiers générés |
-|--------|------------------|
-| `.ai/skills/*.yaml` | `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, etc. |
+```
+data/ (SOURCE) → .ai/ (copie locale) → generate.sh → fichiers plateformes
+```
+
+| Source | Synchronisé vers | Fichiers générés |
+|--------|------------------|------------------|
+| `data/skills/*.yaml` | `.ai/skills/*.yaml` | `AGENTS.md`, `.cursorrules`, etc. |
+| `data/hooks/hooks.yaml` | `.ai/hooks/hooks.yaml` | `.claude/settings.json` |
 
 ### Skills disponibles
 
@@ -83,10 +88,11 @@ Toutes les configurations d'agents IA sont définies une seule fois dans `.ai/sk
 ### Workflow
 
 1. **Début de session** : Lire `.ai/MEMORY.md`
-2. **Modifier les skills** : Éditer les fichiers YAML dans `.ai/skills/`
-3. **Générer** : Exécuter `.ai/generate.sh`
-4. **Valider** : Vérifications pré-commit via `workflow-orchestrator`
-5. **Mettre à jour la mémoire** : Enregistrer les décisions via `memory-keeper`
+2. **Modifier les données** : Éditer les fichiers YAML dans `prompts/fr/metametaprompts/data/`
+3. **Synchroniser** : Copier vers `.ai/` (via `data-sync` ou manuellement)
+4. **Générer** : Exécuter `.ai/generate.sh`
+5. **Valider** : Vérifications pré-commit via `workflow-orchestrator`
+6. **Mettre à jour la mémoire** : Enregistrer les décisions via `memory-keeper`
 
 ## Utilisation
 
@@ -108,16 +114,20 @@ Toutes les configurations d'agents IA sont définies une seule fois dans `.ai/sk
 
 ### Ajouter un nouveau skill
 
-1. Copier le template :
+1. Créer le skill dans data/ (source de vérité) :
    ```bash
-   cp .ai/skills/_TEMPLATE.yaml .ai/skills/mon-skill.yaml
+   cp prompts/fr/metametaprompts/data/skills/_TEMPLATE.yaml \
+      prompts/fr/metametaprompts/data/skills/mon-skill.yaml
    ```
 
 2. Éditer le fichier YAML avec votre définition de skill
 
-3. Générer les configurations :
+3. Mettre à jour manifest.yaml avec le hash et la version
+
+4. Synchroniser vers .ai/ et générer :
    ```bash
-   .ai/generate.sh
+   cp prompts/fr/metametaprompts/data/skills/mon-skill.yaml .ai/skills/
+   .ai/generate.sh --force
    ```
 
 ### Ajouter un nouveau prompt
