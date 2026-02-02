@@ -235,8 +235,80 @@ cp data/hooks/hooks.yaml .ai/hooks/
 .ai/generate.sh --dry-run
 ```
 
+## Machine à états du parsing des hooks
+
+La fonction `generate_claude_hooks()` dans `.ai/generate.sh` utilise une machine à états pour analyser le fichier YAML des hooks et générer la configuration JSON.
+
+### États
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      MACHINE À ÉTATS DU PARSING HOOKS                        │
+│                                                                              │
+│   ┌──────────┐      Correspondance event    ┌──────────────┐                │
+│   │   IDLE   │ ──────────────────────────► │   IN_EVENT   │                │
+│   │          │    (SessionStart:)          │              │                │
+│   └──────────┘                             └───────┬──────┘                │
+│        ▲                                           │                        │
+│        │ Clé niveau supérieur                      │ Marqueur hook          │
+│        │ (sort de l'event)                         │ (- name: "...")        │
+│        │                                           ▼                        │
+│        │                                   ┌──────────────┐                │
+│        │                                   │   IN_HOOK    │◄────────────┐  │
+│        │                                   │              │             │  │
+│        │                                   └───────┬──────┘             │  │
+│        │                                           │                    │  │
+│        │                                           │ hooks: array       │  │
+│        │                                           ▼                    │  │
+│        │                                   ┌──────────────┐             │  │
+│        │                                   │ IN_HOOKS_ARR │             │  │
+│        │                                   │              │─────────────┘  │
+│        │                                   └───────┬──────┘  Nouveau hook  │
+│        │                                           │                        │
+│        │                                           │ command: | ou prompt: |│
+│        │                                           ▼                        │
+│        │                                   ┌──────────────┐                │
+│        └───────────────────────────────────│ IN_MULTILINE │                │
+│                   Fin multiligne           │              │                │
+│                   (indentation diminue)    └──────────────┘                │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Variables d'état
+
+| Variable | Type | Objectif |
+|----------|------|----------|
+| `current_event` | string | Événement en cours d'analyse (SessionStart, etc.) |
+| `in_hook_list` | bool | Dans la liste des hooks d'un événement |
+| `in_hook_item` | bool | Dans une définition de hook spécifique |
+| `in_hooks_array` | bool | Dans le tableau `hooks:` d'un hook |
+| `reading_multiline` | string | Type de contenu multiligne (command/prompt) |
+| `multiline_indent` | int | Niveau d'indentation pour le contenu multiligne |
+
+### Transitions
+
+| De | Vers | Déclencheur |
+|----|------|-------------|
+| IDLE | IN_EVENT | Ligne correspond à `^(SessionStart\|...):`$ |
+| IN_EVENT | IN_HOOK | Ligne correspond à `^[[:space:]]+-[[:space:]]+name:` |
+| IN_HOOK | IN_HOOKS_ARRAY | Ligne correspond à `hooks:$` |
+| IN_HOOKS_ARRAY | IN_MULTILINE | Ligne correspond à `command:\|$` ou `prompt:\|$` |
+| IN_MULTILINE | IN_HOOK | L'indentation diminue sous le seuil |
+| IN_EVENT | IDLE | Clé de niveau supérieur sans indentation |
+
+### Refactoring futur
+
+La machine à états est candidate pour extraction en modules séparés :
+- `.ai/lib/hooks-parser.sh` - Analyser hooks.yaml
+- `.ai/lib/hooks-transformer.sh` - Transformer vers format plateforme
+- `.ai/lib/platform-writers/*.sh` - Écrire fichiers spécifiques plateforme
+
+Voir `docs/plans/refactor-plan-2026-02-02.md` pour le plan complet de refactoring.
+
 ## Voir aussi
 
 - [AGENTS.md](../../AGENTS.md) - Règles fondamentales pour les agents IA
 - [data/README.md](../../prompts/fr/metametaprompts/data/README.md) - Documentation de la source de vérité
 - [hooks-manager skill](../../.ai/skills/hooks-manager.yaml) - Base de connaissances des hooks
+- [Capacités plateformes](../../.ai/data/platform-capabilities.yaml) - Matrice des fonctionnalités

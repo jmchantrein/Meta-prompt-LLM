@@ -1,0 +1,225 @@
+# Platform Capabilities Mapping
+# ============================================================================
+# Defines what features each platform supports.
+# Used by generate.sh to determine what to generate for each platform.
+#
+# Part of Phase 2.2 refactoring (see docs/plans/refactor-plan-2026-02-02.md)
+# ============================================================================
+
+schema_version: "1.0.0"
+last_updated: "2026-02-02"
+
+# Event types supported across platforms
+events:
+  - SessionStart        # When a session begins
+  - UserPromptSubmit    # When user submits a prompt
+  - PreToolUse          # Before a tool is executed
+  - PostToolUse         # After a tool execution
+  - Stop                # When session is stopped
+  - SessionEnd          # When session ends (not widely supported)
+
+# Platform definitions
+platforms:
+  claude-code:
+    name: "Claude Code"
+    rating: 5
+    rating_display: "★★★★★"
+    config_files:
+      - ".claude/settings.json"
+      - ".claude/agents/*.md"
+    hooks:
+      supported: true
+      events:
+        SessionStart: true
+        UserPromptSubmit: true
+        PreToolUse: true
+        PostToolUse: true
+        Stop: true
+        SessionEnd: false
+      types:
+        command: true
+        prompt: true
+        agent: true
+      features:
+        matcher: true
+        timeout: true
+        multiline_commands: true
+    subagents:
+      supported: true
+      format: "markdown"
+      location: ".claude/agents/"
+    commands:
+      supported: true
+      location: ".claude/commands/"
+    notes: "Full support - all features available"
+
+  cursor:
+    name: "Cursor"
+    rating: 4
+    rating_display: "★★★★☆"
+    config_files:
+      - ".cursorrules"
+      - ".cursor/hooks.json"
+    hooks:
+      supported: true
+      events:
+        SessionStart: false
+        UserPromptSubmit: true
+        PreToolUse: true
+        PostToolUse: true
+        Stop: false
+        SessionEnd: false
+      types:
+        command: true
+        prompt: false
+        agent: false
+      features:
+        matcher: true
+        timeout: true
+        multiline_commands: false
+    subagents:
+      supported: false
+    commands:
+      supported: false
+    notes: "Good support - no SessionStart, no agent hooks"
+
+  opencode:
+    name: "OpenCode"
+    rating: 3
+    rating_display: "★★★☆☆"
+    config_files:
+      - ".opencode/agents/*.md"
+      - ".opencode/hooks/*.sh"
+    hooks:
+      supported: true
+      events:
+        SessionStart: false
+        UserPromptSubmit: true
+        PreToolUse: true
+        PostToolUse: true
+        Stop: false
+        SessionEnd: false
+      types:
+        command: true
+        prompt: false
+        agent: false
+      features:
+        matcher: true
+        timeout: false
+        multiline_commands: true
+    subagents:
+      supported: true
+      format: "markdown"
+      location: ".opencode/agents/"
+    commands:
+      supported: false
+    notes: "Requires oh-my-opencode plugin for full hooks"
+
+  codex:
+    name: "Codex CLI"
+    rating: 2
+    rating_display: "★★☆☆☆"
+    config_files:
+      - "codex.toml"
+      - ".codex/agents/*.md"
+    hooks:
+      supported: false
+      notes: "Only agent-turn-complete notification supported"
+    subagents:
+      supported: true
+      format: "markdown"
+      location: ".codex/agents/"
+    commands:
+      supported: false
+    notes: "Basic agent support only"
+
+  aider:
+    name: "Aider"
+    rating: 1
+    rating_display: "★☆☆☆☆"
+    config_files:
+      - ".aider.conf.yml"
+    hooks:
+      supported: false
+      notes: "No hooks - only auto_lint/test_cmd for automatic testing"
+    subagents:
+      supported: false
+    commands:
+      supported: false
+    notes: "YAML config only, no hooks system"
+
+  continue-dev:
+    name: "Continue.dev"
+    rating: 1
+    rating_display: "★☆☆☆☆"
+    config_files:
+      - ".continuerc.json"
+    hooks:
+      supported: false
+      notes: "Data events only, no command execution"
+    subagents:
+      supported: false
+    commands:
+      supported: true
+      format: "json"
+      location: ".continuerc.json"
+    notes: "Custom commands in JSON format"
+
+  ollama:
+    name: "Ollama"
+    rating: 1
+    rating_display: "★☆☆☆☆"
+    config_files:
+      - "ollama/Modelfile.*"
+    hooks:
+      supported: false
+    subagents:
+      supported: false
+    commands:
+      supported: false
+    notes: "Modelfile generation only - no runtime hooks"
+
+# Hook type definitions
+hook_types:
+  command:
+    description: "Execute a shell command"
+    requires: ["command"]
+    optional: ["timeout", "matcher"]
+
+  prompt:
+    description: "Send a prompt to the LLM"
+    requires: ["prompt"]
+    optional: ["timeout", "matcher"]
+
+  agent:
+    description: "Invoke a subagent"
+    requires: ["prompt"]
+    optional: ["timeout", "matcher"]
+    notes: "Only supported by Claude Code"
+
+# Event timing
+event_timing:
+  SessionStart:
+    when: "session_begins"
+    use_case: "Load context, read memory, display welcome"
+
+  UserPromptSubmit:
+    when: "after_user_input"
+    use_case: "Validate input, add context, log activity"
+
+  PreToolUse:
+    when: "before_tool_execution"
+    use_case: "Guardrails, permission checks, audit"
+
+  PostToolUse:
+    when: "after_tool_execution"
+    use_case: "Auto-format, run tests, sync data"
+
+  Stop:
+    when: "session_interrupted"
+    use_case: "Save state, commit pending, notify"
+
+  SessionEnd:
+    when: "session_ends"
+    use_case: "Cleanup, final save"
+    notes: "Rarely supported - most platforms don't fire this"
