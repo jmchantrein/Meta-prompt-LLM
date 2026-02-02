@@ -55,6 +55,8 @@ A framework for creating, modifying, and maintaining prompt collections with:
 
 ## Evolution history
 
+> **Note**: Ces versions sont sémantiques pour le projet. Le fichier `.ai/VERSION` (format `1.0.0-hash`) est différent : c'est un hash de détection de changements pour generate.sh.
+
 | Version | Date | Changes |
 |---------|------|---------|
 | 0.1.0 | 2026-01-31 | Initial architecture bootstrap |
@@ -72,7 +74,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | 2026-02-01 | - | 15bd248→0fa9ba7 | Socratic-tutor prompt, audit fixes |
 | 2026-02-02 | PR #4 | 2994926→d1876f9 | KISS refactor, hooks-manager skill |
 | 2026-02-02 | PR #5 | fc1c3db→c1e0b88 | Workflow-documenter, architecture docs |
-| 2026-02-02 | bq507 | 5c703b4→a5cfb24 | Complete hooks lifecycle, multi-platform generation, platform detection |
+| 2026-02-02 | PR #6 (bq507) | 5c703b4→a5cfb24 | Complete hooks lifecycle, multi-platform generation, platform detection (branche nommée "french-support" par erreur) |
 
 ## Lessons learned
 
@@ -85,9 +87,12 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | 2026-02-02 | Source of truth = data/ | .ai/ is generated, never edit directly |
 | 2026-02-02 | SessionStart exists | Hook event runs BEFORE user input, not just UserPromptSubmit |
 | 2026-02-02 | Stop hook for consistency | Agent-type hook can validate and continue if needed |
-| 2026-02-02 | MEMORY.md not auto-updated | Sessions without memory-keeper invocation lose context |
+| 2026-02-02 | MEMORY.md not auto-updated | ~~Sessions without memory-keeper invocation lose context~~ **OBSOLÈTE**: Stop hook consistency-check vérifie maintenant automatiquement |
 | 2026-02-02 | Maximize LLM support always | Never implement for one platform only; always all supported LLMs |
 | 2026-02-02 | Platform detection proactive | Detect LLM at session start, show limitations without asking |
+| 2026-02-02 | Skill vs Agent terminology | Skill = YAML source file, Agent = Claude Code runtime. Interchangeable. |
+| 2026-02-02 | VERSION file ≠ project version | .ai/VERSION is hash for generate.sh change detection, not semver |
+| 2026-02-02 | User hooks can extend project hooks | ~/.claude/ hooks (like git-check) add to project .claude/settings.json |
 
 ## Current context
 
@@ -108,9 +113,15 @@ A framework for creating, modifying, and maintaining prompt collections with:
 
 - None currently
 
-## Available agents
+## Available skills (aka agents)
 
-| Agent | Purpose | Status |
+> **Terminologie** :
+> - **Skill** = fichier YAML de définition (`.ai/skills/*.yaml`)
+> - **Agent** = sous-agent Claude Code généré à partir du skill
+>
+> Les termes sont interchangeables dans ce projet. "Skill" est le terme source, "agent" est le terme runtime.
+
+| Skill | Purpose | Status |
 |-------|---------|--------|
 | data-sync | Syncs data/ to .ai/ and validates integrity | Active |
 | hooks-manager | Multi-platform hook generation from YAML | Active |
@@ -161,6 +172,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 ┌─ Stop ─────────────────────────────────────────────────────┐
 │  ✅ [consistency-check] Agent vérifie si MEMORY.md        │
 │     doit être mis à jour. Si oui, continue la session.    │
+│  Note: hooks utilisateur (~/.claude/) peuvent s'ajouter   │
 └────────────────────────────────────────────────────────────┘
                             ↓
 ┌─ SessionEnd ───────────────────────────────────────────────┐
@@ -197,4 +209,4 @@ A framework for creating, modifying, and maintaining prompt collections with:
 
 ---
 
-*Last updated: 2026-02-02 by memory-keeper*
+*Last updated: 2026-02-02 by memory-keeper (session 4fPY2: clarified 6 inconsistencies)*
