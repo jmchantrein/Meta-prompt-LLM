@@ -34,6 +34,10 @@
       "description": "Manages EN/FR translation and documentation synchronization"
     },
     {
+      "name": "workflow-documenter",
+      "description": "Génère et maintient la documentation des workflows agents/skills/hooks"
+    },
+    {
       "name": "workflow-orchestrator",
       "description": "Orchestrates multi-agent workflows and validation sequences"
     }

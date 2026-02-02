@@ -104,7 +104,7 @@ instructions:
 
     For English documents:
     ```markdown
-    > [Version francaise](../fr/[same-path].md)
+    > [Version française](../fr/[same-path].md)
 
     # Document title
     ...

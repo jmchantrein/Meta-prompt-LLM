@@ -25,5 +25,6 @@ cat .ai/MEMORY.md
 - **prompt-validator**: Validates prompts against schema and quality standards
 - **self-improver**: Agent d'auto-amélioration du projet Meta-prompt-LLM
 - **translator**: Manages EN/FR translation and documentation synchronization
+- **workflow-documenter**: Génère et maintient la documentation des workflows agents/skills/hooks
 - **workflow-orchestrator**: Orchestrates multi-agent workflows and validation sequences
 

@@ -9,9 +9,9 @@ Complete rules: see AGENTS.md at the project root.
 
 WARNING FOR LLM CONTRIBUTORS:
 - This project uses a hybrid AI architecture
-- Skills in .ai/skills/*.yaml are the SINGLE SOURCE of truth
-- NEVER modify generated files directly
-- Always run .ai/generate.sh after modifying skills
+- Data in prompts/fr/metametaprompts/data/ is the SINGLE SOURCE of truth
+- NEVER modify .ai/ directly - modify data/ then sync
+- Always run .ai/generate.sh after syncing skills to .ai/
 - Follow inclusive writing conventions (rule 10)
 -->
 
@@ -41,17 +41,16 @@ Deterministic data is in `../../fr/metametaprompts/data/` (French is source of t
 
 | File | Description |
 |------|-------------|
-| [rules-index.yaml](../../fr/metametaprompts/data/rules-index.yaml) | AGENTS.md rules index |
-| [skills-index.yaml](../../fr/metametaprompts/data/skills-index.yaml) | Skills index |
-| [prompts-index.yaml](../../fr/metametaprompts/data/prompts-index.yaml) | Prompts index |
-| [dependencies.yaml](../../fr/metametaprompts/data/dependencies.yaml) | Dependencies mapping |
-| [pending-reviews.yaml](../../fr/metametaprompts/data/pending-reviews.yaml) | Pending reviews |
+| [manifest.yaml](../../fr/metametaprompts/data/manifest.yaml) | Central index with version hashes and integrity verification |
+| [rules/](../../fr/metametaprompts/data/rules/) | AGENTS.md rules in YAML format |
+| [skills/](../../fr/metametaprompts/data/skills/) | Skill definitions in YAML format |
+| [prompts/](../../fr/metametaprompts/data/prompts/) | Shared prompts (socratic-tutor, etc.) |
 
 ## Usage
 
 The `self-improver` skill uses this data to:
 
-1. Detect rule changes (via hash)
+1. Detect rule changes (via hash in manifest.yaml)
 2. Calculate impact scope (via dependencies)
 3. Propose verifications to user
 4. Update impacted prompts
@@ -59,4 +58,4 @@ The `self-improver` skill uses this data to:
 ## See Also
 
 - [AGENTS.md](../../../AGENTS.md) - Project rules
-- [self-improver skill](../../../.ai/skills/self-improver.yaml) - Self-improvement skill
+- [self-improver skill](../../fr/metametaprompts/data/skills/self-improver.yaml) - Self-improvement skill (source of truth)

@@ -48,9 +48,9 @@ Complete rules: see AGENTS.md at the project root.
 
 WARNING FOR LLM CONTRIBUTORS:
 - This project uses a hybrid AI architecture
-- Skills in .ai/skills/*.yaml are the SINGLE SOURCE of truth
-- NEVER modify generated files directly
-- Always run .ai/generate.sh after modifying skills
+- Data in prompts/fr/metametaprompts/data/ is the SINGLE SOURCE of truth
+- NEVER modify .ai/ directly - modify data/ then sync
+- Always run .ai/generate.sh after syncing skills to .ai/
 - Follow inclusive writing conventions (rule 10)
 -->
 
@@ -85,7 +85,7 @@ the project to:
                     └───────────────┬─────────────────┘
                                     │
                     ┌───────────────▼─────────────────┐
-                    │      AGENTS.md / .ai/skills     │
+                    │      AGENTS.md / data/skills    │
                     │      (project rules)            │
                     └───────────────┬─────────────────┘
                                     │
@@ -132,7 +132,7 @@ https://jmchantrein.github.io/Meta-prompt-LLM/prompts/fr/metametaprompts/data/
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ 2. Detect changes (deterministic)                                        │
 │    - Compare hash(AGENTS.md) with rules-index.yaml                      │
-│    - Compare hash(.ai/skills/*.yaml) with skills-index.yaml             │
+│    - Compare hash(data/skills/*.yaml) with skills-index.yaml            │
 │    - Check if pending-reviews.yaml contains reviews                     │
 └───────────────────────────────────┬─────────────────────────────────────┘
                                     ▼
@@ -228,7 +228,7 @@ proposed to the user at the start of each session.
 
 ## Associated Skill
 
-The `self-improver` skill (`.ai/skills/self-improver.yaml`) implements
+The `self-improver` skill (`prompts/fr/metametaprompts/data/skills/self-improver.yaml`) implements
 this workflow. It is triggered:
 
 - Automatically at the start of each session

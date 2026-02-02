@@ -204,7 +204,7 @@ CLAUDE.md                       # pointeur -> AGENTS.md
 # Documentation bilingue
 docs/
 ├── en/                         # documentation principale (anglais)
-└── fr/                         # traduction francaise (miroir)
+└── fr/                         # traduction française (miroir)
 
 README.md                       # anglais (principal)
 README.fr.md                    # francais (lien croise)

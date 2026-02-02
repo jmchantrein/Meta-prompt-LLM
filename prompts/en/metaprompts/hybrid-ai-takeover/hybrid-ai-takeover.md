@@ -34,7 +34,7 @@ update_prompt: |
   Compare versions and inform me of any changes.
 -->
 
-> [Version francaise](../../../fr/metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md)
+> [Version française](../../../fr/metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md)
 
 # Project takeover to hybrid AI architecture
 

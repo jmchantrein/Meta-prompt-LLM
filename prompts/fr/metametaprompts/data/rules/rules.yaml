@@ -49,7 +49,7 @@ rules:
     name: "DRY and KISS"
     description: "Single source of truth, keep things simple"
     instruction: |
-      - Single source of truth (`.ai/skills/*.yaml`)
+      - Single source of truth (`prompts/fr/metametaprompts/data/`)
       - Keep things simple
       - Decompose into atomic tasks
 

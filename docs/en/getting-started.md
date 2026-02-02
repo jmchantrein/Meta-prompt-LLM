@@ -1,4 +1,4 @@
-> [Version francaise](../fr/getting-started.md)
+> [Version française](../fr/getting-started.md)
 
 # Getting started
 
@@ -43,6 +43,10 @@ cat .ai/MEMORY.md
 List the skills available in the project:
 
 ```bash
+# Source of truth
+ls prompts/fr/metametaprompts/data/skills/*.yaml
+
+# Or local working copy
 ls .ai/skills/*.yaml
 ```
 
@@ -91,10 +95,11 @@ Use the prompt-validator skill to check your prompt.
 
 ## Creating a skill
 
-### 1. Copy the template
+### 1. Copy the template (in source of truth)
 
 ```bash
-cp .ai/skills/_TEMPLATE.yaml .ai/skills/my-skill.yaml
+cp prompts/fr/metametaprompts/data/skills/_TEMPLATE.yaml \
+   prompts/fr/metametaprompts/data/skills/my-skill.yaml
 ```
 
 ### 2. Define the skill
@@ -105,14 +110,20 @@ Edit the YAML file with:
 - Instructions (role, guidelines, process)
 - Constraints
 
-### 3. Generate
+### 3. Update manifest.yaml
+
+Add hash and version entry in `prompts/fr/metametaprompts/data/manifest.yaml`.
+
+### 4. Sync and generate
 
 ```bash
-.ai/generate.sh
+cp prompts/fr/metametaprompts/data/skills/my-skill.yaml .ai/skills/
+.ai/generate.sh --force
 ```
 
 ## Next steps
 
 - Read [AGENTS.md](../../AGENTS.md) for the complete rules
-- Explore existing skills in `.ai/skills/`
+- Explore existing skills in `prompts/fr/metametaprompts/data/skills/`
 - Browse the prompt collection in `prompts/`
+- Read [Architecture documentation](./architecture.md) for data flow

@@ -34,7 +34,7 @@ update_prompt: |
   Compare versions and inform me of any changes.
 -->
 
-> [Version francaise](../../../fr/metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md)
+> [Version française](../../../fr/metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md)
 
 # Hybrid AI architecture bootstrap
 

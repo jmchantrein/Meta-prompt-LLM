@@ -2,6 +2,11 @@
 
 All notable changes to the skills will be documented in this file.
 
+## [1.0.1] - 2026-02-02
+
+### Added
+- hooks-manager: LLM hooks knowledge base and multi-platform hook generation
+
 ## [1.0.0] - 2026-02-01
 
 ### Added

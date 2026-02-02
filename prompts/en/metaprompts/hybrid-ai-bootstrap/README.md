@@ -1,6 +1,6 @@
 # hybrid-ai-bootstrap
 
-> [Version francaise](../../../fr/metaprompts/hybrid-ai-bootstrap/README.md)
+> [Version française](../../../fr/metaprompts/hybrid-ai-bootstrap/README.md)
 
 Initialization prompt for creating new projects with a hybrid AI architecture supporting multiple platforms (Claude Code, Cursor, Ollama, etc.).
 

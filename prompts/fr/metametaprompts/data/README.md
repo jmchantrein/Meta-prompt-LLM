@@ -1,57 +1,109 @@
-# Data - Source de Vérité
+# Data - Source de Vérité Unique
 
 > [English version](#english-version-below)
 
-Ce dossier contient la **source de vérité unique** pour le système de version check.
+Ce dossier est la **SOURCE DE VÉRITÉ UNIQUE** pour tout le projet.
 
-## Structure simplifiée (KISS)
+## Flux de données
+
+```
+data/ (SOURCE) ──────────────────────► .ai/ (CIBLE)
+                    data-sync ou
+                    copie manuelle
+```
+
+**RÈGLE IMPORTANTE** : Toute modification doit être faite dans `data/`, puis synchronisée vers `.ai/`.
+
+## Structure
 
 ```
 data/
-├── manifest.yaml          # Index central unique
+├── manifest.yaml          # Index central (versions, hashes, URLs)
 ├── rules/
-│   └── rules.yaml         # Règles extraites de AGENTS.md
+│   ├── rules.yaml         # Règles extraites de AGENTS.md
+│   └── CHANGELOG.md
 ├── skills/
-│   └── *.yaml             # Copie des skills
+│   ├── *.yaml             # Définitions des skills
+│   └── CHANGELOG.md
+├── hooks/
+│   ├── hooks.yaml         # Configuration des hooks
+│   └── CHANGELOG.md
 └── prompts/
-    └── [prompt-name]/     # Prompts versionnés
-        ├── prompt.en.md
-        └── prompt.fr.md
+    └── [prompt-name]/     # Prompts versionnés (EN + FR)
 ```
+
+## Correspondance data/ → .ai/
+
+| Source (data/) | Cible (.ai/) |
+|----------------|--------------|
+| `skills/*.yaml` | `.ai/skills/*.yaml` |
+| `hooks/hooks.yaml` | `.ai/hooks/hooks.yaml` |
+| `rules/rules.yaml` | Utilisé par self-improver |
 
 ## manifest.yaml
 
-Seul fichier d'index. Contient :
+Index central unique contenant :
 - URLs des fichiers sources (raw GitHub)
 - Hashes SHA256 pour vérification d'intégrité
 - Versions sémantiques
 - Métadonnées des prompts
 
-## Usage
+## Procédure de modification
 
-Les prompts incluent un bloc `<!-- META -->` qui pointe vers leur source dans ce dossier. Au démarrage de session, un LLM peut vérifier si une mise à jour est disponible.
+1. Modifier le fichier dans `data/`
+2. Mettre à jour le CHANGELOG correspondant
+3. Recalculer le hash si nécessaire : `sha256sum fichier.yaml`
+4. Mettre à jour `manifest.yaml` (hash, version, date)
+5. Synchroniser vers `.ai/` via `data-sync` ou copie manuelle
 
 ---
 
 # English Version Below
 
-# Data - Source of Truth
+# Data - Single Source of Truth
 
-This folder contains the **single source of truth** for the version check system.
+This folder is the **SINGLE SOURCE OF TRUTH** for the entire project.
 
-## Simplified structure (KISS)
+## Data Flow
+
+```
+data/ (SOURCE) ──────────────────────► .ai/ (TARGET)
+                    data-sync or
+                    manual copy
+```
+
+**IMPORTANT RULE**: All modifications must be made in `data/`, then synchronized to `.ai/`.
+
+## Structure
 
 ```
 data/
-├── manifest.yaml          # Single central index
+├── manifest.yaml          # Central index (versions, hashes, URLs)
 ├── rules/
-│   └── rules.yaml         # Rules extracted from AGENTS.md
+│   ├── rules.yaml         # Rules extracted from AGENTS.md
+│   └── CHANGELOG.md
 ├── skills/
-│   └── *.yaml             # Skills copy
+│   ├── *.yaml             # Skill definitions
+│   └── CHANGELOG.md
+├── hooks/
+│   ├── hooks.yaml         # Hooks configuration
+│   └── CHANGELOG.md
 └── prompts/
-    └── [prompt-name]/     # Versioned prompts
+    └── [prompt-name]/     # Versioned prompts (EN + FR)
 ```
 
-## manifest.yaml
+## Mapping data/ → .ai/
 
-Single index file containing URLs, SHA256 hashes, versions, and prompt metadata.
+| Source (data/) | Target (.ai/) |
+|----------------|---------------|
+| `skills/*.yaml` | `.ai/skills/*.yaml` |
+| `hooks/hooks.yaml` | `.ai/hooks/hooks.yaml` |
+| `rules/rules.yaml` | Used by self-improver |
+
+## Modification procedure
+
+1. Modify the file in `data/`
+2. Update the corresponding CHANGELOG
+3. Recalculate hash if needed: `sha256sum file.yaml`
+4. Update `manifest.yaml` (hash, version, date)
+5. Sync to `.ai/` via `data-sync` or manual copy

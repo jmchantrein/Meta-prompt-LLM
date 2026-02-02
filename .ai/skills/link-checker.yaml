@@ -149,7 +149,7 @@ instructions:
     ## Broken links
 
     ### file: prompts/en/metaprompts/example/example.md
-    - Line 21: [Version francaise](../../../fr/metaprompts/example/example.md)
+    - Line 21: [Version française](../../../fr/metaprompts/example/example.md)
       Target does not exist: prompts/fr/metaprompts/example/example.md
 
     ### file: docs/en/guide.md
@@ -180,7 +180,7 @@ instructions:
         - Broken links: 0
 
         ## Links validated
-        - Line 21: [Version francaise](../../../fr/metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md) -> OK
+        - Line 21: [Version française](../../../fr/metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md) -> OK
         - Line 312: [hybrid-ai-takeover](../hybrid-ai-takeover/hybrid-ai-takeover.md) -> OK
       explanation: "All links in the file point to existing targets"
 

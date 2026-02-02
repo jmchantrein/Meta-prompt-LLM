@@ -48,9 +48,9 @@ Règles complètes : voir AGENTS.md à la racine du projet.
 
 AVERTISSEMENT POUR LES CONTRIBUTEUR·ICES LLM :
 - Ce projet utilise une architecture IA hybride
-- Les skills dans .ai/skills/*.yaml sont la SOURCE UNIQUE de vérité
-- Ne JAMAIS modifier directement les fichiers générés
-- Toujours exécuter .ai/generate.sh après modification des skills
+- Les données dans prompts/fr/metametaprompts/data/ sont la SOURCE UNIQUE de vérité
+- Ne JAMAIS modifier .ai/ directement - modifier data/ puis synchroniser
+- Toujours exécuter .ai/generate.sh après synchronisation des skills vers .ai/
 - Respecter les conventions d'écriture inclusive (règle 10)
 -->
 
@@ -85,7 +85,7 @@ au projet de :
                     └───────────────┬─────────────────┘
                                     │
                     ┌───────────────▼─────────────────┐
-                    │      AGENTS.md / .ai/skills     │
+                    │      AGENTS.md / data/skills    │
                     │      (règles du projet)         │
                     └───────────────┬─────────────────┘
                                     │
@@ -132,7 +132,7 @@ https://jmchantrein.github.io/Meta-prompt-LLM/prompts/fr/metametaprompts/data/
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ 2. Détecter les changements (déterministe)                               │
 │    - Comparer hash(AGENTS.md) avec rules-index.yaml                     │
-│    - Comparer hash(.ai/skills/*.yaml) avec skills-index.yaml            │
+│    - Comparer hash(data/skills/*.yaml) avec skills-index.yaml           │
 │    - Vérifier si pending-reviews.yaml contient des reviews              │
 └───────────────────────────────────┬─────────────────────────────────────┘
                                     ▼
@@ -229,7 +229,7 @@ Ces notes sont extraites et stockées dans `pending-reviews.yaml` pour
 
 ## Skill associé
 
-Le skill `self-improver` (`.ai/skills/self-improver.yaml`) implémente
+Le skill `self-improver` (`prompts/fr/metametaprompts/data/skills/self-improver.yaml`) implémente
 ce workflow. Il est déclenché :
 
 - Automatiquement au début de chaque session
