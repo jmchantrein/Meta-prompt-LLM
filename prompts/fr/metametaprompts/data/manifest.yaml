@@ -1,0 +1,145 @@
+# Meta-prompt-LLM Manifest
+# Central index for version tracking and integrity verification
+#
+# Source of truth for all prompts, rules, and skills
+# https://github.com/jmchantrein/Meta-prompt-LLM
+
+schema_version: "1.0.0"
+last_updated: "2026-02-01T15:00:00Z"
+repository: "https://github.com/jmchantrein/Meta-prompt-LLM"
+
+base_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data"
+
+# Integrity hashes for all data files
+integrity:
+  "rules/rules.yaml":
+    hash: "sha256:7b5fd16e19e8b76698d47460dd8eb11b1135babd5ca93969c074e53fcceaf91f"
+    version: "1.0.0"
+    last_modified: "2026-02-01"
+
+  "skills/inclusivity-reviewer.yaml":
+    hash: "sha256:10ad9d17df870437f6d62178df2ba3ca18cb7385b5375bc2dd7f6d3d857fd59e"
+    version: "1.0.0"
+    last_modified: "2026-02-01"
+
+  "skills/link-checker.yaml":
+    hash: "sha256:0a165c65e4ba92c5e1b1b5a6691932825dc003c120ede6dd2b516fc7d3a4a03a"
+    version: "1.0.0"
+    last_modified: "2026-02-01"
+
+  "skills/memory-keeper.yaml":
+    hash: "sha256:51c170e7b0984448081efdefb3112c56e3e3277e7e526278b04fca94897dbf3e"
+    version: "1.0.0"
+    last_modified: "2026-02-01"
+
+  "skills/prompt-validator.yaml":
+    hash: "sha256:fe4db4fe5a6a130537a240a77e5fbf269d1815b14f7130ab13b42ce0cfc929ea"
+    version: "1.0.0"
+    last_modified: "2026-02-01"
+
+  "skills/self-improver.yaml":
+    hash: "sha256:e4bee012ee5275a7fab6f196c2b6fabd31db5247f7a89b75c0f0b61914e7cab7"
+    version: "1.0.0"
+    last_modified: "2026-02-01"
+
+  "skills/translator.yaml":
+    hash: "sha256:74a748745e43f2a9cd8c8c868c46304ba9bf1804626a28d2263863a4e3cf0619"
+    version: "1.0.0"
+    last_modified: "2026-02-01"
+
+  "skills/workflow-orchestrator.yaml":
+    hash: "sha256:966aeed22d0fe58e675b2868a2468b7ac81f94fe7167014b6b67b598081d0b68"
+    version: "1.0.0"
+    last_modified: "2026-02-01"
+
+  "skills/data-sync.yaml":
+    hash: "sha256:55432e3f88f1c3fa6cec6c8f0431397975af828b6ef8847260e74465433556bf"
+    version: "1.0.0"
+    last_modified: "2026-02-01"
+
+  "prompts/socratic-tutor/socratic-tutor.en.md":
+    hash: "sha256:8e92b4d159ebcfebf43df8ad92d2bb3655a81428a3da3ddac25046b74372fee9"
+    version: "1.0.0"
+    last_modified: "2026-02-01"
+
+  "prompts/socratic-tutor/socratic-tutor.fr.md":
+    hash: "sha256:bca160951678f5a7647bdbaed03c57ed465e5727bd45ff6cd8ee73a8aff6b5f7"
+    version: "1.0.0"
+    last_modified: "2026-02-01"
+
+# Rules
+rules:
+  version: "1.0.0"
+  url: "{base_url}/rules/rules.yaml"
+  changelog_url: "{base_url}/rules/CHANGELOG.md"
+
+# Skills
+skills:
+  version: "1.0.0"
+  changelog_url: "{base_url}/skills/CHANGELOG.md"
+  items:
+    - id: "inclusivity-reviewer"
+      version: "1.0.0"
+      category: "validation"
+      url: "{base_url}/skills/inclusivity-reviewer.yaml"
+      description: "Reviews content for inclusive writing and modern terminology"
+
+    - id: "link-checker"
+      version: "1.0.0"
+      category: "validation"
+      url: "{base_url}/skills/link-checker.yaml"
+      description: "Validates internal links and paths in markdown files"
+
+    - id: "memory-keeper"
+      version: "1.0.0"
+      category: "core"
+      url: "{base_url}/skills/memory-keeper.yaml"
+      description: "Manages persistent project memory between sessions"
+
+    - id: "prompt-validator"
+      version: "1.0.0"
+      category: "validation"
+      url: "{base_url}/skills/prompt-validator.yaml"
+      description: "Validates prompts against schema and quality standards"
+
+    - id: "self-improver"
+      version: "1.0.0"
+      category: "core"
+      url: "{base_url}/skills/self-improver.yaml"
+      description: "Agent d'auto-amélioration du projet Meta-prompt-LLM"
+
+    - id: "translator"
+      version: "1.0.0"
+      category: "translation"
+      url: "{base_url}/skills/translator.yaml"
+      description: "Manages EN/FR translation and documentation synchronization"
+
+    - id: "workflow-orchestrator"
+      version: "1.0.0"
+      category: "core"
+      url: "{base_url}/skills/workflow-orchestrator.yaml"
+      description: "Orchestrates multi-agent workflows and validation sequences"
+
+    - id: "data-sync"
+      version: "1.0.0"
+      category: "core"
+      url: "{base_url}/skills/data-sync.yaml"
+      description: "Synchronizes data/ to project files and validates integrity"
+
+# Prompts
+prompts:
+  changelog_url: "{base_url}/prompts/CHANGELOG.md"
+  items:
+    - id: "socratic-tutor"
+      version: "1.0.0"
+      languages:
+        en:
+          url: "{base_url}/prompts/socratic-tutor/socratic-tutor.en.md"
+          hash: "sha256:8e92b4d159ebcfebf43df8ad92d2bb3655a81428a3da3ddac25046b74372fee9"
+        fr:
+          url: "{base_url}/prompts/socratic-tutor/socratic-tutor.fr.md"
+          hash: "sha256:bca160951678f5a7647bdbaed03c57ed465e5727bd45ff6cd8ee73a8aff6b5f7"
+      category: "pedagogy"
+      description: "Pedagogical tutor using Socratic method and evidence-based principles"
+      applicable_rules: ["rule-0", "rule-1", "rule-8"]
+      applicable_skills: ["prompt-validator", "inclusivity-reviewer"]

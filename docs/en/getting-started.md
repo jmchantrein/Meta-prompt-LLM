@@ -15,7 +15,7 @@ This guide will help you set up and use Meta-prompt-LLM.
 ### Clone the repository
 
 ```bash
-git clone https://github.com/your-org/Meta-prompt-LLM.git
+git clone https://github.com/jmchantrein/Meta-prompt-LLM.git
 cd Meta-prompt-LLM
 ```
 

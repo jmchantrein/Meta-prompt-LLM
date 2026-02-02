@@ -1,10 +1,10 @@
 > [English version](../en/getting-started.md)
 
-# Demarrage
+# Démarrage
 
-Ce guide vous aidera a configurer et utiliser Meta-prompt-LLM.
+Ce guide vous aidera à configurer et utiliser Meta-prompt-LLM.
 
-## Prerequis
+## Prérequis
 
 - Shell Bash (Linux, macOS, WSL)
 - Git
@@ -12,33 +12,33 @@ Ce guide vous aidera a configurer et utiliser Meta-prompt-LLM.
 
 ## Installation
 
-### Cloner le depot
+### Cloner le dépôt
 
 ```bash
-git clone https://github.com/your-org/Meta-prompt-LLM.git
+git clone https://github.com/jmchantrein/Meta-prompt-LLM.git
 cd Meta-prompt-LLM
 ```
 
-### Generer les configurations
+### Générer les configurations
 
 ```bash
 chmod +x .ai/generate.sh
 .ai/generate.sh
 ```
 
-Cela cree les fichiers de configuration specifiques a chaque plateforme pour tous les outils IA supportes.
+Cela crée les fichiers de configuration spécifiques à chaque plateforme pour tous les outils IA supportés.
 
-## Premiere session
+## Première session
 
 ### 1. Charger le contexte
 
-Au debut de chaque session IA, l'agent doit lire le fichier memoire :
+Au début de chaque session IA, l'agent doit lire le fichier mémoire :
 
 ```bash
 cat .ai/MEMORY.md
 ```
 
-### 2. Verifier les skills disponibles
+### 2. Vérifier les skills disponibles
 
 Lister les skills disponibles dans le projet :
 
@@ -56,27 +56,27 @@ Agent(s): prompt-validator
 Veuillez valider le prompt dans prompts/meta/hybrid-ai-bootstrap.md
 ```
 
-## Creer un prompt
+## Créer un prompt
 
 ### 1. Copier le template
 
 ```bash
-cp prompts/_TEMPLATE.md prompts/[categorie]/mon-prompt.md
+cp prompts/_TEMPLATE.md prompts/[catégorie]/mon-prompt.md
 ```
 
-### 2. Editer le frontmatter
+### 2. Éditer le frontmatter
 
 ```yaml
 ---
 name: "mon-prompt"
 version: "1.0.0"
 category: "development"
-description: "Breve description"
+description: "Brève description"
 tags: ["tag1", "tag2"]
 ---
 ```
 
-### 3. Ecrire le contenu
+### 3. Écrire le contenu
 
 Suivre la structure du template :
 - Contexte
@@ -87,9 +87,9 @@ Suivre la structure du template :
 
 ### 4. Valider
 
-Utiliser le skill prompt-validator pour verifier votre prompt.
+Utiliser le skill prompt-validator pour vérifier votre prompt.
 
-## Creer un skill
+## Créer un skill
 
 ### 1. Copier le template
 
@@ -97,22 +97,22 @@ Utiliser le skill prompt-validator pour verifier votre prompt.
 cp .ai/skills/_TEMPLATE.yaml .ai/skills/mon-skill.yaml
 ```
 
-### 2. Definir le skill
+### 2. Définir le skill
 
-Editer le fichier YAML avec :
-- Metadonnees (name, version, description)
-- Declencheurs (patterns, keywords, commands)
+Éditer le fichier YAML avec :
+- Métadonnées (name, version, description)
+- Déclencheurs (patterns, keywords, commands)
 - Instructions (role, guidelines, process)
 - Contraintes
 
-### 3. Generer
+### 3. Générer
 
 ```bash
 .ai/generate.sh
 ```
 
-## Prochaines etapes
+## Prochaines étapes
 
-- Lire [AGENTS.md](../../AGENTS.md) pour les regles completes
+- Lire [AGENTS.md](../../AGENTS.md) pour les règles complètes
 - Explorer les skills existants dans `.ai/skills/`
 - Parcourir la collection de prompts dans `prompts/`

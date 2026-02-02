@@ -48,6 +48,8 @@ readonly AIDER_CONF="${PROJECT_ROOT}/.aider.conf.yml"
 readonly OLLAMA_DIR="${PROJECT_ROOT}/ollama"
 readonly OPENCODE_AGENTS_DIR="${PROJECT_ROOT}/.opencode/agents"
 readonly CODEX_AGENTS_DIR="${PROJECT_ROOT}/.codex/agents"
+readonly HOOKS_FILE="${SCRIPT_DIR}/hooks/hooks.yaml"
+readonly CLAUDE_SETTINGS="${PROJECT_ROOT}/.claude/settings.local.json"
 
 # Options
 FORCE=false
@@ -355,6 +357,16 @@ Format: `[ ]` to do, `[x]` done, `[~]` in progress, `[!]` blocked
 - Code: English
 - Documentation: English (main) with French translation
 - Cross-reference links between EN/FR docs
+
+## Rule 13: version check
+
+At session start, if this prompt has a META block:
+
+1. Read \`source_url\` and \`version\` from META
+2. Fetch source (if web access available)
+3. Compare local version with remote version
+4. If remote is newer: inform user, show changelog, propose update
+5. If same or no web access: continue normally
 
 ---
 
@@ -704,6 +716,216 @@ generate_codex_agents() {
     log_success "Generated Codex agents"
 }
 
+# Generate Claude Code hooks settings
+generate_claude_hooks() {
+    log_info "Generating Claude Code hooks..."
+
+    if [[ ! -f "${HOOKS_FILE}" ]]; then
+        log_warn "Hooks file not found: ${HOOKS_FILE}"
+        log_warn "Skipping hooks generation"
+        return 0
+    fi
+
+    ensure_dir "$(dirname "${CLAUDE_SETTINGS}")"
+
+    # Generate hooks JSON from YAML
+    # This is a simplified parser that extracts enabled hooks
+    local hooks_json='{'
+    hooks_json+='"_comment": "'"${GENERATED_MARKER}"' from .ai/hooks/hooks.yaml",'
+    hooks_json+='"hooks": {'
+
+    local has_pre_tool=false
+    local has_post_tool=false
+    local has_user_prompt=false
+    local has_stop=false
+
+    local pre_tool_hooks=""
+    local post_tool_hooks=""
+    local user_prompt_hooks=""
+    local stop_hooks=""
+
+    local current_section=""
+    local current_event=""
+    local in_hook=false
+    local hook_enabled=false
+    local hook_matcher=""
+    local hook_type=""
+    local hook_command=""
+    local hook_prompt=""
+
+    while IFS= read -r line; do
+        # Detect section changes
+        if [[ "${line}" =~ ^(session|guardrails|automation|audit|session_end|validation): ]]; then
+            current_section="${BASH_REMATCH[1]}"
+            continue
+        fi
+
+        # Detect lifecycle event
+        if [[ "${line}" =~ ^[[:space:]]+(PreToolUse|PostToolUse|UserPromptSubmit|Stop): ]]; then
+            current_event="${BASH_REMATCH[1]}"
+            continue
+        fi
+
+        # Detect hook start
+        if [[ "${line}" =~ ^[[:space:]]+-[[:space:]]+name:[[:space:]]*\"([^\"]+)\" ]]; then
+            # Save previous hook if it was enabled
+            if [[ "${in_hook}" == "true" && "${hook_enabled}" == "true" ]]; then
+                local hook_json=""
+                if [[ -n "${hook_matcher}" ]]; then
+                    hook_json='{"matcher":"'"${hook_matcher}"'","hooks":[{"type":"'"${hook_type}"'"'
+                else
+                    hook_json='{"hooks":[{"type":"'"${hook_type}"'"'
+                fi
+
+                if [[ "${hook_type}" == "command" && -n "${hook_command}" ]]; then
+                    # Escape special chars in command
+                    local escaped_cmd="${hook_command//\\/\\\\}"
+                    escaped_cmd="${escaped_cmd//\"/\\\"}"
+                    escaped_cmd="${escaped_cmd//$'\n'/\\n}"
+                    hook_json+=',"command":"'"${escaped_cmd}"'"'
+                elif [[ "${hook_type}" == "prompt" && -n "${hook_prompt}" ]]; then
+                    local escaped_prompt="${hook_prompt//\"/\\\"}"
+                    hook_json+=',"prompt":"'"${escaped_prompt}"'"'
+                fi
+                hook_json+='}]}'
+
+                case "${current_event}" in
+                    PreToolUse)
+                        [[ "${has_pre_tool}" == "true" ]] && pre_tool_hooks+=","
+                        pre_tool_hooks+="${hook_json}"
+                        has_pre_tool=true
+                        ;;
+                    PostToolUse)
+                        [[ "${has_post_tool}" == "true" ]] && post_tool_hooks+=","
+                        post_tool_hooks+="${hook_json}"
+                        has_post_tool=true
+                        ;;
+                    UserPromptSubmit)
+                        [[ "${has_user_prompt}" == "true" ]] && user_prompt_hooks+=","
+                        user_prompt_hooks+="${hook_json}"
+                        has_user_prompt=true
+                        ;;
+                    Stop)
+                        [[ "${has_stop}" == "true" ]] && stop_hooks+=","
+                        stop_hooks+="${hook_json}"
+                        has_stop=true
+                        ;;
+                esac
+            fi
+
+            # Start new hook
+            in_hook=true
+            hook_enabled=false
+            hook_matcher=""
+            hook_type=""
+            hook_command=""
+            hook_prompt=""
+            continue
+        fi
+
+        # Parse hook properties
+        if [[ "${in_hook}" == "true" ]]; then
+            if [[ "${line}" =~ enabled:[[:space:]]*(true|false) ]]; then
+                [[ "${BASH_REMATCH[1]}" == "true" ]] && hook_enabled=true
+            elif [[ "${line}" =~ matcher:[[:space:]]*\"([^\"]+)\" ]]; then
+                hook_matcher="${BASH_REMATCH[1]}"
+            elif [[ "${line}" =~ -[[:space:]]+type:[[:space:]]*\"(command|prompt|agent)\" ]]; then
+                hook_type="${BASH_REMATCH[1]}"
+            elif [[ "${line}" =~ command:[[:space:]]*\| ]]; then
+                # Multiline command - read next lines
+                hook_command=""
+                while IFS= read -r cmd_line; do
+                    if [[ "${cmd_line}" =~ ^[[:space:]]{12,} ]]; then
+                        hook_command+="${cmd_line#            }"$'\n'
+                    else
+                        break
+                    fi
+                done
+                hook_command="${hook_command%$'\n'}"
+            elif [[ "${line}" =~ prompt:[[:space:]]*\"([^\"]+)\" ]]; then
+                hook_prompt="${BASH_REMATCH[1]}"
+            fi
+        fi
+    done < "${HOOKS_FILE}"
+
+    # Handle last hook
+    if [[ "${in_hook}" == "true" && "${hook_enabled}" == "true" ]]; then
+        local hook_json=""
+        if [[ -n "${hook_matcher}" ]]; then
+            hook_json='{"matcher":"'"${hook_matcher}"'","hooks":[{"type":"'"${hook_type}"'"'
+        else
+            hook_json='{"hooks":[{"type":"'"${hook_type}"'"'
+        fi
+
+        if [[ "${hook_type}" == "command" && -n "${hook_command}" ]]; then
+            local escaped_cmd="${hook_command//\\/\\\\}"
+            escaped_cmd="${escaped_cmd//\"/\\\"}"
+            escaped_cmd="${escaped_cmd//$'\n'/\\n}"
+            hook_json+=',"command":"'"${escaped_cmd}"'"'
+        elif [[ "${hook_type}" == "prompt" && -n "${hook_prompt}" ]]; then
+            local escaped_prompt="${hook_prompt//\"/\\\"}"
+            hook_json+=',"prompt":"'"${escaped_prompt}"'"'
+        fi
+        hook_json+='}]}'
+
+        case "${current_event}" in
+            PreToolUse)
+                [[ "${has_pre_tool}" == "true" ]] && pre_tool_hooks+=","
+                pre_tool_hooks+="${hook_json}"
+                has_pre_tool=true
+                ;;
+            PostToolUse)
+                [[ "${has_post_tool}" == "true" ]] && post_tool_hooks+=","
+                post_tool_hooks+="${hook_json}"
+                has_post_tool=true
+                ;;
+            UserPromptSubmit)
+                [[ "${has_user_prompt}" == "true" ]] && user_prompt_hooks+=","
+                user_prompt_hooks+="${hook_json}"
+                has_user_prompt=true
+                ;;
+            Stop)
+                [[ "${has_stop}" == "true" ]] && stop_hooks+=","
+                stop_hooks+="${hook_json}"
+                has_stop=true
+                ;;
+        esac
+    fi
+
+    # Build final JSON
+    local first_event=true
+    if [[ "${has_user_prompt}" == "true" ]]; then
+        [[ "${first_event}" != "true" ]] && hooks_json+=","
+        hooks_json+='"UserPromptSubmit":['"${user_prompt_hooks}"']'
+        first_event=false
+    fi
+    if [[ "${has_pre_tool}" == "true" ]]; then
+        [[ "${first_event}" != "true" ]] && hooks_json+=","
+        hooks_json+='"PreToolUse":['"${pre_tool_hooks}"']'
+        first_event=false
+    fi
+    if [[ "${has_post_tool}" == "true" ]]; then
+        [[ "${first_event}" != "true" ]] && hooks_json+=","
+        hooks_json+='"PostToolUse":['"${post_tool_hooks}"']'
+        first_event=false
+    fi
+    if [[ "${has_stop}" == "true" ]]; then
+        [[ "${first_event}" != "true" ]] && hooks_json+=","
+        hooks_json+='"Stop":['"${stop_hooks}"']'
+        first_event=false
+    fi
+
+    hooks_json+='}}'
+
+    # Format JSON if jq is available
+    if command_exists jq; then
+        hooks_json=$(echo "${hooks_json}" | jq '.')
+    fi
+
+    write_file "${CLAUDE_SETTINGS}" "${hooks_json}"
+    log_success "Generated Claude Code hooks settings"
+}
+
 # Update VERSION file
 update_version() {
     local skills_hash
@@ -792,6 +1014,7 @@ main() {
     generate_agents_md
     generate_claude_md
     generate_claude_agents
+    generate_claude_hooks
     generate_cursorrules
     generate_continuerc
     generate_aider_conf

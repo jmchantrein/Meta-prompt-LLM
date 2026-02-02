@@ -1,0 +1,218 @@
+# Hooks Source of Truth
+# ============================================================================
+# This file defines all hooks for the project in a platform-agnostic format.
+# The generate.sh script converts these to platform-specific configurations.
+#
+# Hook types:
+#   - command: Execute shell command (exit code 0 = success, non-zero = block)
+#   - prompt: Ask yes/no question (no = block)
+#   - agent: Spawn subagent for validation
+#
+# Lifecycle events:
+#   - UserPromptSubmit: When user sends a message
+#   - PreToolUse: Before a tool executes (can block)
+#   - PostToolUse: After a tool completes
+#   - Stop: When session ends
+# ============================================================================
+
+version: "1.0.0"
+updated: "2026-02-02"
+
+# ----------------------------------------------------------------------------
+# SESSION INITIALIZATION
+# ----------------------------------------------------------------------------
+session:
+  # Load context at session start
+  UserPromptSubmit:
+    - name: "load-memory"
+      description: "Remind to load project memory at session start"
+      enabled: true
+      hooks:
+        - type: "command"
+          command: |
+            if [ -f ".ai/MEMORY.md" ]; then
+              echo "📋 Remember to read .ai/MEMORY.md for project context"
+            fi
+
+    - name: "check-skills-sync"
+      description: "Check if generated files are in sync with skills"
+      enabled: true
+      hooks:
+        - type: "command"
+          command: |
+            if [ -f ".ai/generate.sh" ]; then
+              .ai/generate.sh --check 2>/dev/null || echo "⚠️ Skills may need regeneration: .ai/generate.sh"
+            fi
+
+# ----------------------------------------------------------------------------
+# GUARDRAILS - Sensitive Files
+# ----------------------------------------------------------------------------
+guardrails:
+  PreToolUse:
+    # Protect environment files
+    - name: "protect-env-files"
+      description: "Require confirmation before writing to .env files"
+      enabled: true
+      matcher: "Write(.env*)"
+      hooks:
+        - type: "prompt"
+          prompt: "⚠️ You are about to write to an environment file. This may contain secrets. Continue?"
+
+    # Protect credentials
+    - name: "protect-credentials"
+      description: "Block writes to credential files"
+      enabled: true
+      matcher: "Write(*credential*)"
+      hooks:
+        - type: "prompt"
+          prompt: "⚠️ Writing to a credentials file. Are you sure this is intentional?"
+
+    - name: "protect-secrets"
+      description: "Block writes to secret files"
+      enabled: true
+      matcher: "Write(*secret*)"
+      hooks:
+        - type: "prompt"
+          prompt: "⚠️ Writing to a secrets file. Confirm this is intentional?"
+
+    # Protect git config
+    - name: "protect-git-config"
+      description: "Prevent accidental git config changes"
+      enabled: true
+      matcher: "Bash(git config*)"
+      hooks:
+        - type: "prompt"
+          prompt: "Modifying git configuration. Is this intended?"
+
+# ----------------------------------------------------------------------------
+# GUARDRAILS - Destructive Operations
+# ----------------------------------------------------------------------------
+  # Destructive bash commands
+    - name: "confirm-delete"
+      description: "Require confirmation for file deletion"
+      enabled: true
+      matcher: "Bash(rm *)"
+      hooks:
+        - type: "prompt"
+          prompt: "This command will delete files. Are you sure?"
+
+    - name: "confirm-force-push"
+      description: "Require confirmation for force push"
+      enabled: true
+      matcher: "Bash(git push*--force*)"
+      hooks:
+        - type: "prompt"
+          prompt: "⚠️ Force push can overwrite remote history. Confirm?"
+
+    - name: "confirm-hard-reset"
+      description: "Require confirmation for hard reset"
+      enabled: true
+      matcher: "Bash(git reset --hard*)"
+      hooks:
+        - type: "prompt"
+          prompt: "⚠️ Hard reset will discard all uncommitted changes. Continue?"
+
+    - name: "confirm-clean"
+      description: "Require confirmation for git clean"
+      enabled: true
+      matcher: "Bash(git clean*)"
+      hooks:
+        - type: "prompt"
+          prompt: "⚠️ Git clean will remove untracked files. Continue?"
+
+# ----------------------------------------------------------------------------
+# AUTOMATION - Code Quality
+# ----------------------------------------------------------------------------
+automation:
+  PostToolUse:
+    # Regenerate configs when skills change
+    - name: "auto-generate-on-skill-change"
+      description: "Regenerate platform configs when skills are modified"
+      enabled: true
+      matcher: "Write(.ai/skills/*.yaml)"
+      hooks:
+        - type: "command"
+          command: |
+            echo "📦 Skill modified. Running generate.sh..."
+            .ai/generate.sh 2>/dev/null || echo "⚠️ generate.sh failed"
+
+    # Remind about inclusive language for French content
+    - name: "inclusivity-reminder-fr"
+      description: "Remind to check inclusive language for French files"
+      enabled: true
+      matcher: "Write(**/fr/**/*.md)"
+      hooks:
+        - type: "command"
+          command: |
+            echo "🔍 French content modified. Remember: inclusive writing rules apply."
+
+    # Remind about translation sync
+    - name: "translation-sync-reminder"
+      description: "Remind to sync translations when docs change"
+      enabled: true
+      matcher: "Write(docs/en/*.md)"
+      hooks:
+        - type: "command"
+          command: |
+            echo "🌍 English doc modified. Remember to update French translation in docs/fr/"
+
+# ----------------------------------------------------------------------------
+# AUDIT LOGGING
+# ----------------------------------------------------------------------------
+audit:
+  PostToolUse:
+    - name: "log-file-writes"
+      description: "Log all file write operations"
+      enabled: false  # Enable if you want audit logging
+      matcher: "Write(*)"
+      hooks:
+        - type: "command"
+          command: |
+            echo "$(date -Iseconds) WRITE: $CLAUDE_FILE_PATH" >> .ai/audit.log
+
+    - name: "log-bash-commands"
+      description: "Log all bash commands"
+      enabled: false  # Enable if you want audit logging
+      matcher: "Bash(*)"
+      hooks:
+        - type: "command"
+          command: |
+            echo "$(date -Iseconds) BASH: $CLAUDE_TOOL_INPUT" >> .ai/audit.log
+
+# ----------------------------------------------------------------------------
+# SESSION END
+# ----------------------------------------------------------------------------
+session_end:
+  Stop:
+    - name: "memory-update-reminder"
+      description: "Remind to update memory on session end"
+      enabled: true
+      hooks:
+        - type: "command"
+          command: |
+            echo "📝 Session ending. Consider updating .ai/MEMORY.md with important decisions."
+
+# ----------------------------------------------------------------------------
+# VALIDATION HOOKS (Agent-based)
+# ----------------------------------------------------------------------------
+validation:
+  PostToolUse:
+    # Validate prompts when modified
+    - name: "validate-prompts"
+      description: "Run prompt-validator on prompt changes"
+      enabled: false  # Enable when prompt-validator is ready
+      matcher: "Write(prompts/**/*.md)"
+      hooks:
+        - type: "agent"
+          agent: "prompt-validator"
+          prompt: "Validate the prompt that was just modified"
+
+    # Check links in markdown
+    - name: "check-markdown-links"
+      description: "Validate links in markdown files"
+      enabled: false  # Enable when link-checker is ready
+      matcher: "Write(docs/**/*.md)"
+      hooks:
+        - type: "agent"
+          agent: "link-checker"
+          prompt: "Check internal links in the modified file"
