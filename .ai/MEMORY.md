@@ -30,6 +30,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | Inclusive writing | Yes (French content) |
 | Shell standard | Bash (shellcheck-valid) |
 | AI tools coverage | Maximum (all platforms) |
+| End-of-response summary | Yes (skills, hooks, commands) |
 
 ## Technical decisions
 
@@ -209,4 +210,4 @@ A framework for creating, modifying, and maintaining prompt collections with:
 
 ---
 
-*Last updated: 2026-02-02 by memory-keeper (session 4fPY2: clarified 6 inconsistencies)*
+*Last updated: 2026-02-02 by memory-keeper (session 4fPY2: clarified 6 inconsistencies, added end-of-response summary preference)*
