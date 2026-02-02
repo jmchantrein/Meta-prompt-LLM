@@ -77,7 +77,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | 2026-02-02 | PR #5 | fc1c3db→c1e0b88 | Workflow-documenter, architecture docs |
 | 2026-02-02 | PR #6 (bq507) | 5c703b4→a5cfb24 | Complete hooks lifecycle, multi-platform generation, platform detection (branche nommée "french-support" par erreur) |
 | 2026-02-02 | 4fPY2 | 5b04efe→825b6b5 | Clarified 6 inconsistencies, session-status skill, coherence-check hook, visual-feedback hooks |
-| 2026-02-02 | 3jXvo | 8c8da0b→ | Research: 40+ missing skills; architectural inconsistencies found |
+| 2026-02-02 | 3jXvo | 8c8da0b→ | Research missing skills, license audit, package-manager skill, internal/external structure |
 
 ## Lessons learned
 
@@ -99,6 +99,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | 2026-02-02 | Visual feedback via PostToolUse | Hooks can show context (🧠/📦/🔧) based on file patterns |
 | 2026-02-02 | MEMORY.md inconsistent | .ai/MEMORY.md violates "source of truth = data/" rule - needs refactor |
 | 2026-02-02 | External skills need installer | Cannot manually maintain 626+ skills - need package-manager agent |
+| 2026-02-02 | License audit before install | MIT collections OK (fetch), Anthropic Commercial (reference only) |
 
 ## Current context
 
@@ -110,12 +111,15 @@ A framework for creating, modifying, and maintaining prompt collections with:
 - **[DONE]** Platform detection at SessionStart with capabilities/limitations
 - **[DONE]** Self-improver skill functional with dependencies.yaml
 - GitHub Pages setup for data access
-- **[TODO]** Move MEMORY.md to data/ source of truth
-- **[TODO]** Create package-manager skill for external installs
+- **[TODO]** Move MEMORY.md to data/ source of truth (deferred)
+- **[DONE]** Create package-manager skill for external installs
+- **[DONE]** Create registries.yaml with license audit
+- **[DONE]** Restructure data/ with internal/external split
 
 ### Pending decisions
 
-- Confirm package-manager architecture (registries.yaml + internal/external split)
+- **[IMPLEMENTED]** package-manager architecture (registries.yaml + internal/external split)
+- **[IMPLEMENTED]** License audit completed - MIT collections OK, Anthropic reference-only
 
 ### Blockers
 
@@ -136,6 +140,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | inclusivity-reviewer | Inclusive writing, non-ableist language | Active |
 | link-checker | Internal link validation in markdown | Active |
 | memory-keeper | Persistent memory management | Active |
+| package-manager | External skills/hooks/commands from registries | Active |
 | prompt-validator | Prompt validation against schema | Active |
 | self-improver | Project self-improvement and rule propagation | Active |
 | session-status | End-of-response visual summary via Stop hook | Active |
@@ -177,6 +182,18 @@ A framework for creating, modifying, and maintaining prompt collections with:
 - [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) - Official Vercel skills
 - [antigravity-awesome-skills](https://github.com/sickn33/antigravity-awesome-skills) - 626+ skills
 - [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills) - Community skills
+
+### License audit (2026-02-02)
+
+| Collection | License | Redistribution | Install method |
+|------------|---------|----------------|----------------|
+| vercel-labs/agent-skills | MIT | OK with attribution | fetch |
+| antigravity-awesome-skills | MIT | OK with attribution | fetch |
+| VoltAgent/awesome-agent-skills | MIT | OK with attribution | fetch |
+| obra/superpowers | MIT | OK with attribution | fetch |
+| anthropics/claude-code | Commercial | Reference only | link |
+
+> **Conclusion**: 4/5 collections can be freely installed (MIT). Anthropic skills must be referenced via URL only, not redistributed.
 
 ## Architectural inconsistencies discovered
 
@@ -292,4 +309,4 @@ data/
 
 ---
 
-*Last updated: 2026-02-02 by memory-keeper (session 3jXvo: architectural inconsistencies, package-manager proposal)*
+*Last updated: 2026-02-02 by memory-keeper (session 3jXvo: package-manager skill, registries.yaml, internal/external structure)*

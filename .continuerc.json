@@ -22,6 +22,10 @@
       "description": "Manages persistent project memory between sessions"
     },
     {
+      "name": "package-manager",
+      "description": "Manages external skills, hooks, and commands from registries"
+    },
+    {
       "name": "prompt-validator",
       "description": "Validates prompts against schema and quality standards"
     },

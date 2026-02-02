@@ -43,11 +43,19 @@ triggers:
 context:
   files:
     - "prompts/fr/metametaprompts/data/manifest.yaml"
+    - "prompts/fr/metametaprompts/data/registries.yaml"
     - "prompts/fr/metametaprompts/data/rules/rules.yaml"
-    - "prompts/fr/metametaprompts/data/skills/*.yaml"
+    - "prompts/fr/metametaprompts/data/skills/internal/*.yaml"
+    - "prompts/fr/metametaprompts/data/skills/external/*.yaml"
+    - "prompts/fr/metametaprompts/data/hooks/internal/*.yaml"
+    - "prompts/fr/metametaprompts/data/hooks/external/*.yaml"
+    - "prompts/fr/metametaprompts/data/commands/internal/*.yaml"
+    - "prompts/fr/metametaprompts/data/commands/external/*.yaml"
     - "prompts/fr/metametaprompts/data/prompts/**/*.md"
   outputs:
-    - ".ai/skills/*.yaml"
+    - ".ai/skills/*.yaml"  # Flattened from internal/ + external/
+    - ".ai/hooks/*.yaml"
+    - ".ai/commands/*.yaml"
     - "AGENTS.md"
   dependencies:
     - "memory-keeper"
@@ -64,12 +72,20 @@ instructions:
 
     `prompts/fr/metametaprompts/data/` est la source unique de vérité pour :
     - Règles (data/rules/rules.yaml)
-    - Skills (data/skills/*.yaml)
+    - Skills internes (data/skills/internal/*.yaml)
+    - Skills externes (data/skills/external/*.yaml) - installés via package-manager
+    - Hooks internes (data/hooks/internal/*.yaml)
+    - Hooks externes (data/hooks/external/*.yaml)
+    - Commands internes (data/commands/internal/*.yaml)
+    - Commands externes (data/commands/external/*.yaml)
+    - Registries (data/registries.yaml) - sources externes (Vercel, Antigravity, etc.)
     - Prompts (data/prompts/**/*.md)
 
     ## Fichiers générés (outputs)
 
-    - `.ai/skills/*.yaml` : Copie depuis data/skills/
+    - `.ai/skills/*.yaml` : Aplati depuis data/skills/internal/ + external/
+    - `.ai/hooks/*.yaml` : Aplati depuis data/hooks/internal/ + external/
+    - `.ai/commands/*.yaml` : Aplati depuis data/commands/internal/ + external/
     - `AGENTS.md` : Généré depuis data/rules/ et data/skills/ (via generate.sh)
 
   guidelines:
@@ -110,9 +126,13 @@ instructions:
 
     ### 3. Synchronisation (si validé)
 
-    1. **Skills** : data/skills/*.yaml → .ai/skills/*.yaml
-    2. **Rules** : Exécuter generate.sh pour régénérer AGENTS.md
-    3. **Manifest** : Mettre à jour hash et timestamps
+    1. **Skills** : Flatten internal + external → .ai/skills/*.yaml
+       - data/skills/internal/*.yaml → .ai/skills/*.yaml
+       - data/skills/external/*.yaml → .ai/skills/*.yaml
+    2. **Hooks** : Flatten internal + external → .ai/hooks/*.yaml
+    3. **Commands** : Flatten internal + external → .ai/commands/*.yaml
+    4. **Rules** : Exécuter generate.sh pour régénérer AGENTS.md
+    5. **Manifest** : Mettre à jour hash et timestamps
 
     ### 4. Versioning automatique
 
