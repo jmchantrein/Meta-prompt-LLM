@@ -514,6 +514,68 @@ PostToolUse:
             echo "🌍 [translator] Doc EN modifié. Vérifier traduction FR: $FR_PATH"
           fi
 
+  # ----------------------------
+  # Visual feedback for Read operations
+  # ----------------------------
+  - name: "visual-feedback-read"
+    description: "Show visual feedback when reading project files"
+    enabled: true
+    matcher: "Read"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          # Determine context based on file path
+          case "$FILE_PATH" in
+            *MEMORY.md)
+              echo "🧠 [memory-keeper] Lecture mémoire"
+              ;;
+            *skills/*.yaml)
+              SKILL=$(basename "$FILE_PATH" .yaml)
+              echo "📦 [skill:$SKILL] Lecture définition"
+              ;;
+            *hooks/*.yaml|*hooks.yaml)
+              echo "🔧 [hooks-manager] Lecture hooks"
+              ;;
+            *AGENTS.md|*CLAUDE.md)
+              echo "📋 [config] Lecture configuration"
+              ;;
+            */fr/*.md)
+              echo "🔍 [inclusivity] Lecture contenu FR"
+              ;;
+            */en/*.md)
+              echo "🌍 [translator] Lecture contenu EN"
+              ;;
+          esac
+
+  # ----------------------------
+  # Visual feedback for Edit operations
+  # ----------------------------
+  - name: "visual-feedback-edit"
+    description: "Show visual feedback when editing project files"
+    enabled: true
+    matcher: "Edit"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          case "$FILE_PATH" in
+            *MEMORY.md)
+              echo "🧠 [memory-keeper] Modification mémoire"
+              ;;
+            *skills/*.yaml)
+              SKILL=$(basename "$FILE_PATH" .yaml)
+              echo "📦 [skill:$SKILL] Modification skill"
+              ;;
+            *hooks/*.yaml|*hooks.yaml)
+              echo "🔧 [hooks-manager] Modification hooks"
+              ;;
+          esac
+
 # ============================================================================
 # STOP - Quand Claude finit de répondre
 # ============================================================================

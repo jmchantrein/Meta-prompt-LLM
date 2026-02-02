@@ -144,6 +144,24 @@
             "command": "INPUT=$(cat)\nFILE_PATH=$(echo \"$INPUT\" | grep -o '\"file_path\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' | sed 's/.*\"file_path\"[[:space:]]*:[[:space:]]*\"[^\"]*\\)\".*/\\1/')\n\nif echo \"$FILE_PATH\" | grep -qE 'docs/en/.*\\.md$'; then\n  FR_PATH=$(echo \"$FILE_PATH\" | sed 's|docs/en/|docs/fr/|')\n  echo \"🌍 [translator] Doc EN modifié. Vérifier traduction FR: $FR_PATH\"\nfi\n"
           }
         ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat)\nFILE_PATH=$(echo \"$INPUT\" | grep -o '\"file_path\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' | sed 's/.*\"file_path\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/')\n\n# Determine context based on file path\ncase \"$FILE_PATH\" in\n  *MEMORY.md)\n    echo \"🧠 [memory-keeper] Lecture mémoire\"\n    ;;\n  *skills/*.yaml)\n    SKILL=$(basename \"$FILE_PATH\" .yaml)\n    echo \"📦 [skill:$SKILL] Lecture définition\"\n    ;;\n  *hooks/*.yaml|*hooks.yaml)\n    echo \"🔧 [hooks-manager] Lecture hooks\"\n    ;;\n  *AGENTS.md|*CLAUDE.md)\n    echo \"📋 [config] Lecture configuration\"\n    ;;\n  */fr/*.md)\n    echo \"🔍 [inclusivity] Lecture contenu FR\"\n    ;;\n  */en/*.md)\n    echo \"🌍 [translator] Lecture contenu EN\"\n    ;;\nesac\n"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat)\nFILE_PATH=$(echo \"$INPUT\" | grep -o '\"file_path\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' | sed 's/.*\"file_path\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/')\n\ncase \"$FILE_PATH\" in\n  *MEMORY.md)\n    echo \"🧠 [memory-keeper] Modification mémoire\"\n    ;;\n  *skills/*.yaml)\n    SKILL=$(basename \"$FILE_PATH\" .yaml)\n    echo \"📦 [skill:$SKILL] Modification skill\"\n    ;;\n  *hooks/*.yaml|*hooks.yaml)\n    echo \"🔧 [hooks-manager] Modification hooks\"\n    ;;\nesac\n"
+          }
+        ]
       }
     ],
     "Stop": [
