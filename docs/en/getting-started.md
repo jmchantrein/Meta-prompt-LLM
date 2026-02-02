@@ -1,4 +1,4 @@
-> [Version francaise](../fr/getting-started.md)
+> [Version française](../fr/getting-started.md)
 
 # Getting started
 

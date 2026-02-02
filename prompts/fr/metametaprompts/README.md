@@ -41,18 +41,17 @@ Les données déterministes sont dans `./data/` :
 
 | Fichier | Description |
 |---------|-------------|
-| [rules-index.yaml](./data/rules-index.yaml) | Index des règles AGENTS.md |
-| [skills-index.yaml](./data/skills-index.yaml) | Index des skills |
-| [prompts-index.yaml](./data/prompts-index.yaml) | Index des prompts |
-| [dependencies.yaml](./data/dependencies.yaml) | Mapping dépendances |
-| [pending-reviews.yaml](./data/pending-reviews.yaml) | Reviews en attente |
+| [manifest.yaml](./data/manifest.yaml) | Index central avec hashes de version et vérification d'intégrité |
+| [rules/](./data/rules/) | Règles AGENTS.md au format YAML |
+| [skills/](./data/skills/) | Définitions des skills au format YAML |
+| [prompts/](./data/prompts/) | Prompts partagés (socratic-tutor, etc.) |
 
 ## Utilisation
 
 Le skill `self-improver` utilise ces données pour :
 
-1. Détecter les changements de règles (via hash)
-2. Calculer le scope d'impact (via dependencies)
+1. Détecter les changements de règles (via hash dans manifest.yaml)
+2. Calculer le scope d'impact (via les dépendances)
 3. Proposer des vérifications à l'utilisateur·ice
 4. Mettre à jour les prompts impactés
 

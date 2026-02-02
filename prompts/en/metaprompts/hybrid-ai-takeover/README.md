@@ -1,6 +1,6 @@
 # hybrid-ai-takeover
 
-> [Version francaise](../../../fr/metaprompts/hybrid-ai-takeover/README.md)
+> [Version française](../../../fr/metaprompts/hybrid-ai-takeover/README.md)
 
 Migration prompt for converting existing projects to a hybrid AI architecture with centralized configuration and multi-platform support.
 

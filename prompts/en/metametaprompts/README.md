@@ -41,17 +41,16 @@ Deterministic data is in `../../fr/metametaprompts/data/` (French is source of t
 
 | File | Description |
 |------|-------------|
-| [rules-index.yaml](../../fr/metametaprompts/data/rules-index.yaml) | AGENTS.md rules index |
-| [skills-index.yaml](../../fr/metametaprompts/data/skills-index.yaml) | Skills index |
-| [prompts-index.yaml](../../fr/metametaprompts/data/prompts-index.yaml) | Prompts index |
-| [dependencies.yaml](../../fr/metametaprompts/data/dependencies.yaml) | Dependencies mapping |
-| [pending-reviews.yaml](../../fr/metametaprompts/data/pending-reviews.yaml) | Pending reviews |
+| [manifest.yaml](../../fr/metametaprompts/data/manifest.yaml) | Central index with version hashes and integrity verification |
+| [rules/](../../fr/metametaprompts/data/rules/) | AGENTS.md rules in YAML format |
+| [skills/](../../fr/metametaprompts/data/skills/) | Skill definitions in YAML format |
+| [prompts/](../../fr/metametaprompts/data/prompts/) | Shared prompts (socratic-tutor, etc.) |
 
 ## Usage
 
 The `self-improver` skill uses this data to:
 
-1. Detect rule changes (via hash)
+1. Detect rule changes (via hash in manifest.yaml)
 2. Calculate impact scope (via dependencies)
 3. Propose verifications to user
 4. Update impacted prompts

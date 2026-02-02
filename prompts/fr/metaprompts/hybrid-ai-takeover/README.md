@@ -2,59 +2,59 @@
 
 > [English version](../../../en/metaprompts/hybrid-ai-takeover/README.md)
 
-Prompt de migration pour convertir des projets existants vers une architecture IA hybride avec configuration centralisee et support multi-plateforme.
+Prompt de migration pour convertir des projets existants vers une architecture IA hybride avec configuration centralisée et support multi-plateforme.
 
 ## Cas d'utilisation
 
-- Migrer un projet avec des fichiers de config IA disperses
+- Migrer un projet avec des fichiers de config IA dispersés
 - Consolider CLAUDE.md, .cursorrules, Modelfile, etc.
-- Ajouter une memoire persistante a un projet existant
-- Etablir une documentation bilingue a partir de docs existantes
+- Ajouter une mémoire persistante à un projet existant
+- Établir une documentation bilingue à partir de docs existantes
 
 ## Quand l'utiliser
 
 Utilisez ce prompt quand :
 
 - Vous avez un **projet existant** avec une configuration IA
-- Les fichiers de config IA sont devenus desynchronises
-- Vous voulez centraliser et unifier les definitions d'agents
-- Vous devez ajouter une orchestration de workflows a une configuration existante
+- Les fichiers de config IA sont devenus désynchronisés
+- Vous voulez centraliser et unifier les définitions d'agents
+- Vous devez ajouter une orchestration de workflows à une configuration existante
 
-Pour les nouveaux projets, utilisez plutot [hybrid-ai-bootstrap](../hybrid-ai-bootstrap/hybrid-ai-bootstrap.md).
+Pour les nouveaux projets, utilisez plutôt [hybrid-ai-bootstrap](../hybrid-ai-bootstrap/hybrid-ai-bootstrap.md).
 
 ## Ce qu'il fait
 
-1. **Decouverte** : scanne les fichiers IA existants (CLAUDE.md, .cursorrules, etc.)
-2. **Sauvegarde** : preserve tous les fichiers legacy dans `.ai/legacy-backup/`
-3. **Analyse** : genere un rapport structure de l'etat actuel
-4. **Migration** : extrait les regles et skills des fichiers legacy
-5. **Centralisation** : cree une structure unifiee `.ai/skills/*.yaml`
-6. **Generation** : produit des configs specifiques a chaque plateforme depuis le YAML
+1. **Découverte** : scanne les fichiers IA existants (CLAUDE.md, .cursorrules, etc.)
+2. **Sauvegarde** : préserve tous les fichiers legacy dans `.ai/legacy-backup/`
+3. **Analyse** : génère un rapport structuré de l'état actuel
+4. **Migration** : extrait les règles et skills des fichiers legacy
+5. **Centralisation** : crée une structure unifiée `.ai/skills/*.yaml`
+6. **Génération** : produit des configs spécifiques à chaque plateforme depuis le YAML
 
-## Selection du paradigme
+## Sélection du paradigme
 
-Le prompt vous aide a choisir le bon paradigme de developpement :
+Le prompt vous aide à choisir le bon paradigme de développement :
 
-| Contexte | Recommande |
+| Contexte | Recommandé |
 |----------|------------|
 | Prototype rapide, POC | Vibe coding |
-| Production, equipe | Spec-driven (style Kiro) |
-| Complexe, multi-agent | Methode BMAD |
+| Production, équipe | Spec-driven (style Kiro) |
+| Complexe, multi-agent | Méthode BMAD |
 | Refactoring, dette technique | TDD strict |
 | Focus documentation | Doc-driven |
 
-## Fonctionnalites de securite
+## Fonctionnalités de sécurité
 
 - **Sauvegarde obligatoire** avant toute modification
-- Fichiers legacy preserves dans `.ai/legacy-backup/`
-- Resolution de conflits avec regles de priorite
+- Fichiers legacy préservés dans `.ai/legacy-backup/`
+- Résolution de conflits avec règles de priorité
 - Checklist de validation avant finalisation
 
-## Prerequis
+## Prérequis
 
-- Un·e assistant·e IA capable d'operations sur fichiers
+- Un·e assistant·e IA capable d'opérations sur fichiers
 - Environnement bash pour les scripts
-- Projet existant a migrer
+- Projet existant à migrer
 
 ## Ressources connexes
 

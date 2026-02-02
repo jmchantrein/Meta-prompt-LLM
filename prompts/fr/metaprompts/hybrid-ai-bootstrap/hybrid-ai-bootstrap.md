@@ -107,7 +107,7 @@ CLAUDE.md                       # pointeur → AGENTS.md
 docs/
 ├── en/                         # documentation principale (anglais)
 │   └── *.md
-└── fr/                         # traduction francaise (miroir)
+└── fr/                         # traduction française (miroir)
     └── *.md
 
 prompts/                        # collection de prompts (si applicable)
@@ -234,7 +234,7 @@ Format : [ ] a faire, [x] fait, [~] en cours, [!] bloque
 - **Documentation principale** : anglais (docs/en/)
 - **Interface** : anglais par defaut
 
-### Traduction francaise obligatoire
+### Traduction française obligatoire
 L'agent **translator** doit TOUJOURS maintenir a jour :
 
 1. **Documentation** :

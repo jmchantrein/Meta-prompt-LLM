@@ -63,7 +63,7 @@ model_hints:
   temperature: 0.3
 ---
 
-> [Version francaise](../../../fr/[category]/[prompt-name]/[prompt-name].md)
+> [Version française](../../../fr/[category]/[prompt-name]/[prompt-name].md)
 
 # Prompt name
 

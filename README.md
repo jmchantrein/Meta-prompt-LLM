@@ -1,4 +1,4 @@
-> [Version francaise](./README.fr.md)
+> [Version française](./README.fr.md)
 
 > [!WARNING]
 > This project is under development. Structure and APIs may change.
