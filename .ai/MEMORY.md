@@ -30,6 +30,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | Inclusive writing | Yes (French content) |
 | Shell standard | Bash (shellcheck-valid) |
 | AI tools coverage | Maximum (all platforms) |
+| End-of-response summary | Yes (skills, hooks, commands) |
 
 ## Technical decisions
 
@@ -55,6 +56,8 @@ A framework for creating, modifying, and maintaining prompt collections with:
 
 ## Evolution history
 
+> **Note**: Ces versions sont sémantiques pour le projet. Le fichier `.ai/VERSION` (format `1.0.0-hash`) est différent : c'est un hash de détection de changements pour generate.sh.
+
 | Version | Date | Changes |
 |---------|------|---------|
 | 0.1.0 | 2026-01-31 | Initial architecture bootstrap |
@@ -72,7 +75,8 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | 2026-02-01 | - | 15bd248→0fa9ba7 | Socratic-tutor prompt, audit fixes |
 | 2026-02-02 | PR #4 | 2994926→d1876f9 | KISS refactor, hooks-manager skill |
 | 2026-02-02 | PR #5 | fc1c3db→c1e0b88 | Workflow-documenter, architecture docs |
-| 2026-02-02 | bq507 | 5c703b4→a5cfb24 | Complete hooks lifecycle, multi-platform generation, platform detection |
+| 2026-02-02 | PR #6 (bq507) | 5c703b4→a5cfb24 | Complete hooks lifecycle, multi-platform generation, platform detection (branche nommée "french-support" par erreur) |
+| 2026-02-02 | 4fPY2 | 5b04efe→825b6b5 | Clarified 6 inconsistencies, session-status skill, coherence-check hook, visual-feedback hooks |
 
 ## Lessons learned
 
@@ -85,9 +89,13 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | 2026-02-02 | Source of truth = data/ | .ai/ is generated, never edit directly |
 | 2026-02-02 | SessionStart exists | Hook event runs BEFORE user input, not just UserPromptSubmit |
 | 2026-02-02 | Stop hook for consistency | Agent-type hook can validate and continue if needed |
-| 2026-02-02 | MEMORY.md not auto-updated | Sessions without memory-keeper invocation lose context |
+| 2026-02-02 | MEMORY.md not auto-updated | ~~Sessions without memory-keeper invocation lose context~~ **OBSOLÈTE**: Stop hook consistency-check vérifie maintenant automatiquement |
 | 2026-02-02 | Maximize LLM support always | Never implement for one platform only; always all supported LLMs |
 | 2026-02-02 | Platform detection proactive | Detect LLM at session start, show limitations without asking |
+| 2026-02-02 | Skill vs Agent terminology | Skill = YAML source file, Agent = Claude Code runtime. Interchangeable. |
+| 2026-02-02 | VERSION file ≠ project version | .ai/VERSION is hash for generate.sh change detection, not semver |
+| 2026-02-02 | User hooks can extend project hooks | ~/.claude/ hooks (like git-check) add to project .claude/settings.json |
+| 2026-02-02 | Visual feedback via PostToolUse | Hooks can show context (🧠/📦/🔧) based on file patterns |
 
 ## Current context
 
@@ -108,9 +116,15 @@ A framework for creating, modifying, and maintaining prompt collections with:
 
 - None currently
 
-## Available agents
+## Available skills (aka agents)
 
-| Agent | Purpose | Status |
+> **Terminologie** :
+> - **Skill** = fichier YAML de définition (`.ai/skills/*.yaml`)
+> - **Agent** = sous-agent Claude Code généré à partir du skill
+>
+> Les termes sont interchangeables dans ce projet. "Skill" est le terme source, "agent" est le terme runtime.
+
+| Skill | Purpose | Status |
 |-------|---------|--------|
 | data-sync | Syncs data/ to .ai/ and validates integrity | Active |
 | hooks-manager | Multi-platform hook generation from YAML | Active |
@@ -119,6 +133,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 | memory-keeper | Persistent memory management | Active |
 | prompt-validator | Prompt validation against schema | Active |
 | self-improver | Project self-improvement and rule propagation | Active |
+| session-status | End-of-response visual summary via Stop hook | Active |
 | translator | EN/FR translation, sync | Active |
 | workflow-documenter | Generates workflow documentation | Active |
 | workflow-orchestrator | Multi-agent orchestration | Active |
@@ -141,6 +156,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 │  🔧 [generate] Vérifie si régénération nécessaire         │
 │  🧠 [memory-keeper] Charge .ai/MEMORY.md dans le contexte │
 │  🔄 [self-improver] Vérifie les changements de règles     │
+│  🔍 [coherence-check] Détecte orphelins et boucles        │
 └────────────────────────────────────────────────────────────┘
                             ↓
 ┌─ UserPromptSubmit ─────────────────────────────────────────┐
@@ -161,6 +177,8 @@ A framework for creating, modifying, and maintaining prompt collections with:
 ┌─ Stop ─────────────────────────────────────────────────────┐
 │  ✅ [consistency-check] Agent vérifie si MEMORY.md        │
 │     doit être mis à jour. Si oui, continue la session.    │
+│  📊 [session-status] Affiche synthèse skills/hooks/cmds   │
+│  Note: hooks utilisateur (~/.claude/) peuvent s'ajouter   │
 └────────────────────────────────────────────────────────────┘
                             ↓
 ┌─ SessionEnd ───────────────────────────────────────────────┐
@@ -197,4 +215,4 @@ A framework for creating, modifying, and maintaining prompt collections with:
 
 ---
 
-*Last updated: 2026-02-02 by memory-keeper*
+*Last updated: 2026-02-02 by memory-keeper (session 4fPY2: 6 inconsistencies fixed, session-status, coherence-check, visual-feedback hooks)*

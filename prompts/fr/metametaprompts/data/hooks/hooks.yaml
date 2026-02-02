@@ -255,6 +255,80 @@ SessionStart:
 
           echo "✅ [self-improver] Vérification terminée"
 
+  # ----------------------------
+  # 5. Skills/Hooks coherence check
+  # ----------------------------
+  - name: "init-coherence-check"
+    description: "Verify skills/hooks relationships and detect orphans"
+    enabled: true
+    matcher: "startup"
+    hooks:
+      - type: "command"
+        timeout: 15
+        command: |
+          echo "🔍 [coherence-check] Analyse des relations skills/hooks..."
+
+          SKILLS_DIR=".ai/skills"
+          HOOKS_FILE=".ai/hooks/hooks.yaml"
+
+          # List all skills
+          ALL_SKILLS=""
+          for f in "$SKILLS_DIR"/*.yaml; do
+            [ -f "$f" ] || continue
+            [ "$(basename "$f")" = "_TEMPLATE.yaml" ] && continue
+            skill=$(grep -m1 '^name:' "$f" | sed 's/name:[[:space:]]*"\?\([^"]*\)"\?/\1/')
+            [ -n "$skill" ] && ALL_SKILLS="$ALL_SKILLS $skill"
+          done
+
+          # Skills referenced in hooks (by name pattern)
+          HOOKED_SKILLS="data-sync memory-keeper self-improver session-status inclusivity-reviewer translator"
+
+          # Find orphans
+          ORPHANS=""
+          for skill in $ALL_SKILLS; do
+            is_hooked=false
+            for hooked in $HOOKED_SKILLS; do
+              [ "$skill" = "$hooked" ] && is_hooked=true && break
+            done
+            [ "$is_hooked" = false ] && ORPHANS="$ORPHANS $skill"
+          done
+
+          if [ -n "$ORPHANS" ]; then
+            echo "📋 [coherence-check] Skills orphelins (invocables manuellement):"
+            for orphan in $ORPHANS; do
+              echo "   └── $orphan"
+            done
+          else
+            echo "✅ [coherence-check] Tous les skills sont liés à des hooks"
+          fi
+
+          # Check for potential loops (skills that might trigger hooks)
+          echo "🔄 [coherence-check] Analyse des boucles potentielles..."
+          LOOP_RISKS=""
+
+          # Skills that write to data/ or .ai/ could trigger PostToolUse hooks
+          for skill in $ALL_SKILLS; do
+            skill_file="$SKILLS_DIR/${skill}.yaml"
+            [ -f "$skill_file" ] || continue
+
+            # Check if skill mentions writing to data/ or .ai/
+            if grep -qE 'write|edit|modify|sync' "$skill_file" 2>/dev/null; then
+              if grep -qE 'data/|\.ai/' "$skill_file" 2>/dev/null; then
+                LOOP_RISKS="$LOOP_RISKS $skill"
+              fi
+            fi
+          done
+
+          if [ -n "$LOOP_RISKS" ]; then
+            echo "⚠️ [coherence-check] Skills avec risque de boucle (écrivent dans data/.ai/):"
+            for risk in $LOOP_RISKS; do
+              echo "   └── $risk → PostToolUse:auto-sync/auto-generate"
+            done
+            echo "   Note: Protégé par PreToolUse guardrails"
+          else
+            echo "✅ [coherence-check] Pas de risque de boucle détecté"
+          fi
+
 # ============================================================================
 # USER PROMPT SUBMIT - À chaque message utilisateur·ice
 # ============================================================================
@@ -440,6 +514,68 @@ PostToolUse:
             echo "🌍 [translator] Doc EN modifié. Vérifier traduction FR: $FR_PATH"
           fi
 
+  # ----------------------------
+  # Visual feedback for Read operations
+  # ----------------------------
+  - name: "visual-feedback-read"
+    description: "Show visual feedback when reading project files"
+    enabled: true
+    matcher: "Read"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          # Determine context based on file path
+          case "$FILE_PATH" in
+            *MEMORY.md)
+              echo "🧠 [memory-keeper] Lecture mémoire"
+              ;;
+            *skills/*.yaml)
+              SKILL=$(basename "$FILE_PATH" .yaml)
+              echo "📦 [skill:$SKILL] Lecture définition"
+              ;;
+            *hooks/*.yaml|*hooks.yaml)
+              echo "🔧 [hooks-manager] Lecture hooks"
+              ;;
+            *AGENTS.md|*CLAUDE.md)
+              echo "📋 [config] Lecture configuration"
+              ;;
+            */fr/*.md)
+              echo "🔍 [inclusivity] Lecture contenu FR"
+              ;;
+            */en/*.md)
+              echo "🌍 [translator] Lecture contenu EN"
+              ;;
+          esac
+
+  # ----------------------------
+  # Visual feedback for Edit operations
+  # ----------------------------
+  - name: "visual-feedback-edit"
+    description: "Show visual feedback when editing project files"
+    enabled: true
+    matcher: "Edit"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          case "$FILE_PATH" in
+            *MEMORY.md)
+              echo "🧠 [memory-keeper] Modification mémoire"
+              ;;
+            *skills/*.yaml)
+              SKILL=$(basename "$FILE_PATH" .yaml)
+              echo "📦 [skill:$SKILL] Modification skill"
+              ;;
+            *hooks/*.yaml|*hooks.yaml)
+              echo "🔧 [hooks-manager] Modification hooks"
+              ;;
+          esac
+
 # ============================================================================
 # STOP - Quand Claude finit de répondre
 # ============================================================================
@@ -497,6 +633,91 @@ Stop:
           { "ok": true }
           ou
           { "ok": false, "reason": "🧠 [memory-keeper] [description de ce qui doit être ajouté à MEMORY.md]" }
+
+  # ----------------------------
+  # Session status summary (after consistency-check)
+  # ----------------------------
+  - name: "session-status-summary"
+    description: "Display visual summary of skills, hooks, and commands"
+    enabled: true
+    hooks:
+      - type: "command"
+        timeout: 15
+        command: |
+          # Session Status Summary - Generated by session-status skill
+          # This provides visibility into the system's capabilities
+
+          echo ""
+          echo "---"
+          echo ""
+          echo "## 📊 SYNTHÈSE SYSTÈME META-PROMPT-LLM"
+          echo ""
+
+          SKILLS_DIR=".ai/skills"
+          HOOKED_SKILLS="data-sync memory-keeper self-improver session-status inclusivity-reviewer translator"
+
+          # Count skills
+          SKILL_COUNT=$(find "$SKILLS_DIR" -name "*.yaml" ! -name "_TEMPLATE.yaml" 2>/dev/null | wc -l)
+
+          echo "### 🎯 Skills ($SKILL_COUNT)"
+          echo ""
+          echo "| Skill | Description | Hook |"
+          echo "|-------|-------------|------|"
+
+          if [ -d "$SKILLS_DIR" ]; then
+            for skill_file in "$SKILLS_DIR"/*.yaml; do
+              [ -f "$skill_file" ] || continue
+              [ "$(basename "$skill_file")" = "_TEMPLATE.yaml" ] && continue
+
+              skill_name=$(grep -m1 '^name:' "$skill_file" | sed 's/name:[[:space:]]*"\?\([^"]*\)"\?/\1/')
+              skill_desc=$(grep -m1 '^description:' "$skill_file" | sed 's/description:[[:space:]]*"\?\([^"]*\)"\?/\1/' | cut -c1-35)
+
+              # Check if hooked
+              is_hooked="❌"
+              for h in $HOOKED_SKILLS; do
+                [ "$skill_name" = "$h" ] && is_hooked="✅" && break
+              done
+
+              [ -n "$skill_name" ] && echo "| \`$skill_name\` | $skill_desc | $is_hooked |"
+            done
+          fi
+
+          echo ""
+          echo "### 🔄 Hooks Lifecycle"
+          echo ""
+          echo "\`\`\`"
+          echo "SessionStart ─┬─ 📋 platform-detect"
+          echo "              ├─ 🔧 data-sync"
+          echo "              ├─ 🔧 generate-check"
+          echo "              ├─ 🧠 load-memory"
+          echo "              ├─ 🔄 self-improver"
+          echo "              └─ 🔍 coherence-check ← NEW"
+          echo "      ↓"
+          echo "UserPromptSubmit ── 📋 context-reminder"
+          echo "      ↓"
+          echo "PreToolUse ───── 🛡️ guardrails (.env/secrets/git/rm)"
+          echo "      ↓"
+          echo "PostToolUse ──┬─ 📦 auto-generate ←──┐"
+          echo "              ├─ 🔧 auto-sync    ←──┤ loop risk"
+          echo "              ├─ 🔍 inclusivity     │ (protected)"
+          echo "              └─ 🌍 translator      │"
+          echo "      ↓                              │"
+          echo "Stop ─────────┬─ ✅ consistency [AGENT]"
+          echo "              └─ 📊 session-status [CMD]"
+          echo "      ↓"
+          echo "SessionEnd ───── 📝 final-reminder"
+          echo "\`\`\`"
+          echo ""
+          echo "### 📋 Commandes"
+          echo ""
+          echo "\`\`\`bash"
+          echo ".ai/generate.sh          # Régénère tout"
+          echo ".ai/generate.sh --check  # Vérifie"
+          echo "cat .ai/MEMORY.md        # Mémoire"
+          echo "\`\`\`"
+          echo ""
+          echo "**Légende**: Hook=✅ (automatique) | Hook=❌ (manuel)"
+          echo ""
 
 # ============================================================================
 # SESSION END - Quand la session se termine

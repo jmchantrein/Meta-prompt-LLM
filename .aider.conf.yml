@@ -21,6 +21,7 @@ conventions: |
 #   - memory-keeper: Manages persistent project memory between sessions
 #   - prompt-validator: Validates prompts against schema and quality standards
 #   - self-improver: Agent d'auto-amélioration du projet Meta-prompt-LLM
+#   - session-status: Generates end-of-response visual summary of skills, hooks, and commands
 #   - translator: Manages EN/FR translation and documentation synchronization
 #   - workflow-documenter: Génère et maintient la documentation des workflows agents/skills/hooks
 #   - workflow-orchestrator: Orchestrates multi-agent workflows and validation sequences
