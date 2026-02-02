@@ -1,0 +1,40 @@
+# Pending Reviews
+# ============================================================================
+# Tracks @future-self notes and pending review items.
+# Updated by self-improver after processing commits.
+#
+# Structure:
+#   items:
+#     - id: "review-001"
+#       source: "commit hash or session"
+#       date: "YYYY-MM-DD"
+#       note: "The @future-self message"
+#       impact: ["file1", "file2"]
+#       action: "What needs to be done"
+#       status: "pending" | "in_progress" | "done"
+# ============================================================================
+
+version: "1.0.0"
+updated: "2026-02-02"
+
+# Current pending reviews
+items:
+  - id: "review-001"
+    source: "session-bq507"
+    date: "2026-02-02"
+    note: "Hooks lifecycle implementation complete"
+    impact:
+      - "prompts/fr/metametaprompts/data/hooks/hooks.yaml"
+      - ".ai/generate.sh"
+      - ".claude/settings.json"
+    action: "Test SessionStart and Stop hooks in new session"
+    status: "pending"
+    context: |
+      Implementation of complete hook lifecycle:
+      - SessionStart (4 hooks: data-sync, generate, memory, self-improver)
+      - Stop (agent hook for consistency check)
+      - SessionEnd (memory reminder)
+      Visual feedback convention with emoji prefixes.
+
+# Archive of completed reviews (keep for history)
+archive: []

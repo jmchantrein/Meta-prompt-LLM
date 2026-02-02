@@ -717,6 +717,8 @@ generate_codex_agents() {
 }
 
 # Generate Claude Code hooks settings
+# Supports: SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop, SessionEnd
+# Hook types: command, prompt, agent
 generate_claude_hooks() {
     log_info "Generating Claude Code hooks..."
 
@@ -728,202 +730,257 @@ generate_claude_hooks() {
 
     ensure_dir "$(dirname "${CLAUDE_SETTINGS}")"
 
-    # Generate hooks JSON from YAML
-    # This is a simplified parser that extracts enabled hooks
-    local hooks_json='{'
-    hooks_json+='"_comment": "'"${GENERATED_MARKER}"' from .ai/hooks/hooks.yaml",'
-    hooks_json+='"hooks": {'
+    # Temporary file for building JSON
+    local tmp_file
+    tmp_file=$(mktemp)
+    trap "rm -f ${tmp_file}" EXIT
 
-    local has_pre_tool=false
-    local has_post_tool=false
-    local has_user_prompt=false
-    local has_stop=false
+    # Initialize hook arrays for each event type
+    declare -A event_hooks
+    local ALL_EVENTS="SessionStart UserPromptSubmit PreToolUse PostToolUse Stop SessionEnd"
+    for event in ${ALL_EVENTS}; do
+        event_hooks["${event}"]=""
+    done
 
-    local pre_tool_hooks=""
-    local post_tool_hooks=""
-    local user_prompt_hooks=""
-    local stop_hooks=""
-
-    local current_section=""
+    # State machine variables
     local current_event=""
-    local in_hook=false
-    local hook_enabled=false
+    local in_hook_list=false
+    local in_hook_item=false
+    local hook_enabled=""
     local hook_matcher=""
+    local hook_timeout=""
+    local in_hooks_array=false
     local hook_type=""
     local hook_command=""
     local hook_prompt=""
+    local reading_multiline=""
+    local multiline_content=""
+    local multiline_indent=0
 
-    while IFS= read -r line; do
-        # Detect section changes
-        if [[ "${line}" =~ ^(session|guardrails|automation|audit|session_end|validation): ]]; then
-            current_section="${BASH_REMATCH[1]}"
-            continue
-        fi
-
-        # Detect lifecycle event
-        if [[ "${line}" =~ ^[[:space:]]+(PreToolUse|PostToolUse|UserPromptSubmit|Stop): ]]; then
-            current_event="${BASH_REMATCH[1]}"
-            continue
-        fi
-
-        # Detect hook start
-        if [[ "${line}" =~ ^[[:space:]]+-[[:space:]]+name:[[:space:]]*\"([^\"]+)\" ]]; then
-            # Save previous hook if it was enabled
-            if [[ "${in_hook}" == "true" && "${hook_enabled}" == "true" ]]; then
-                local hook_json=""
-                if [[ -n "${hook_matcher}" ]]; then
-                    hook_json='{"matcher":"'"${hook_matcher}"'","hooks":[{"type":"'"${hook_type}"'"'
-                else
-                    hook_json='{"hooks":[{"type":"'"${hook_type}"'"'
-                fi
-
-                if [[ "${hook_type}" == "command" && -n "${hook_command}" ]]; then
-                    # Escape special chars in command
-                    local escaped_cmd="${hook_command//\\/\\\\}"
-                    escaped_cmd="${escaped_cmd//\"/\\\"}"
-                    escaped_cmd="${escaped_cmd//$'\n'/\\n}"
-                    hook_json+=',"command":"'"${escaped_cmd}"'"'
-                elif [[ "${hook_type}" == "prompt" && -n "${hook_prompt}" ]]; then
-                    local escaped_prompt="${hook_prompt//\"/\\\"}"
-                    hook_json+=',"prompt":"'"${escaped_prompt}"'"'
-                fi
-                hook_json+='}]}'
-
-                case "${current_event}" in
-                    PreToolUse)
-                        [[ "${has_pre_tool}" == "true" ]] && pre_tool_hooks+=","
-                        pre_tool_hooks+="${hook_json}"
-                        has_pre_tool=true
-                        ;;
-                    PostToolUse)
-                        [[ "${has_post_tool}" == "true" ]] && post_tool_hooks+=","
-                        post_tool_hooks+="${hook_json}"
-                        has_post_tool=true
-                        ;;
-                    UserPromptSubmit)
-                        [[ "${has_user_prompt}" == "true" ]] && user_prompt_hooks+=","
-                        user_prompt_hooks+="${hook_json}"
-                        has_user_prompt=true
-                        ;;
-                    Stop)
-                        [[ "${has_stop}" == "true" ]] && stop_hooks+=","
-                        stop_hooks+="${hook_json}"
-                        has_stop=true
-                        ;;
-                esac
+    # Process YAML line by line
+    while IFS= read -r line || [[ -n "${line}" ]]; do
+        # Handle multiline content
+        if [[ -n "${reading_multiline}" ]]; then
+            # Check if line is still part of multiline (has sufficient indentation)
+            local line_indent=0
+            if [[ "${line}" =~ ^([[:space:]]*) ]]; then
+                line_indent=${#BASH_REMATCH[1]}
             fi
 
-            # Start new hook
-            in_hook=true
-            hook_enabled=false
-            hook_matcher=""
-            hook_type=""
-            hook_command=""
-            hook_prompt=""
+            if [[ ${line_indent} -ge ${multiline_indent} && -n "${line}" ]] || [[ -z "${line// /}" ]]; then
+                # Still in multiline, append content
+                local content_part="${line}"
+                if [[ ${line_indent} -ge ${multiline_indent} ]]; then
+                    content_part="${line:${multiline_indent}}"
+                fi
+                multiline_content+="${content_part}"$'\n'
+                continue
+            else
+                # End of multiline
+                if [[ "${reading_multiline}" == "command" ]]; then
+                    hook_command="${multiline_content%$'\n'}"
+                elif [[ "${reading_multiline}" == "prompt" ]]; then
+                    hook_prompt="${multiline_content%$'\n'}"
+                fi
+                reading_multiline=""
+                multiline_content=""
+                # Fall through to process current line
+            fi
+        fi
+
+        # Detect top-level event (SessionStart:, UserPromptSubmit:, etc.)
+        if [[ "${line}" =~ ^(SessionStart|UserPromptSubmit|PreToolUse|PostToolUse|Stop|SessionEnd):[[:space:]]*$ ]]; then
+            # Save previous hook if exists
+            if [[ "${in_hook_item}" == "true" && "${hook_enabled}" == "true" && -n "${hook_type}" ]]; then
+                save_hook_to_event
+            fi
+            current_event="${BASH_REMATCH[1]}"
+            in_hook_list=true
+            in_hook_item=false
+            log_verbose "Processing event: ${current_event}"
             continue
         fi
 
-        # Parse hook properties
-        if [[ "${in_hook}" == "true" ]]; then
-            if [[ "${line}" =~ enabled:[[:space:]]*(true|false) ]]; then
-                [[ "${BASH_REMATCH[1]}" == "true" ]] && hook_enabled=true
-            elif [[ "${line}" =~ matcher:[[:space:]]*\"([^\"]+)\" ]]; then
-                hook_matcher="${BASH_REMATCH[1]}"
-            elif [[ "${line}" =~ -[[:space:]]+type:[[:space:]]*\"(command|prompt|agent)\" ]]; then
-                hook_type="${BASH_REMATCH[1]}"
-            elif [[ "${line}" =~ command:[[:space:]]*\| ]]; then
-                # Multiline command - read next lines
+        # Skip comment lines and empty lines
+        [[ "${line}" =~ ^[[:space:]]*# ]] && continue
+        [[ -z "${line// /}" ]] && continue
+
+        # Inside an event's hook list
+        if [[ "${in_hook_list}" == "true" ]]; then
+            # Detect new hook item (- name: "...")
+            if [[ "${line}" =~ ^[[:space:]]+-[[:space:]]+name:[[:space:]]*[\"\']?([^\"\']+)[\"\']? ]]; then
+                # Save previous hook if exists
+                if [[ "${in_hook_item}" == "true" && "${hook_enabled}" == "true" && -n "${hook_type}" ]]; then
+                    save_hook_to_event
+                fi
+                # Reset for new hook
+                in_hook_item=true
+                hook_enabled=""
+                hook_matcher=""
+                hook_timeout=""
+                in_hooks_array=false
+                hook_type=""
                 hook_command=""
-                while IFS= read -r cmd_line; do
-                    if [[ "${cmd_line}" =~ ^[[:space:]]{12,} ]]; then
-                        hook_command+="${cmd_line#            }"$'\n'
-                    else
-                        break
+                hook_prompt=""
+                continue
+            fi
+
+            # Parse hook properties
+            if [[ "${in_hook_item}" == "true" ]]; then
+                # enabled: true/false
+                if [[ "${line}" =~ enabled:[[:space:]]*(true|false) ]]; then
+                    hook_enabled="${BASH_REMATCH[1]}"
+                    continue
+                fi
+
+                # matcher: "pattern"
+                if [[ "${line}" =~ matcher:[[:space:]]*[\"\']?([^\"\']+)[\"\']? ]]; then
+                    hook_matcher="${BASH_REMATCH[1]}"
+                    continue
+                fi
+
+                # hooks: (array start)
+                if [[ "${line}" =~ ^[[:space:]]+hooks:[[:space:]]*$ ]]; then
+                    in_hooks_array=true
+                    continue
+                fi
+
+                # Inside hooks array
+                if [[ "${in_hooks_array}" == "true" ]]; then
+                    # - type: "command"
+                    if [[ "${line}" =~ -[[:space:]]+type:[[:space:]]*[\"\']?(command|prompt|agent)[\"\']? ]]; then
+                        hook_type="${BASH_REMATCH[1]}"
+                        continue
                     fi
-                done
-                hook_command="${hook_command%$'\n'}"
-            elif [[ "${line}" =~ prompt:[[:space:]]*\"([^\"]+)\" ]]; then
-                hook_prompt="${BASH_REMATCH[1]}"
+
+                    # type: "command" (without dash)
+                    if [[ "${line}" =~ ^[[:space:]]+type:[[:space:]]*[\"\']?(command|prompt|agent)[\"\']? ]]; then
+                        hook_type="${BASH_REMATCH[1]}"
+                        continue
+                    fi
+
+                    # timeout: 30
+                    if [[ "${line}" =~ timeout:[[:space:]]*([0-9]+) ]]; then
+                        hook_timeout="${BASH_REMATCH[1]}"
+                        continue
+                    fi
+
+                    # command: | (multiline)
+                    if [[ "${line}" =~ command:[[:space:]]*\|[[:space:]]*$ ]]; then
+                        reading_multiline="command"
+                        multiline_content=""
+                        # Calculate indent for multiline content
+                        if [[ "${line}" =~ ^([[:space:]]*) ]]; then
+                            multiline_indent=$((${#BASH_REMATCH[1]} + 2))
+                        fi
+                        continue
+                    fi
+
+                    # command: "inline"
+                    if [[ "${line}" =~ command:[[:space:]]*[\"\']([^\"\']+)[\"\'] ]]; then
+                        hook_command="${BASH_REMATCH[1]}"
+                        continue
+                    fi
+
+                    # prompt: | (multiline)
+                    if [[ "${line}" =~ prompt:[[:space:]]*\|[[:space:]]*$ ]]; then
+                        reading_multiline="prompt"
+                        multiline_content=""
+                        if [[ "${line}" =~ ^([[:space:]]*) ]]; then
+                            multiline_indent=$((${#BASH_REMATCH[1]} + 2))
+                        fi
+                        continue
+                    fi
+
+                    # prompt: "inline"
+                    if [[ "${line}" =~ prompt:[[:space:]]*[\"\']([^\"\']+)[\"\'] ]]; then
+                        hook_prompt="${BASH_REMATCH[1]}"
+                        continue
+                    fi
+                fi
+            fi
+
+            # Check if we've left the event (new top-level key)
+            if [[ "${line}" =~ ^[a-zA-Z] && ! "${line}" =~ ^[[:space:]] ]]; then
+                in_hook_list=false
             fi
         fi
     done < "${HOOKS_FILE}"
 
-    # Handle last hook
-    if [[ "${in_hook}" == "true" && "${hook_enabled}" == "true" ]]; then
-        local hook_json=""
-        if [[ -n "${hook_matcher}" ]]; then
-            hook_json='{"matcher":"'"${hook_matcher}"'","hooks":[{"type":"'"${hook_type}"'"'
-        else
-            hook_json='{"hooks":[{"type":"'"${hook_type}"'"'
-        fi
-
-        if [[ "${hook_type}" == "command" && -n "${hook_command}" ]]; then
-            local escaped_cmd="${hook_command//\\/\\\\}"
-            escaped_cmd="${escaped_cmd//\"/\\\"}"
-            escaped_cmd="${escaped_cmd//$'\n'/\\n}"
-            hook_json+=',"command":"'"${escaped_cmd}"'"'
-        elif [[ "${hook_type}" == "prompt" && -n "${hook_prompt}" ]]; then
-            local escaped_prompt="${hook_prompt//\"/\\\"}"
-            hook_json+=',"prompt":"'"${escaped_prompt}"'"'
-        fi
-        hook_json+='}]}'
-
-        case "${current_event}" in
-            PreToolUse)
-                [[ "${has_pre_tool}" == "true" ]] && pre_tool_hooks+=","
-                pre_tool_hooks+="${hook_json}"
-                has_pre_tool=true
-                ;;
-            PostToolUse)
-                [[ "${has_post_tool}" == "true" ]] && post_tool_hooks+=","
-                post_tool_hooks+="${hook_json}"
-                has_post_tool=true
-                ;;
-            UserPromptSubmit)
-                [[ "${has_user_prompt}" == "true" ]] && user_prompt_hooks+=","
-                user_prompt_hooks+="${hook_json}"
-                has_user_prompt=true
-                ;;
-            Stop)
-                [[ "${has_stop}" == "true" ]] && stop_hooks+=","
-                stop_hooks+="${hook_json}"
-                has_stop=true
-                ;;
-        esac
+    # Save final hook if exists
+    if [[ "${in_hook_item}" == "true" && "${hook_enabled}" == "true" && -n "${hook_type}" ]]; then
+        save_hook_to_event
     fi
 
     # Build final JSON
+    local hooks_json='{"_comment":"'"${GENERATED_MARKER}"' from .ai/hooks/hooks.yaml","hooks":{'
     local first_event=true
-    if [[ "${has_user_prompt}" == "true" ]]; then
-        [[ "${first_event}" != "true" ]] && hooks_json+=","
-        hooks_json+='"UserPromptSubmit":['"${user_prompt_hooks}"']'
-        first_event=false
-    fi
-    if [[ "${has_pre_tool}" == "true" ]]; then
-        [[ "${first_event}" != "true" ]] && hooks_json+=","
-        hooks_json+='"PreToolUse":['"${pre_tool_hooks}"']'
-        first_event=false
-    fi
-    if [[ "${has_post_tool}" == "true" ]]; then
-        [[ "${first_event}" != "true" ]] && hooks_json+=","
-        hooks_json+='"PostToolUse":['"${post_tool_hooks}"']'
-        first_event=false
-    fi
-    if [[ "${has_stop}" == "true" ]]; then
-        [[ "${first_event}" != "true" ]] && hooks_json+=","
-        hooks_json+='"Stop":['"${stop_hooks}"']'
-        first_event=false
-    fi
+
+    for event in ${ALL_EVENTS}; do
+        if [[ -n "${event_hooks[${event}]}" ]]; then
+            [[ "${first_event}" != "true" ]] && hooks_json+=","
+            hooks_json+="\"${event}\":[${event_hooks[${event}]}]"
+            first_event=false
+        fi
+    done
 
     hooks_json+='}}'
 
     # Format JSON if jq is available
     if command_exists jq; then
-        hooks_json=$(echo "${hooks_json}" | jq '.')
+        hooks_json=$(echo "${hooks_json}" | jq '.' 2>/dev/null) || true
     fi
 
     write_file "${CLAUDE_SETTINGS}" "${hooks_json}"
     log_success "Generated Claude Code hooks settings"
+}
+
+# Helper function to save current hook to event array
+save_hook_to_event() {
+    local hook_json=""
+
+    # Build hook JSON
+    if [[ -n "${hook_matcher}" ]]; then
+        hook_json='{"matcher":"'"${hook_matcher}"'","hooks":[{"type":"'"${hook_type}"'"'
+    else
+        hook_json='{"hooks":[{"type":"'"${hook_type}"'"'
+    fi
+
+    # Add timeout if specified
+    if [[ -n "${hook_timeout}" ]]; then
+        hook_json+=',"timeout":'"${hook_timeout}"
+    fi
+
+    # Add type-specific content
+    if [[ "${hook_type}" == "command" && -n "${hook_command}" ]]; then
+        # Escape special chars in command for JSON
+        local escaped_cmd="${hook_command//\\/\\\\}"
+        escaped_cmd="${escaped_cmd//\"/\\\"}"
+        escaped_cmd="${escaped_cmd//$'\n'/\\n}"
+        escaped_cmd="${escaped_cmd//$'\t'/\\t}"
+        hook_json+=',"command":"'"${escaped_cmd}"'"'
+    elif [[ "${hook_type}" == "prompt" && -n "${hook_prompt}" ]]; then
+        local escaped_prompt="${hook_prompt//\\/\\\\}"
+        escaped_prompt="${escaped_prompt//\"/\\\"}"
+        escaped_prompt="${escaped_prompt//$'\n'/\\n}"
+        hook_json+=',"prompt":"'"${escaped_prompt}"'"'
+    elif [[ "${hook_type}" == "agent" && -n "${hook_prompt}" ]]; then
+        local escaped_prompt="${hook_prompt//\\/\\\\}"
+        escaped_prompt="${escaped_prompt//\"/\\\"}"
+        escaped_prompt="${escaped_prompt//$'\n'/\\n}"
+        hook_json+=',"prompt":"'"${escaped_prompt}"'"'
+    fi
+
+    hook_json+='}]}'
+
+    # Append to event's hook array
+    if [[ -n "${event_hooks[${current_event}]}" ]]; then
+        event_hooks["${current_event}"]+=",${hook_json}"
+    else
+        event_hooks["${current_event}"]="${hook_json}"
+    fi
+
+    log_verbose "Added hook to ${current_event}: type=${hook_type}"
 }
 
 # Update VERSION file

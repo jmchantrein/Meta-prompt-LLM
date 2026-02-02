@@ -1,260 +1,463 @@
 # Hooks Source of Truth
 # ============================================================================
-# This file defines all hooks for the project in a platform-agnostic format.
-# The generate.sh script converts these to platform-specific configurations.
+# Source de vérité pour tous les hooks du projet Meta-prompt-LLM.
 #
-# Hook types:
-#   - command: Execute shell command (exit code 0 = success, non-zero = block)
-#   - prompt: Ask yes/no question (no = block)
-#   - agent: Spawn subagent for validation
+# FLUX DE DONNÉES:
+#   1. Ce fichier (data/hooks/hooks.yaml) = Source de vérité
+#   2. data-sync copie vers .ai/hooks/hooks.yaml
+#   3. generate.sh génère .claude/settings.json
 #
-# Lifecycle events:
-#   - UserPromptSubmit: When user sends a message
-#   - PreToolUse: Before a tool executes (can block)
-#   - PostToolUse: After a tool completes
-#   - Stop: When session ends
+# LIFECYCLE EVENTS (ordre d'exécution):
+#   1. SessionStart     - Avant toute interaction utilisateur·ice
+#   2. UserPromptSubmit - Quand l'utilisateur·ice envoie un message
+#   3. PreToolUse       - Avant l'exécution d'un outil (peut bloquer)
+#   4. PostToolUse      - Après l'exécution d'un outil
+#   5. Stop             - Quand Claude finit de répondre
+#   6. SessionEnd       - Quand la session se termine
+#
+# HOOK TYPES:
+#   - command: Exécute une commande shell (exit 0 = succès)
+#   - prompt:  Question oui/non à l'utilisateur·ice
+#   - agent:   Sous-agent avec accès aux outils (Read, Grep, Glob)
+#
+# VISUAL FEEDBACK CONVENTION:
+#   Les hooks utilisent des préfixes emoji pour indiquer l'agent actif:
+#   🔧 [data-sync] - Agent de synchronisation
+#   🧠 [memory-keeper] - Agent mémoire
+#   🔄 [self-improver] - Agent d'amélioration
+#   ✅ [consistency-check] - Vérification de consistance
+#   📊 [workflow-orchestrator] - Orchestrateur
+#
 # ============================================================================
 
-version: "1.0.0"
+version: "2.0.0"
 updated: "2026-02-02"
 
-# ----------------------------------------------------------------------------
-# SESSION INITIALIZATION
-# ----------------------------------------------------------------------------
-session:
-  # Load context at session start
-  UserPromptSubmit:
-    - name: "load-memory"
-      description: "Remind to load project memory at session start"
-      enabled: true
-      hooks:
-        - type: "command"
-          command: |
-            if [ -f ".ai/MEMORY.md" ]; then
-              echo "📋 Remember to read .ai/MEMORY.md for project context"
+# ============================================================================
+# SESSION START - Initialisation AVANT toute interaction
+# ============================================================================
+# Runs when a session begins. source = "startup" | "resume" | "clear" | "compact"
+# Output goes to additionalContext for Claude to see.
+
+SessionStart:
+  # ----------------------------
+  # 1. Data sync check
+  # ----------------------------
+  - name: "init-data-sync"
+    description: "Synchronize data/ to .ai/ at session start"
+    enabled: true
+    matcher: "startup"  # Only on new sessions
+    hooks:
+      - type: "command"
+        timeout: 30
+        command: |
+          echo "🔧 [data-sync] Vérification de synchronisation..."
+
+          DATA_DIR="prompts/fr/metametaprompts/data"
+          AI_DIR=".ai"
+
+          # Check if data/ has changes not in .ai/
+          if [ -d "$DATA_DIR/skills" ] && [ -d "$AI_DIR/skills" ]; then
+            DATA_HASH=$(find "$DATA_DIR/skills" -name "*.yaml" -exec cat {} \; 2>/dev/null | md5sum | cut -d' ' -f1)
+            AI_HASH=$(find "$AI_DIR/skills" -name "*.yaml" -exec cat {} \; 2>/dev/null | md5sum | cut -d' ' -f1)
+
+            if [ "$DATA_HASH" != "$AI_HASH" ]; then
+              echo "⚠️ [data-sync] Changements détectés dans data/, synchronisation nécessaire"
+              echo "   Exécutez: cp -r $DATA_DIR/skills/* $AI_DIR/skills/"
+            else
+              echo "✅ [data-sync] Skills synchronisés"
             fi
+          fi
 
-    - name: "check-skills-sync"
-      description: "Check if generated files are in sync with skills"
-      enabled: true
-      hooks:
-        - type: "command"
-          command: |
-            if [ -f ".ai/generate.sh" ]; then
-              .ai/generate.sh --check 2>/dev/null || echo "⚠️ Skills may need regeneration: .ai/generate.sh"
+          # Check hooks sync
+          if [ -f "$DATA_DIR/hooks/hooks.yaml" ] && [ -f "$AI_DIR/hooks/hooks.yaml" ]; then
+            DATA_HOOKS_HASH=$(md5sum "$DATA_DIR/hooks/hooks.yaml" | cut -d' ' -f1)
+            AI_HOOKS_HASH=$(md5sum "$AI_DIR/hooks/hooks.yaml" | cut -d' ' -f1)
+
+            if [ "$DATA_HOOKS_HASH" != "$AI_HOOKS_HASH" ]; then
+              echo "⚠️ [data-sync] hooks.yaml désynchronisé, copie..."
+              cp "$DATA_DIR/hooks/hooks.yaml" "$AI_DIR/hooks/hooks.yaml"
+              echo "✅ [data-sync] hooks.yaml synchronisé"
             fi
+          fi
 
-# ----------------------------------------------------------------------------
-# GUARDRAILS - Sensitive Files
-# ----------------------------------------------------------------------------
-guardrails:
-  PreToolUse:
-    # Protect environment files
-    - name: "protect-env-files"
-      description: "Require confirmation before writing to .env files"
-      enabled: true
-      matcher: "Write(.env*)"
-      hooks:
-        - type: "prompt"
-          prompt: "⚠️ You are about to write to an environment file. This may contain secrets. Continue?"
+  # ----------------------------
+  # 2. Generate check
+  # ----------------------------
+  - name: "init-generate-check"
+    description: "Check if generate.sh needs to run"
+    enabled: true
+    matcher: "startup|resume"
+    hooks:
+      - type: "command"
+        timeout: 60
+        command: |
+          echo "🔧 [generate] Vérification des fichiers générés..."
 
-    # Protect credentials
-    - name: "protect-credentials"
-      description: "Block writes to credential files"
-      enabled: true
-      matcher: "Write(*credential*)"
-      hooks:
-        - type: "prompt"
-          prompt: "⚠️ Writing to a credentials file. Are you sure this is intentional?"
+          if [ -f ".ai/generate.sh" ]; then
+            if ! .ai/generate.sh --check 2>/dev/null; then
+              echo "⚠️ [generate] Régénération nécessaire..."
+              .ai/generate.sh 2>/dev/null && echo "✅ [generate] Fichiers régénérés" || echo "❌ [generate] Échec"
+            else
+              echo "✅ [generate] Fichiers à jour"
+            fi
+          fi
 
-    - name: "protect-secrets"
-      description: "Block writes to secret files"
-      enabled: true
-      matcher: "Write(*secret*)"
-      hooks:
-        - type: "prompt"
-          prompt: "⚠️ Writing to a secrets file. Confirm this is intentional?"
+  # ----------------------------
+  # 3. Load memory context
+  # ----------------------------
+  - name: "init-load-memory"
+    description: "Load project memory into context"
+    enabled: true
+    hooks:
+      - type: "command"
+        command: |
+          echo "🧠 [memory-keeper] Chargement du contexte..."
 
-    # Protect git config
-    - name: "protect-git-config"
-      description: "Prevent accidental git config changes"
-      enabled: true
-      matcher: "Bash(git config*)"
-      hooks:
-        - type: "prompt"
-          prompt: "Modifying git configuration. Is this intended?"
+          if [ -f ".ai/MEMORY.md" ]; then
+            echo ""
+            echo "═══════════════════════════════════════════════════════════════"
+            echo "                    CONTEXTE PROJET CHARGÉ"
+            echo "═══════════════════════════════════════════════════════════════"
+            cat ".ai/MEMORY.md"
+            echo "═══════════════════════════════════════════════════════════════"
+            echo ""
+          else
+            echo "⚠️ [memory-keeper] Fichier .ai/MEMORY.md non trouvé"
+          fi
 
-# ----------------------------------------------------------------------------
-# GUARDRAILS - Destructive Operations
-# ----------------------------------------------------------------------------
-  # Destructive bash commands
-    - name: "confirm-delete"
-      description: "Require confirmation for file deletion"
-      enabled: true
-      matcher: "Bash(rm *)"
-      hooks:
-        - type: "prompt"
-          prompt: "This command will delete files. Are you sure?"
+  # ----------------------------
+  # 4. Self-improver quick check
+  # ----------------------------
+  - name: "init-self-improver"
+    description: "Quick check for rule/skill changes"
+    enabled: true
+    matcher: "startup"
+    hooks:
+      - type: "command"
+        timeout: 10
+        command: |
+          echo "🔄 [self-improver] Vérification des changements de règles..."
 
-    - name: "confirm-force-push"
-      description: "Require confirmation for force push"
-      enabled: true
-      matcher: "Bash(git push*--force*)"
-      hooks:
-        - type: "prompt"
-          prompt: "⚠️ Force push can overwrite remote history. Confirm?"
+          # Check AGENTS.md hash vs stored hash
+          if [ -f "AGENTS.md" ] && [ -f ".ai/VERSION" ]; then
+            CURRENT_HASH=$(md5sum AGENTS.md | cut -d' ' -f1)
+            STORED_INFO=$(cat .ai/VERSION)
 
-    - name: "confirm-hard-reset"
-      description: "Require confirmation for hard reset"
-      enabled: true
-      matcher: "Bash(git reset --hard*)"
-      hooks:
-        - type: "prompt"
-          prompt: "⚠️ Hard reset will discard all uncommitted changes. Continue?"
+            # Simple check - if AGENTS.md changed since last generate
+            if ! echo "$STORED_INFO" | grep -q "agents"; then
+              echo "ℹ️ [self-improver] Première session ou version mise à jour"
+            fi
+          fi
 
-    - name: "confirm-clean"
-      description: "Require confirmation for git clean"
-      enabled: true
-      matcher: "Bash(git clean*)"
-      hooks:
-        - type: "prompt"
-          prompt: "⚠️ Git clean will remove untracked files. Continue?"
+          echo "✅ [self-improver] Vérification terminée"
 
-# ----------------------------------------------------------------------------
-# AUTOMATION - Code Quality
-# ----------------------------------------------------------------------------
-automation:
-  PostToolUse:
-    # Regenerate configs when skills change
-    - name: "auto-generate-on-skill-change"
-      description: "Regenerate platform configs when skills are modified"
-      enabled: true
-      matcher: "Write(.ai/skills/*.yaml)"
-      hooks:
-        - type: "command"
-          command: |
-            echo "📦 Skill modified. Running generate.sh..."
-            .ai/generate.sh 2>/dev/null || echo "⚠️ generate.sh failed"
+# ============================================================================
+# USER PROMPT SUBMIT - À chaque message utilisateur·ice
+# ============================================================================
 
-    # Remind about inclusive language for French content
-    - name: "inclusivity-reminder-fr"
-      description: "Remind to check inclusive language for French files"
-      enabled: true
-      matcher: "Write(**/fr/**/*.md)"
-      hooks:
-        - type: "command"
-          command: |
-            echo "🔍 French content modified. Remember: inclusive writing rules apply."
+UserPromptSubmit:
+  - name: "user-context-reminder"
+    description: "Rappel léger du contexte"
+    enabled: true
+    hooks:
+      - type: "command"
+        command: |
+          # Feedback visuel discret
+          echo "📋 Session active | Mémoire: .ai/MEMORY.md"
 
-    # Remind about translation sync
-    - name: "translation-sync-reminder"
-      description: "Remind to sync translations when docs change"
-      enabled: true
-      matcher: "Write(docs/en/*.md)"
-      hooks:
-        - type: "command"
-          command: |
-            echo "🌍 English doc modified. Remember to update French translation in docs/fr/"
+# ============================================================================
+# PRE TOOL USE - Avant l'exécution d'un outil
+# ============================================================================
 
-# ----------------------------------------------------------------------------
-# AUDIT LOGGING
-# ----------------------------------------------------------------------------
-audit:
-  PostToolUse:
-    - name: "log-file-writes"
-      description: "Log all file write operations"
-      enabled: false  # Enable if you want audit logging
-      matcher: "Write(*)"
-      hooks:
-        - type: "command"
-          command: |
-            echo "$(date -Iseconds) WRITE: $CLAUDE_FILE_PATH" >> .ai/audit.log
+PreToolUse:
+  # ----------------------------
+  # Guardrails - Fichiers sensibles
+  # ----------------------------
+  - name: "protect-env-files"
+    description: "Require confirmation before writing to .env files"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
 
-    - name: "log-bash-commands"
-      description: "Log all bash commands"
-      enabled: false  # Enable if you want audit logging
-      matcher: "Bash(*)"
-      hooks:
-        - type: "command"
-          command: |
-            echo "$(date -Iseconds) BASH: $CLAUDE_TOOL_INPUT" >> .ai/audit.log
+          if echo "$FILE_PATH" | grep -qE '\.env'; then
+            echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"⚠️ Écriture dans un fichier .env détectée. Contient potentiellement des secrets."}}'
+            exit 0
+          fi
+          exit 0
 
-# ----------------------------------------------------------------------------
-# SESSION END
-# ----------------------------------------------------------------------------
-session_end:
-  Stop:
-    - name: "memory-update-reminder"
-      description: "Remind to update memory on session end"
-      enabled: true
-      hooks:
-        - type: "command"
-          command: |
-            echo "📝 Session ending. Consider updating .ai/MEMORY.md with important decisions."
+  - name: "protect-credentials"
+    description: "Block writes to credential files"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
 
-# ----------------------------------------------------------------------------
-# VALIDATION HOOKS (Agent-based)
-# ----------------------------------------------------------------------------
-validation:
-  PostToolUse:
-    # Validate prompts when modified
-    - name: "validate-prompts"
-      description: "Run prompt-validator on prompt changes"
-      enabled: false  # Enable when prompt-validator is ready
-      matcher: "Write(prompts/**/*.md)"
-      hooks:
-        - type: "agent"
-          agent: "prompt-validator"
-          prompt: "Validate the prompt that was just modified"
+          if echo "$FILE_PATH" | grep -qiE 'credential|secret|password|token|key\.'; then
+            echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"⚠️ Écriture dans un fichier de credentials détectée."}}'
+            exit 0
+          fi
+          exit 0
 
-    # Check links in markdown
-    - name: "check-markdown-links"
-      description: "Validate links in markdown files"
-      enabled: false  # Enable when link-checker is ready
-      matcher: "Write(docs/**/*.md)"
-      hooks:
-        - type: "agent"
-          agent: "link-checker"
-          prompt: "Check internal links in the modified file"
+  # ----------------------------
+  # Guardrails - Opérations destructives
+  # ----------------------------
+  - name: "protect-destructive-git"
+    description: "Protect against destructive git operations"
+    enabled: true
+    matcher: "Bash"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          COMMAND=$(echo "$INPUT" | grep -o '"command"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
 
-# ----------------------------------------------------------------------------
-# WORKFLOW DOCUMENTATION HOOKS
-# ----------------------------------------------------------------------------
-workflow_documentation:
-  PostToolUse:
-    # Update workflow docs when skills change
-    - name: "update-workflows-on-skill-change"
-      description: "Trigger workflow documentation update when skills are modified"
-      enabled: true
-      matcher: "Write(prompts/fr/metametaprompts/data/skills/*.yaml)"
-      hooks:
-        - type: "command"
-          command: |
-            echo "📊 Skill modified. Remember to update workflow documentation:"
-            echo "   - Run /update-workflows or invoke workflow-documenter"
-            echo "   - Update docs/*/workflows.md"
+          # Check for dangerous patterns
+          if echo "$COMMAND" | grep -qE 'git (push.*--force|reset --hard|clean -[fd])'; then
+            echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"⚠️ Opération git destructive détectée. Confirmer?"}}'
+            exit 0
+          fi
 
-    # Update workflow docs when hooks change
-    - name: "update-workflows-on-hooks-change"
-      description: "Trigger workflow documentation update when hooks are modified"
-      enabled: true
-      matcher: "Write(prompts/fr/metametaprompts/data/hooks/*.yaml)"
-      hooks:
-        - type: "command"
-          command: |
-            echo "📊 Hooks modified. Remember to update workflow documentation:"
-            echo "   - Run /update-workflows or invoke workflow-documenter"
-            echo "   - Update docs/*/workflows.md"
+          if echo "$COMMAND" | grep -qE 'rm -rf'; then
+            echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"⚠️ Suppression récursive détectée. Confirmer?"}}'
+            exit 0
+          fi
+          exit 0
 
-    # Remind to add dependencies_urls when prompts are modified
-    - name: "check-dependencies-urls"
-      description: "Remind to add dependencies_urls in prompt META blocks"
-      enabled: true
-      matcher: "Write(prompts/**/*.md)"
-      hooks:
-        - type: "command"
-          command: |
-            echo "📋 Prompt modified. Ensure META block includes dependencies_urls:"
-            echo "   - skills: URLs to required skills"
-            echo "   - hooks: URL to hooks.yaml"
-            echo "   - rules: URL to AGENTS.md"
+  # ----------------------------
+  # Guardrails - Protection source de vérité
+  # ----------------------------
+  - name: "protect-generated-files"
+    description: "Warn when editing generated files instead of source"
+    enabled: true
+    matcher: "Write|Edit"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          # Check if editing .ai/ directly (should edit data/ instead)
+          if echo "$FILE_PATH" | grep -qE '^\.ai/(skills|hooks)/'; then
+            echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"⚠️ Modification directe de .ai/ détectée. Préférez modifier data/ (source de vérité)."}}'
+            exit 0
+          fi
+          exit 0
+
+# ============================================================================
+# POST TOOL USE - Après l'exécution d'un outil
+# ============================================================================
+
+PostToolUse:
+  # ----------------------------
+  # Auto-regenerate on skill changes
+  # ----------------------------
+  - name: "auto-generate-on-skill-change"
+    description: "Regenerate platform configs when skills are modified"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          if echo "$FILE_PATH" | grep -qE '(data/skills|\.ai/skills)/.*\.yaml$'; then
+            echo "📦 [generate] Skill modifié, régénération..."
+            .ai/generate.sh 2>/dev/null && echo "✅ [generate] Régénéré" || echo "❌ [generate] Échec"
+          fi
+
+  # ----------------------------
+  # Sync data to .ai on data changes
+  # ----------------------------
+  - name: "auto-sync-on-data-change"
+    description: "Sync data/ to .ai/ when data files change"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          # If data/hooks changed, sync to .ai/hooks
+          if echo "$FILE_PATH" | grep -qE 'data/hooks/.*\.yaml$'; then
+            echo "🔧 [data-sync] Hooks modifiés, synchronisation..."
+            cp "prompts/fr/metametaprompts/data/hooks/hooks.yaml" ".ai/hooks/hooks.yaml" 2>/dev/null
+            echo "✅ [data-sync] Hooks synchronisés vers .ai/"
+          fi
+
+          # If data/skills changed, sync to .ai/skills
+          if echo "$FILE_PATH" | grep -qE 'data/skills/.*\.yaml$'; then
+            SKILL_NAME=$(basename "$FILE_PATH")
+            echo "🔧 [data-sync] Skill modifié: $SKILL_NAME"
+            cp "$FILE_PATH" ".ai/skills/$SKILL_NAME" 2>/dev/null
+            echo "✅ [data-sync] Skill synchronisé vers .ai/"
+          fi
+
+  # ----------------------------
+  # Inclusive writing reminder
+  # ----------------------------
+  - name: "inclusivity-reminder-fr"
+    description: "Remind about inclusive writing for French files"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+          if echo "$FILE_PATH" | grep -qE '/fr/.*\.md$'; then
+            echo "🔍 [inclusivity] Contenu FR modifié. Rappel: écriture inclusive requise."
+          fi
+
+  # ----------------------------
+  # Translation sync reminder
+  # ----------------------------
+  - name: "translation-sync-reminder"
+    description: "Remind to sync translations when docs change"
+    enabled: true
+    matcher: "Write"
+    hooks:
+      - type: "command"
+        command: |
+          INPUT=$(cat)
+          FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"[^"]*\)".*/\1/')
+
+          if echo "$FILE_PATH" | grep -qE 'docs/en/.*\.md$'; then
+            FR_PATH=$(echo "$FILE_PATH" | sed 's|docs/en/|docs/fr/|')
+            echo "🌍 [translator] Doc EN modifié. Vérifier traduction FR: $FR_PATH"
+          fi
+
+# ============================================================================
+# STOP - Quand Claude finit de répondre
+# ============================================================================
+# Ce hook vérifie si des actions de consistance sont nécessaires.
+# Si oui, il retourne { "ok": false, "reason": "..." } pour continuer.
+
+Stop:
+  - name: "consistency-check"
+    description: "Check if memory or consistency actions are needed"
+    enabled: true
+    hooks:
+      - type: "agent"
+        timeout: 60
+        prompt: |
+          Tu es l'agent de vérification de consistance du projet Meta-prompt-LLM.
+
+          ## Contexte
+
+          Tu es appelé à la fin de chaque réponse de Claude pour vérifier
+          si des actions de consistance sont nécessaires.
+
+          ## Ta mission
+
+          1. Lis le transcript de la session via $ARGUMENTS
+          2. Détermine si cette session a impliqué:
+             - Des décisions techniques importantes
+             - Des modifications de règles ou skills
+             - Des leçons apprises
+             - Des changements de contexte projet
+
+          3. Si OUI à l'un de ces points:
+             - Retourne { "ok": false, "reason": "🧠 [memory-keeper] Mise à jour de .ai/MEMORY.md recommandée: [résumé des changements]" }
+
+          4. Si NON (conversation simple, pas de décision):
+             - Retourne { "ok": true }
+
+          ## Critères de décision
+
+          METTRE À JOUR MEMORY.MD si:
+          - Nouvelle décision technique prise
+          - Nouveau skill créé ou modifié
+          - Nouvelle règle ou convention adoptée
+          - Problème résolu qui constitue une leçon
+          - Changement de contexte projet
+
+          NE PAS METTRE À JOUR si:
+          - Simple question/réponse
+          - Lecture de fichiers sans modification
+          - Exécution de commandes routinières
+          - Correction de typos mineurs
+
+          ## Format de réponse
+
+          Retourne UNIQUEMENT un objet JSON:
+          { "ok": true }
+          ou
+          { "ok": false, "reason": "🧠 [memory-keeper] [description de ce qui doit être ajouté à MEMORY.md]" }
+
+# ============================================================================
+# SESSION END - Quand la session se termine
+# ============================================================================
+
+SessionEnd:
+  - name: "final-memory-reminder"
+    description: "Final reminder to update memory"
+    enabled: true
+    hooks:
+      - type: "command"
+        command: |
+          echo ""
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "                    FIN DE SESSION"
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "📝 Si des décisions importantes ont été prises,"
+          echo "   assurez-vous que .ai/MEMORY.md est à jour."
+          echo ""
+          echo "🔄 Pour la prochaine session:"
+          echo "   - SessionStart chargera automatiquement le contexte"
+          echo "   - data-sync vérifiera la synchronisation"
+          echo "═══════════════════════════════════════════════════════════════"
+
+# ============================================================================
+# VISUAL FEEDBACK REFERENCE
+# ============================================================================
+#
+# Cette section documente les conventions de feedback visuel utilisées.
+#
+# STRUCTURE D'UN MESSAGE DE FEEDBACK:
+#   [emoji] [agent] [action] [détails]
+#
+# EMOJIS PAR CATÉGORIE:
+#   ✅ Succès
+#   ⚠️ Attention requise
+#   ❌ Échec
+#   📋 Information
+#   🔧 Maintenance/sync
+#   🧠 Mémoire
+#   🔄 Auto-amélioration
+#   📦 Génération
+#   🔍 Vérification
+#   🌍 Traduction
+#   📊 Orchestration
+#
+# AGENTS IDENTIFIÉS:
+#   [data-sync]          - Synchronisation data/ → .ai/
+#   [generate]           - Génération de fichiers
+#   [memory-keeper]      - Gestion mémoire
+#   [self-improver]      - Auto-amélioration
+#   [consistency-check]  - Vérification post-réponse
+#   [inclusivity]        - Écriture inclusive
+#   [translator]         - Synchronisation EN/FR
+#
+# IMBRICATION (THREAD LEVEL):
+#   Niveau 0: Agent principal (Claude)
+#   Niveau 1: └── Sous-agent (invoqué par Claude)
+#   Niveau 2:     └── Sous-sous-agent (invoqué par sous-agent)
+#
+# Exemple de sortie:
+#   🔧 [data-sync] Vérification de synchronisation...
+#   ├── Checking skills: data/skills/*.yaml
+#   ├── Checking hooks: data/hooks/hooks.yaml
+#   └── ✅ Synchronisation complète
+#
+# ============================================================================
