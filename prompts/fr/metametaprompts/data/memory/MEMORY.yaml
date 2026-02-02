@@ -1,0 +1,447 @@
+# Project Memory - Source of Truth
+# ============================================================================
+# This YAML file is the single source of truth for project memory.
+# generate.sh converts this to .ai/MEMORY.md for human readability.
+# ============================================================================
+
+version: "1.0.0"
+updated: "2026-02-02"
+updated_by: "memory-keeper"
+session: "3jXvo"
+
+# ----------------------------------------------------------------------------
+# PROJECT IDENTITY
+# ----------------------------------------------------------------------------
+identity:
+  name: "Meta-prompt-LLM"
+  type: "Prompt framework and collection"
+  created: "2026-01-31"
+  main_language: "English (with French translation)"
+  paradigm: "Doc-driven + Spec-driven hybrid"
+
+description: |
+  A framework for creating, modifying, and maintaining prompt collections with:
+  - Centralized skill definitions in YAML
+  - Multi-platform generation (Claude Code, Cursor, Ollama, OpenCode, Aider, Continue.dev, Codex, etc.)
+  - Persistent memory between sessions
+  - Workflow orchestration for validation
+  - Bilingual documentation (EN/FR)
+
+# ----------------------------------------------------------------------------
+# USER PREFERENCES
+# ----------------------------------------------------------------------------
+preferences:
+  language_interface: "French"
+  language_code_docs: "English"
+  inclusive_writing: true
+  shell_standard: "Bash (shellcheck-valid)"
+  ai_tools_coverage: "Maximum (all platforms)"
+  end_of_response_summary: true
+
+# ----------------------------------------------------------------------------
+# TECHNICAL DECISIONS
+# ----------------------------------------------------------------------------
+decisions:
+  - date: "2026-01-31"
+    decision: "Doc-driven + Spec-driven paradigm"
+    reason: "Meta-project about prompts; docs ARE the product"
+  - date: "2026-01-31"
+    decision: "YAML as single source for skills"
+    reason: "DRY principle; generate platform-specific files"
+  - date: "2026-01-31"
+    decision: "Bash-only for generate.sh"
+    reason: "Maximize portability, LLM-only stack"
+  - date: "2026-01-31"
+    decision: "AGENTS.md standard adopted"
+    reason: "Industry consensus, Linux Foundation backing"
+  - date: "2026-01-31"
+    decision: "Bilingual EN/FR documentation"
+    reason: "User preference, inclusivity"
+  - date: "2026-02-01"
+    decision: "Meta-Meta-prompt-LLM system"
+    reason: "Self-reference for coherent project evolution"
+  - date: "2026-02-01"
+    decision: "Data in FR as source of truth"
+    reason: "YAML data in prompts/fr/metametaprompts/data/"
+  - date: "2026-02-01"
+    decision: "GitHub Pages for data access"
+    reason: "YAML served directly, no duplication"
+  - date: "2026-02-01"
+    decision: "Rule 15: mandatory post-review"
+    reason: "Ensures memory update and self-improver run"
+  - date: "2026-02-02"
+    decision: "KISS for data/ structure"
+    reason: "Simplified from nested to flat structure (2994926)"
+  - date: "2026-02-02"
+    decision: "Hooks in source of truth"
+    reason: "hooks.yaml in data/ generates platform configs"
+  - date: "2026-02-02"
+    decision: "SessionStart hook needed"
+    reason: "Initialize session BEFORE user input"
+  - date: "2026-02-02"
+    decision: "Stop hook for consistency"
+    reason: "Agent-based check after each Claude response"
+  - date: "2026-02-02"
+    decision: "Visual feedback for agents"
+    reason: "Show agent hierarchy/nesting during session"
+  - date: "2026-02-02"
+    decision: "Multi-platform hook generation"
+    reason: "generate.sh creates configs for all supported LLMs"
+  - date: "2026-02-02"
+    decision: "Platform detection at SessionStart"
+    reason: "Show LLM capabilities/limitations automatically"
+  - date: "2026-02-02"
+    decision: "Maximize LLM support rule"
+    reason: "Always implement for ALL platforms, not just Claude"
+  - date: "2026-02-02"
+    decision: "MEMORY.md in source of truth"
+    reason: "Consistency with other data files; YAML as source"
+  - date: "2026-02-02"
+    decision: "Sync functions in generate.sh"
+    reason: "data/ internal+external synced to .ai/ before generation"
+  - date: "2026-02-02"
+    decision: "Unified internal/external architecture"
+    reason: "Skills, hooks, commands all use same pattern for internal and external packages"
+  - date: "2026-02-02"
+    decision: "Slash commands generation"
+    reason: "commands.yaml generates .claude/commands/*.md for Claude Code"
+
+# ----------------------------------------------------------------------------
+# EVOLUTION HISTORY
+# ----------------------------------------------------------------------------
+evolution:
+  note: "Ces versions sont sémantiques pour le projet. Le fichier .ai/VERSION (format 1.0.0-hash) est différent : c'est un hash de détection de changements pour generate.sh."
+  versions:
+    - version: "0.1.0"
+      date: "2026-01-31"
+      changes: "Initial architecture bootstrap"
+    - version: "0.2.0"
+      date: "2026-02-01"
+      changes: "Meta-Meta-prompt-LLM system for self-improvement"
+    - version: "0.3.0"
+      date: "2026-02-02"
+      changes: "Hooks system, workflow-documenter, architecture docs"
+    - version: "0.4.0"
+      date: "2026-02-02"
+      changes: "Package manager, MEMORY.md in source of truth"
+
+# ----------------------------------------------------------------------------
+# SESSION HISTORY
+# ----------------------------------------------------------------------------
+sessions:
+  - date: "2026-01-31"
+    id: "PR #1"
+    commits: "a93cd40→d08129a"
+    summary: "Initial bootstrap: prompt structure, link-checker, hybrid-ai-takeover"
+  - date: "2026-02-01"
+    id: "PR #2"
+    commits: "6853193→95d71e9"
+    summary: "Rule 15, README notices for LLM contribution"
+  - date: "2026-02-01"
+    id: "PR #3"
+    commits: "268b72e→a91ec36"
+    summary: "Self-improver, orchestrator workflows"
+  - date: "2026-02-01"
+    id: "-"
+    commits: "616c005→8beaafb"
+    summary: "Version check system (spec→impl)"
+  - date: "2026-02-01"
+    id: "-"
+    commits: "15bd248→0fa9ba7"
+    summary: "Socratic-tutor prompt, audit fixes"
+  - date: "2026-02-02"
+    id: "PR #4"
+    commits: "2994926→d1876f9"
+    summary: "KISS refactor, hooks-manager skill"
+  - date: "2026-02-02"
+    id: "PR #5"
+    commits: "fc1c3db→c1e0b88"
+    summary: "Workflow-documenter, architecture docs"
+  - date: "2026-02-02"
+    id: "PR #6 (bq507)"
+    commits: "5c703b4→a5cfb24"
+    summary: "Complete hooks lifecycle, multi-platform generation, platform detection"
+  - date: "2026-02-02"
+    id: "4fPY2"
+    commits: "5b04efe→825b6b5"
+    summary: "Clarified 6 inconsistencies, session-status skill, coherence-check hook"
+  - date: "2026-02-02"
+    id: "3jXvo"
+    commits: "8c8da0b→a93e7df"
+    summary: "Package-manager skill, MEMORY/hooks/commands refactor, unified internal/external architecture"
+
+# ----------------------------------------------------------------------------
+# LESSONS LEARNED
+# ----------------------------------------------------------------------------
+lessons:
+  - date: "2026-01-31"
+    lesson: "Research before implementation"
+    context: "BMAD, Kiro, AGENTS.md standards inform architecture"
+  - date: "2026-02-01"
+    lesson: "Semi-automatic propagation"
+    context: "Always propose, never modify without validation"
+  - date: "2026-02-01"
+    lesson: "@future-self convention"
+    context: "Use commit messages to communicate between sessions"
+  - date: "2026-02-02"
+    lesson: "KISS principle for data/"
+    context: "Flat structure better than nested (2994926)"
+  - date: "2026-02-02"
+    lesson: "Source of truth = data/"
+    context: ".ai/ is generated, never edit directly"
+  - date: "2026-02-02"
+    lesson: "SessionStart exists"
+    context: "Hook event runs BEFORE user input, not just UserPromptSubmit"
+  - date: "2026-02-02"
+    lesson: "Stop hook for consistency"
+    context: "Agent-type hook can validate and continue if needed"
+  - date: "2026-02-02"
+    lesson: "Maximize LLM support always"
+    context: "Never implement for one platform only; always all supported LLMs"
+  - date: "2026-02-02"
+    lesson: "Platform detection proactive"
+    context: "Detect LLM at session start, show limitations without asking"
+  - date: "2026-02-02"
+    lesson: "Skill vs Agent terminology"
+    context: "Skill = YAML source file, Agent = Claude Code runtime. Interchangeable."
+  - date: "2026-02-02"
+    lesson: "VERSION file ≠ project version"
+    context: ".ai/VERSION is hash for generate.sh change detection, not semver"
+  - date: "2026-02-02"
+    lesson: "User hooks can extend project hooks"
+    context: "~/.claude/ hooks (like git-check) add to project .claude/settings.json"
+  - date: "2026-02-02"
+    lesson: "Visual feedback via PostToolUse"
+    context: "Hooks can show context based on file patterns"
+  - date: "2026-02-02"
+    lesson: "License audit before install"
+    context: "MIT collections OK (fetch), Anthropic Commercial (reference only)"
+
+# ----------------------------------------------------------------------------
+# CURRENT CONTEXT
+# ----------------------------------------------------------------------------
+context:
+  active_work:
+    - status: "done"
+      item: "Complete hooks lifecycle (SessionStart, Stop, SessionEnd)"
+    - status: "done"
+      item: "Visual feedback system for agent hierarchy"
+    - status: "done"
+      item: "Multi-platform hook generation (Cursor, OpenCode, Codex)"
+    - status: "done"
+      item: "Platform detection at SessionStart with capabilities/limitations"
+    - status: "done"
+      item: "Self-improver skill functional with dependencies.yaml"
+    - status: "done"
+      item: "Create package-manager skill for external installs"
+    - status: "done"
+      item: "Create registries.yaml with license audit"
+    - status: "done"
+      item: "Restructure data/ with internal/external split"
+    - status: "done"
+      item: "Move MEMORY.md to data/ source of truth"
+    - status: "todo"
+      item: "GitHub Pages setup for data access"
+
+  pending_decisions: []
+
+  blockers: []
+
+# ----------------------------------------------------------------------------
+# AVAILABLE SKILLS
+# ----------------------------------------------------------------------------
+skills:
+  terminology:
+    skill: "fichier YAML de définition (.ai/skills/*.yaml)"
+    agent: "sous-agent Claude Code généré à partir du skill"
+    note: "Les termes sont interchangeables dans ce projet."
+
+  list:
+    - name: "data-sync"
+      purpose: "Syncs data/ to .ai/ and validates integrity"
+      status: "active"
+    - name: "hooks-manager"
+      purpose: "Multi-platform hook generation from YAML"
+      status: "active"
+    - name: "inclusivity-reviewer"
+      purpose: "Inclusive writing, non-ableist language"
+      status: "active"
+    - name: "link-checker"
+      purpose: "Internal link validation in markdown"
+      status: "active"
+    - name: "memory-keeper"
+      purpose: "Persistent memory management"
+      status: "active"
+    - name: "package-manager"
+      purpose: "External skills/hooks/commands from registries"
+      status: "active"
+    - name: "prompt-validator"
+      purpose: "Prompt validation against schema"
+      status: "active"
+    - name: "self-improver"
+      purpose: "Project self-improvement and rule propagation"
+      status: "active"
+    - name: "session-status"
+      purpose: "End-of-response visual summary via Stop hook"
+      status: "active"
+    - name: "translator"
+      purpose: "EN/FR translation, sync"
+      status: "active"
+    - name: "workflow-documenter"
+      purpose: "Generates workflow documentation"
+      status: "active"
+    - name: "workflow-orchestrator"
+      purpose: "Multi-agent orchestration"
+      status: "active"
+
+# ----------------------------------------------------------------------------
+# MISSING SKILLS ROADMAP
+# ----------------------------------------------------------------------------
+missing_skills:
+  identified: "2026-02-02"
+  sources:
+    - "Vercel"
+    - "Antigravity"
+    - "VoltAgent"
+    - "GitHub collections"
+
+  priority_1:
+    - name: "security-auditor"
+      category: "Security"
+      sources: "Snyk, OWASP, all collections"
+    - name: "test-generator"
+      category: "Testing"
+      sources: "Qodo, TDD patterns, Superpowers"
+    - name: "code-reviewer"
+      category: "Quality"
+      sources: "CodeRabbit, Qodo Merge, all collections"
+
+  priority_2:
+    - name: "api-documenter"
+      category: "Documentation"
+      sources: "OpenAPI/Swagger ecosystem"
+    - name: "debugger"
+      category: "Troubleshooting"
+      sources: "JetBrains, all IDEs"
+    - name: "react-best-practices"
+      category: "Framework"
+      sources: "Vercel official (40+ rules)"
+
+  priority_3:
+    - name: "changelog-generator"
+      category: "Documentation"
+      sources: "Conventional Commits"
+    - name: "dependency-checker"
+      category: "Security"
+      sources: "npm audit, Snyk"
+    - name: "migration-assistant"
+      category: "Refactoring"
+      sources: "AWS Transform, ModLogix"
+    - name: "tdd-workflow"
+      category: "Testing"
+      sources: "Superpowers, Builder.io"
+
+  reference_collections:
+    - url: "https://github.com/vercel-labs/agent-skills"
+      name: "Official Vercel skills"
+    - url: "https://github.com/sickn33/antigravity-awesome-skills"
+      name: "626+ skills"
+    - url: "https://github.com/VoltAgent/awesome-agent-skills"
+      name: "Community skills"
+
+  license_audit:
+    date: "2026-02-02"
+    results:
+      - collection: "vercel-labs/agent-skills"
+        license: "MIT"
+        redistribution: "OK with attribution"
+        method: "fetch"
+      - collection: "antigravity-awesome-skills"
+        license: "MIT"
+        redistribution: "OK with attribution"
+        method: "fetch"
+      - collection: "VoltAgent/awesome-agent-skills"
+        license: "MIT"
+        redistribution: "OK with attribution"
+        method: "fetch"
+      - collection: "obra/superpowers"
+        license: "MIT"
+        redistribution: "OK with attribution"
+        method: "fetch"
+      - collection: "anthropics/claude-code"
+        license: "Commercial"
+        redistribution: "Reference only"
+        method: "link"
+    conclusion: "4/5 collections can be freely installed (MIT). Anthropic skills must be referenced via URL only."
+
+# ----------------------------------------------------------------------------
+# NOTES
+# ----------------------------------------------------------------------------
+notes:
+  - "All prompts must follow prompts/_TEMPLATE.md"
+  - "Run generate.sh after any skill modification"
+  - "French content must use inclusive writing"
+  - "Source of truth: prompts/fr/metametaprompts/data/"
+  - "Generated files: .ai/ (never edit directly)"
+  - "Use @future-self in commits to leave notes for future sessions"
+
+# ----------------------------------------------------------------------------
+# PLATFORM SUPPORT
+# ----------------------------------------------------------------------------
+platforms:
+  - name: "Claude Code"
+    rating: 5
+    limitations: "None - all 6 events + agent hooks"
+  - name: "Cursor"
+    rating: 4
+    limitations: "No SessionStart, no agent hooks"
+  - name: "OpenCode"
+    rating: 3
+    limitations: "Requires oh-my-opencode plugin"
+  - name: "Codex CLI"
+    rating: 2
+    limitations: "Only notify on agent-turn-complete"
+  - name: "Aider"
+    rating: 1
+    limitations: "No hooks, only auto_lint/test_cmd"
+  - name: "Continue.dev"
+    rating: 1
+    limitations: "Data events only, no command hooks"
+
+# ----------------------------------------------------------------------------
+# VISUAL FEEDBACK CONVENTION
+# ----------------------------------------------------------------------------
+visual_feedback:
+  - emoji: "🔧"
+    agent: "[data-sync]"
+    purpose: "Synchronisation data/ → .ai/"
+  - emoji: "🔧"
+    agent: "[generate]"
+    purpose: "Génération de fichiers"
+  - emoji: "🧠"
+    agent: "[memory-keeper]"
+    purpose: "Gestion mémoire"
+  - emoji: "🔄"
+    agent: "[self-improver]"
+    purpose: "Auto-amélioration"
+  - emoji: "✅"
+    agent: "[consistency-check]"
+    purpose: "Vérification post-réponse"
+  - emoji: "🔍"
+    agent: "[inclusivity]"
+    purpose: "Écriture inclusive"
+  - emoji: "🌍"
+    agent: "[translator]"
+    purpose: "Synchronisation EN/FR"
+  - emoji: "📦"
+    agent: "-"
+    purpose: "Skill/règle modifié"
+  - emoji: "📋"
+    agent: "-"
+    purpose: "Information générale"
+  - emoji: "⚠️"
+    agent: "-"
+    purpose: "Attention requise"
+  - emoji: "❌"
+    agent: "-"
+    purpose: "Échec"

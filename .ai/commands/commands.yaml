@@ -1,0 +1,236 @@
+# Commands Source of Truth
+# ============================================================================
+# Source de vérité pour toutes les commandes du projet Meta-prompt-LLM.
+#
+# FLUX DE DONNÉES:
+#   1. Ce fichier (data/commands/internal/commands.yaml) = Source de vérité
+#   2. data/commands/external/*.yaml = Commandes externes installées
+#   3. generate.sh fusionne et génère les configs par plateforme
+#
+# STRUCTURE:
+#   Chaque commande a: name, description, command (bash), allowed_tools
+# ============================================================================
+
+version: "1.0.0"
+updated: "2026-02-02"
+
+# ----------------------------------------------------------------------------
+# COMMANDES DE GÉNÉRATION
+# ----------------------------------------------------------------------------
+
+generate:
+  name: "generate"
+  description: "Régénère tous les fichiers de configuration depuis data/"
+  aliases:
+    - "gen"
+    - "build"
+  command: ".ai/generate.sh --force"
+  allowed_tools:
+    - "Bash"
+  platforms:
+    claude: true
+    cursor: false  # Pas de commandes custom
+    codex: true
+
+generate-check:
+  name: "generate-check"
+  description: "Vérifie si une régénération est nécessaire"
+  aliases:
+    - "check"
+  command: ".ai/generate.sh --check"
+  allowed_tools:
+    - "Bash"
+  platforms:
+    claude: true
+    codex: true
+
+# ----------------------------------------------------------------------------
+# COMMANDES DE SYNCHRONISATION
+# ----------------------------------------------------------------------------
+
+sync:
+  name: "sync"
+  description: "Synchronise data/ vers .ai/ (skills, hooks, commands)"
+  command: ".ai/generate.sh --force"
+  allowed_tools:
+    - "Bash"
+  platforms:
+    claude: true
+    codex: true
+
+# ----------------------------------------------------------------------------
+# COMMANDES DE VALIDATION
+# ----------------------------------------------------------------------------
+
+validate:
+  name: "validate"
+  description: "Valide tous les prompts contre le schéma"
+  skill: "prompt-validator"
+  allowed_tools:
+    - "Read"
+    - "Glob"
+  platforms:
+    claude: true
+
+lint:
+  name: "lint"
+  description: "Vérifie les liens et la syntaxe markdown"
+  skill: "link-checker"
+  allowed_tools:
+    - "Read"
+    - "Glob"
+    - "Grep"
+  platforms:
+    claude: true
+
+# ----------------------------------------------------------------------------
+# COMMANDES DE TRADUCTION
+# ----------------------------------------------------------------------------
+
+translate:
+  name: "translate"
+  description: "Traduit un fichier EN→FR ou FR→EN"
+  skill: "translator"
+  allowed_tools:
+    - "Read"
+    - "Write"
+  platforms:
+    claude: true
+
+# ----------------------------------------------------------------------------
+# COMMANDES DE MÉMOIRE
+# ----------------------------------------------------------------------------
+
+memory:
+  name: "memory"
+  description: "Affiche le contenu de MEMORY.md"
+  command: "cat .ai/MEMORY.md"
+  allowed_tools:
+    - "Read"
+  platforms:
+    claude: true
+    codex: true
+
+memory-update:
+  name: "memory-update"
+  description: "Met à jour MEMORY.yaml avec les changements de session"
+  skill: "memory-keeper"
+  allowed_tools:
+    - "Read"
+    - "Edit"
+  platforms:
+    claude: true
+
+# ----------------------------------------------------------------------------
+# COMMANDES DE PACKAGE MANAGER
+# ----------------------------------------------------------------------------
+
+pm-install:
+  name: "pm-install"
+  description: "Installe un package depuis un registre"
+  usage: "/pm-install <registry>/<package>"
+  skill: "package-manager"
+  allowed_tools:
+    - "Read"
+    - "Write"
+    - "Bash"
+    - "WebFetch"
+  platforms:
+    claude: true
+
+pm-list:
+  name: "pm-list"
+  description: "Liste les packages installés"
+  skill: "package-manager"
+  allowed_tools:
+    - "Read"
+    - "Glob"
+  platforms:
+    claude: true
+
+pm-update:
+  name: "pm-update"
+  description: "Met à jour tous les packages externes"
+  skill: "package-manager"
+  allowed_tools:
+    - "Read"
+    - "Write"
+    - "Bash"
+    - "WebFetch"
+  platforms:
+    claude: true
+
+# ----------------------------------------------------------------------------
+# COMMANDES DE WORKFLOW
+# ----------------------------------------------------------------------------
+
+workflow:
+  name: "workflow"
+  description: "Lance un workflow de validation complet"
+  skill: "workflow-orchestrator"
+  allowed_tools:
+    - "Read"
+    - "Glob"
+    - "Grep"
+    - "Task"
+  platforms:
+    claude: true
+
+# ----------------------------------------------------------------------------
+# COMMANDES D'AIDE
+# ----------------------------------------------------------------------------
+
+help:
+  name: "help"
+  description: "Affiche l'aide sur les commandes disponibles"
+  output: |
+    ## Commandes disponibles
+
+    ### Génération
+    - `/generate` - Régénère tous les fichiers
+    - `/generate-check` - Vérifie si régénération nécessaire
+
+    ### Validation
+    - `/validate` - Valide les prompts
+    - `/lint` - Vérifie liens et syntaxe
+
+    ### Mémoire
+    - `/memory` - Affiche MEMORY.md
+    - `/memory-update` - Met à jour la mémoire
+
+    ### Package Manager
+    - `/pm-install <registry>/<pkg>` - Installe un package
+    - `/pm-list` - Liste les packages
+    - `/pm-update` - Met à jour les packages
+
+    ### Traduction
+    - `/translate` - Traduit un fichier
+
+    ### Workflow
+    - `/workflow` - Lance validation complète
+  platforms:
+    claude: true
+    cursor: true
+    codex: true
+
+# ----------------------------------------------------------------------------
+# MÉTADONNÉES
+# ----------------------------------------------------------------------------
+
+_meta:
+  total_commands: 14
+  categories:
+    - generation
+    - validation
+    - memory
+    - package-manager
+    - translation
+    - workflow
+    - help
+  changelog:
+    - version: "1.0.0"
+      date: "2026-02-02"
+      changes:
+        - "Initial commands definition"
+        - "14 internal commands"
+        - "Multi-platform support"

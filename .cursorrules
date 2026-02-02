@@ -34,6 +34,11 @@ Validates internal links and paths in markdown files
 Manages persistent project memory between sessions
 
 
+### package-manager
+
+Manages external skills, hooks, and commands from registries
+
+
 ### prompt-validator
 
 Validates prompts against schema and quality standards

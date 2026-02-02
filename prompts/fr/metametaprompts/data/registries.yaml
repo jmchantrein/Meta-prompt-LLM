@@ -1,0 +1,83 @@
+# External registries for skills, hooks, and commands
+# Used by package-manager skill to fetch external resources
+#
+# License audit: 2026-02-02
+# - MIT licensed collections can be fetched and cached locally
+# - Commercial licensed collections must be referenced only (no redistribution)
+
+version: "1.0"
+
+registries:
+  # Vercel official skills (MIT License)
+  vercel:
+    name: "Vercel Agent Skills"
+    url: "https://github.com/vercel-labs/agent-skills"
+    raw_url: "https://raw.githubusercontent.com/vercel-labs/agent-skills/main"
+    license: "MIT"
+    install_method: "fetch"  # Can download and cache locally
+    categories:
+      - react
+      - nextjs
+      - web-performance
+    notes: "Official Vercel skills for React/Next.js development"
+
+  # Antigravity collection (MIT License)
+  antigravity:
+    name: "Antigravity Awesome Skills"
+    url: "https://github.com/sickn33/antigravity-awesome-skills"
+    raw_url: "https://raw.githubusercontent.com/sickn33/antigravity-awesome-skills/main"
+    license: "MIT"
+    install_method: "fetch"
+    categories:
+      - security
+      - testing
+      - documentation
+      - devops
+      - frameworks
+    notes: "626+ community skills including official Anthropic and Vercel"
+
+  # VoltAgent community (MIT License)
+  voltagent:
+    name: "VoltAgent Awesome Agent Skills"
+    url: "https://github.com/VoltAgent/awesome-agent-skills"
+    raw_url: "https://raw.githubusercontent.com/VoltAgent/awesome-agent-skills/main"
+    license: "MIT"
+    install_method: "fetch"
+    categories:
+      - productivity
+      - marketing
+      - infrastructure
+    notes: "Community-maintained skills collection"
+
+  # Superpowers (MIT License)
+  superpowers:
+    name: "Superpowers Core Skills"
+    url: "https://github.com/obra/superpowers"
+    raw_url: "https://raw.githubusercontent.com/obra/superpowers/main"
+    license: "MIT"
+    install_method: "fetch"
+    categories:
+      - tdd
+      - debugging
+      - collaboration
+    notes: "20+ battle-tested skills for Claude Code"
+
+  # Anthropic official (Commercial License)
+  anthropic:
+    name: "Anthropic Claude Code Plugins"
+    url: "https://github.com/anthropics/claude-code/tree/main/plugins"
+    raw_url: "https://raw.githubusercontent.com/anthropics/claude-code/main/plugins"
+    license: "Anthropic Commercial"
+    install_method: "reference"  # Link only, no redistribution
+    categories:
+      - official
+      - plugins
+    notes: "Reference only - see Anthropic Commercial Terms of Service"
+
+# Install methods:
+# - fetch: Download skill/hook/command YAML and cache in data/*/external/
+# - reference: Create a link file pointing to original URL (no local copy)
+
+# Attribution requirements:
+# MIT licensed content must include original license and copyright notice
+# when redistributed. The package-manager skill handles this automatically.

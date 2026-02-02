@@ -53,6 +53,17 @@ readonly CODEX_AGENTS_DIR="${PROJECT_ROOT}/.codex/agents"
 readonly CODEX_CONFIG="${PROJECT_ROOT}/codex.toml"
 readonly HOOKS_FILE="${SCRIPT_DIR}/hooks/hooks.yaml"
 readonly CLAUDE_SETTINGS="${PROJECT_ROOT}/.claude/settings.json"
+readonly MEMORY_YAML="${PROJECT_ROOT}/prompts/fr/metametaprompts/data/memory/MEMORY.yaml"
+readonly MEMORY_MD="${SCRIPT_DIR}/MEMORY.md"
+
+# Data source paths (source of truth)
+readonly DATA_DIR="${PROJECT_ROOT}/prompts/fr/metametaprompts/data"
+readonly DATA_HOOKS_INTERNAL="${DATA_DIR}/hooks/internal"
+readonly DATA_HOOKS_EXTERNAL="${DATA_DIR}/hooks/external"
+readonly DATA_SKILLS_INTERNAL="${DATA_DIR}/skills/internal"
+readonly DATA_SKILLS_EXTERNAL="${DATA_DIR}/skills/external"
+readonly DATA_COMMANDS_INTERNAL="${DATA_DIR}/commands/internal"
+readonly DATA_COMMANDS_EXTERNAL="${DATA_DIR}/commands/external"
 
 # Options
 FORCE=false
@@ -249,6 +260,106 @@ needs_regeneration() {
         return 0  # Needs regeneration
     fi
     return 1  # Up to date
+}
+
+# ----------------------------------------------------------------------------
+# Sync functions (copy from data/ to .ai/)
+# ----------------------------------------------------------------------------
+
+# Sync skills from data/skills/internal + external to .ai/skills/
+sync_skills() {
+    log_info "Syncing skills from data/..."
+    ensure_dir "${SKILLS_DIR}"
+
+    # Copy internal skills
+    if [[ -d "${DATA_SKILLS_INTERNAL}" ]]; then
+        for file in "${DATA_SKILLS_INTERNAL}"/*.yaml; do
+            if [[ -f "${file}" ]]; then
+                cp "${file}" "${SKILLS_DIR}/"
+            fi
+        done
+    fi
+
+    # Copy external skills (if any)
+    if [[ -d "${DATA_SKILLS_EXTERNAL}" ]]; then
+        for file in "${DATA_SKILLS_EXTERNAL}"/*.yaml; do
+            if [[ -f "${file}" ]]; then
+                cp "${file}" "${SKILLS_DIR}/"
+            fi
+        done
+    fi
+
+    log_success "Synced skills"
+}
+
+# Sync hooks from data/hooks/internal + external to .ai/hooks/
+sync_hooks() {
+    log_info "Syncing hooks from data/..."
+    ensure_dir "${SCRIPT_DIR}/hooks"
+
+    local output_file="${SCRIPT_DIR}/hooks/hooks.yaml"
+    local content="# ${GENERATED_MARKER}"$'\n'
+    content+="# Merged from data/hooks/internal/ + external/"$'\n\n'
+
+    # Append internal hooks (main hooks.yaml)
+    if [[ -f "${DATA_HOOKS_INTERNAL}/hooks.yaml" ]]; then
+        # Skip the first lines if they're comments and add the rest
+        content+="# === Internal hooks ==="$'\n'
+        cat "${DATA_HOOKS_INTERNAL}/hooks.yaml" >> /dev/null  # Validate file exists
+        content+=$(cat "${DATA_HOOKS_INTERNAL}/hooks.yaml")
+        content+=$'\n\n'
+    fi
+
+    # Append external hooks (individual YAML files)
+    if [[ -d "${DATA_HOOKS_EXTERNAL}" ]]; then
+        local has_external=false
+        for file in "${DATA_HOOKS_EXTERNAL}"/*.yaml; do
+            if [[ -f "${file}" && "$(basename "${file}")" != ".gitkeep" ]]; then
+                if [[ "${has_external}" == "false" ]]; then
+                    content+="# === External hooks ==="$'\n'
+                    has_external=true
+                fi
+                content+="# From: $(basename "${file}")"$'\n'
+                content+=$(cat "${file}")
+                content+=$'\n\n'
+            fi
+        done
+    fi
+
+    if [[ "${DRY_RUN}" == "true" ]]; then
+        log_info "Would write hooks to: ${output_file}"
+    else
+        echo "${content}" > "${output_file}"
+    fi
+
+    log_success "Synced hooks"
+}
+
+# Sync commands from data/commands/internal + external to .ai/commands/
+sync_commands() {
+    log_info "Syncing commands from data/..."
+    local commands_dir="${SCRIPT_DIR}/commands"
+    ensure_dir "${commands_dir}"
+
+    # Copy internal commands
+    if [[ -d "${DATA_COMMANDS_INTERNAL}" ]]; then
+        for file in "${DATA_COMMANDS_INTERNAL}"/*.yaml; do
+            if [[ -f "${file}" && "$(basename "${file}")" != ".gitkeep" ]]; then
+                cp "${file}" "${commands_dir}/"
+            fi
+        done
+    fi
+
+    # Copy external commands (if any)
+    if [[ -d "${DATA_COMMANDS_EXTERNAL}" ]]; then
+        for file in "${DATA_COMMANDS_EXTERNAL}"/*.yaml; do
+            if [[ -f "${file}" && "$(basename "${file}")" != ".gitkeep" ]]; then
+                cp "${file}" "${commands_dir}/"
+            fi
+        done
+    fi
+
+    log_success "Synced commands"
 }
 
 # ----------------------------------------------------------------------------
@@ -643,6 +754,95 @@ esac
     fi
 
     log_success "Generated OpenCode hooks"
+}
+
+# Generate Claude Code custom commands from commands.yaml
+generate_claude_commands() {
+    log_info "Generating Claude Code commands..."
+
+    local commands_dir="${PROJECT_ROOT}/.claude/commands"
+    ensure_dir "${commands_dir}"
+
+    local commands_file="${SCRIPT_DIR}/commands/commands.yaml"
+    if [[ ! -f "${commands_file}" ]]; then
+        log_warn "No commands.yaml found, skipping"
+        return 0
+    fi
+
+    # Read commands from YAML - simplified parsing
+    local cmd_name=""
+    local cmd_desc=""
+    local cmd_command=""
+    local cmd_skill=""
+    local in_output=false
+    local output_content=""
+
+    while IFS= read -r line; do
+        # Skip metadata section
+        [[ "${line}" =~ ^_meta: ]] && break
+
+        # New command definition (root level key)
+        if [[ "${line}" =~ ^([a-z][a-z0-9_-]*):[[:space:]]*$ ]]; then
+            # Save previous command
+            if [[ -n "${cmd_name}" ]]; then
+                local file="${commands_dir}/${cmd_name}.md"
+                local content="# /${cmd_name}"$'\n\n'
+                content+="${cmd_desc:-No description}"$'\n\n'
+
+                if [[ -n "${cmd_command}" ]]; then
+                    content+="Run: \`${cmd_command}\`"$'\n'
+                elif [[ -n "${cmd_skill}" ]]; then
+                    content+="Invoke skill: \`@${cmd_skill}\`"$'\n'
+                fi
+
+                if [[ -n "${output_content}" ]]; then
+                    content+=$'\n'"${output_content}"
+                fi
+
+                echo "${content}" > "${file}"
+            fi
+
+            cmd_name="${BASH_REMATCH[1]}"
+            cmd_desc=""
+            cmd_command=""
+            cmd_skill=""
+            in_output=false
+            output_content=""
+        elif [[ "${line}" =~ ^[[:space:]]+description:[[:space:]]*\"(.*)\" ]]; then
+            cmd_desc="${BASH_REMATCH[1]}"
+        elif [[ "${line}" =~ ^[[:space:]]+command:[[:space:]]*\"(.*)\" ]]; then
+            cmd_command="${BASH_REMATCH[1]}"
+        elif [[ "${line}" =~ ^[[:space:]]+skill:[[:space:]]*\"(.*)\" ]]; then
+            cmd_skill="${BASH_REMATCH[1]}"
+        elif [[ "${line}" =~ ^[[:space:]]+output:[[:space:]]*\| ]]; then
+            in_output=true
+        elif [[ "${in_output}" == "true" && "${line}" =~ ^[[:space:]]{4}(.*)$ ]]; then
+            output_content+="${BASH_REMATCH[1]}"$'\n'
+        elif [[ "${in_output}" == "true" && ! "${line}" =~ ^[[:space:]] ]]; then
+            in_output=false
+        fi
+    done < "${commands_file}"
+
+    # Save last command
+    if [[ -n "${cmd_name}" ]]; then
+        local file="${commands_dir}/${cmd_name}.md"
+        local content="# /${cmd_name}"$'\n\n'
+        content+="${cmd_desc:-No description}"$'\n\n'
+
+        if [[ -n "${cmd_command}" ]]; then
+            content+="Run: \`${cmd_command}\`"$'\n'
+        elif [[ -n "${cmd_skill}" ]]; then
+            content+="Invoke skill: \`@${cmd_skill}\`"$'\n'
+        fi
+
+        if [[ -n "${output_content}" ]]; then
+            content+=$'\n'"${output_content}"
+        fi
+
+        echo "${content}" > "${file}"
+    fi
+
+    log_success "Generated Claude Code commands"
 }
 
 # Generate Codex CLI configuration with notify
@@ -1130,6 +1330,111 @@ save_hook_to_event() {
     log_verbose "Added hook to ${current_event}: type=${hook_type}"
 }
 
+# Generate MEMORY.md from MEMORY.yaml
+generate_memory_md() {
+    log_info "Generating MEMORY.md..."
+
+    if [[ ! -f "${MEMORY_YAML}" ]]; then
+        log_warn "MEMORY.yaml not found: ${MEMORY_YAML}"
+        return 0
+    fi
+
+    local content="# Project memory"$'\n\n'
+    content+="> Persistent memory for AI agents. Read at session start, update via \`memory-keeper\`."$'\n'
+    content+="> **Source of truth**: \`prompts/fr/metametaprompts/data/memory/MEMORY.yaml\`"$'\n\n'
+
+    # Extract identity
+    local name type created main_lang paradigm
+    name=$(yaml_get "${MEMORY_YAML}" "  name")
+    type=$(yaml_get "${MEMORY_YAML}" "  type")
+    created=$(yaml_get "${MEMORY_YAML}" "  created")
+    main_lang=$(yaml_get "${MEMORY_YAML}" "  main_language")
+    paradigm=$(yaml_get "${MEMORY_YAML}" "  paradigm")
+
+    content+="## Project identity"$'\n\n'
+    content+="| Property | Value |"$'\n'
+    content+="|----------|-------|"$'\n'
+    content+="| Name | ${name:-Meta-prompt-LLM} |"$'\n'
+    content+="| Type | ${type:-Prompt framework} |"$'\n'
+    content+="| Created | ${created:-2026-01-31} |"$'\n'
+    content+="| Main language | ${main_lang:-English} |"$'\n'
+    content+="| Paradigm | ${paradigm:-Doc-driven} |"$'\n\n'
+
+    # Description
+    content+="## Description"$'\n\n'
+    local desc
+    desc=$(yaml_get_block "${MEMORY_YAML}" "description")
+    if [[ -n "${desc}" ]]; then
+        content+="${desc}"$'\n'
+    fi
+
+    # User preferences
+    content+="## User preferences"$'\n\n'
+    content+="| Preference | Value |"$'\n'
+    content+="|------------|-------|"$'\n'
+    local pref_lang pref_code inc_writing shell_std ai_cov summary
+    pref_lang=$(yaml_get "${MEMORY_YAML}" "  language_interface")
+    pref_code=$(yaml_get "${MEMORY_YAML}" "  language_code_docs")
+    inc_writing=$(yaml_get "${MEMORY_YAML}" "  inclusive_writing")
+    shell_std=$(yaml_get "${MEMORY_YAML}" "  shell_standard")
+    ai_cov=$(yaml_get "${MEMORY_YAML}" "  ai_tools_coverage")
+    summary=$(yaml_get "${MEMORY_YAML}" "  end_of_response_summary")
+    content+="| Language (interface) | ${pref_lang:-French} |"$'\n'
+    content+="| Language (code/docs) | ${pref_code:-English} |"$'\n'
+    content+="| Inclusive writing | ${inc_writing:-true} |"$'\n'
+    content+="| Shell standard | ${shell_std:-Bash} |"$'\n'
+    content+="| AI tools coverage | ${ai_cov:-Maximum} |"$'\n'
+    content+="| End-of-response summary | ${summary:-true} |"$'\n\n'
+
+    # Available skills
+    content+="## Available skills"$'\n\n'
+    content+="| Skill | Purpose | Status |"$'\n'
+    content+="|-------|---------|--------|"$'\n'
+
+    local skill_file
+    for skill_file in $(get_skill_files); do
+        local skill_name skill_desc
+        skill_name=$(yaml_get "${skill_file}" "name")
+        skill_desc=$(yaml_get "${skill_file}" "description")
+        if [[ -n "${skill_name}" ]]; then
+            content+="| ${skill_name} | ${skill_desc:-No description} | Active |"$'\n'
+        fi
+    done
+    content+=$'\n'
+
+    # Notes section
+    content+="## Notes"$'\n\n'
+    content+="- All prompts must follow \`prompts/_TEMPLATE.md\`"$'\n'
+    content+="- Run \`generate.sh\` after any skill modification"$'\n'
+    content+="- French content must use inclusive writing"$'\n'
+    content+="- **Source of truth**: \`prompts/fr/metametaprompts/data/\`"$'\n'
+    content+="- **Generated files**: \`.ai/\` (never edit directly)"$'\n'
+    content+="- Use \`@future-self\` in commits to leave notes for future sessions"$'\n\n'
+
+    # Platform support matrix
+    content+="## Platform Support Matrix"$'\n\n'
+    content+="| Platform | Rating | Limitations |"$'\n'
+    content+="|----------|--------|-------------|"$'\n'
+    content+="| Claude Code | ★★★★★ | None - all 6 events + agent hooks |"$'\n'
+    content+="| Cursor | ★★★★☆ | No SessionStart, no agent hooks |"$'\n'
+    content+="| OpenCode | ★★★☆☆ | Requires oh-my-opencode plugin |"$'\n'
+    content+="| Codex CLI | ★★☆☆☆ | Only notify on agent-turn-complete |"$'\n'
+    content+="| Aider | ★☆☆☆☆ | No hooks, only auto_lint/test_cmd |"$'\n'
+    content+="| Continue.dev | ★☆☆☆☆ | Data events only, no command hooks |"$'\n\n'
+
+    # Footer
+    local updated updated_by session
+    updated=$(yaml_get "${MEMORY_YAML}" "updated")
+    updated_by=$(yaml_get "${MEMORY_YAML}" "updated_by")
+    session=$(yaml_get "${MEMORY_YAML}" "session")
+    content+="---"$'\n\n'
+    content+="*Last updated: ${updated:-unknown} by ${updated_by:-unknown} (session ${session:-unknown})*"$'\n'
+    content+="*Generated from: prompts/fr/metametaprompts/data/memory/MEMORY.yaml*"$'\n'
+
+    write_file "${MEMORY_MD}" "${content}"
+    log_success "Generated MEMORY.md"
+}
+
 # Update VERSION file
 update_version() {
     local skills_hash
@@ -1214,7 +1519,13 @@ main() {
         exit 1
     fi
 
+    # Sync from data/ source of truth
+    sync_skills
+    sync_hooks
+    sync_commands
+
     # Run all generators
+    generate_memory_md
     generate_agents_md
     generate_claude_md
     generate_claude_agents
@@ -1228,6 +1539,7 @@ main() {
     generate_opencode_hooks
     generate_codex_agents
     generate_codex_config
+    generate_claude_commands
 
     # Update version
     update_version
