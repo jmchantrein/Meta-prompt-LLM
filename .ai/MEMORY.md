@@ -155,6 +155,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 │  🔧 [generate] Vérifie si régénération nécessaire         │
 │  🧠 [memory-keeper] Charge .ai/MEMORY.md dans le contexte │
 │  🔄 [self-improver] Vérifie les changements de règles     │
+│  🔍 [coherence-check] Détecte orphelins et boucles        │
 └────────────────────────────────────────────────────────────┘
                             ↓
 ┌─ UserPromptSubmit ─────────────────────────────────────────┐
