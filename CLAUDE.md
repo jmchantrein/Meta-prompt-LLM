@@ -17,7 +17,8 @@ cat .ai/MEMORY.md
 .ai/generate.sh
 ```
 
-## Available skills- **data-sync**: Synchronizes data/ to project files and validates integrity
+## Available skills- **codebase-analyst**: Deep codebase analysis for refactoring and architecture review
+- **data-sync**: Synchronizes data/ to project files and validates integrity
 - **hooks-manager**: Manages LLM hooks knowledge base and multi-platform hook generation
 - **inclusivity-reviewer**: Reviews content for inclusive writing and modern terminology
 - **link-checker**: Validates internal links and paths in markdown files

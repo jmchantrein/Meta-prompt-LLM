@@ -148,6 +148,43 @@ SessionStart:
           echo ""
 
   # ----------------------------
+  # 0b. Workflow orchestrator - Session driver
+  # ----------------------------
+  - name: "init-workflow-orchestrator"
+    description: "Orchestrate session startup workflow"
+    enabled: true
+    matcher: "startup"
+    hooks:
+      - type: "agent"
+        timeout: 30
+        prompt: |
+          Tu es le workflow-orchestrator du projet Meta-prompt-LLM.
+
+          ## Contexte de démarrage
+
+          Cette session vient de démarrer. Analyse rapidement le contexte
+          et détermine le workflow approprié.
+
+          ## Actions immédiates
+
+          1. Vérifie si des changements non commités existent (git status)
+          2. Vérifie si des skills ont été modifiés depuis la dernière session
+          3. Détermine si un workflow spécifique est nécessaire
+
+          ## Réponse
+
+          Retourne un JSON indiquant le workflow détecté:
+
+          {
+            "workflow": "normal|pre-commit|resume-work",
+            "context": "[description courte]",
+            "pending_tasks": ["task1", "task2"]
+          }
+
+          Si tout est normal, retourne:
+          { "workflow": "normal", "context": "Session prête", "pending_tasks": [] }
+
+  # ----------------------------
   # 1. Data sync check
   # ----------------------------
   - name: "init-data-sync"
@@ -285,7 +322,7 @@ SessionStart:
           done
 
           # Skills referenced in hooks (by name pattern)
-          HOOKED_SKILLS="data-sync memory-keeper self-improver session-status inclusivity-reviewer translator link-checker prompt-validator workflow-documenter hooks-manager package-manager prompt-engineer"
+          HOOKED_SKILLS="data-sync memory-keeper self-improver session-status inclusivity-reviewer translator link-checker prompt-validator workflow-documenter hooks-manager package-manager prompt-engineer workflow-orchestrator codebase-analyst"
 
           # Find orphans
           ORPHANS=""
@@ -720,7 +757,7 @@ Stop:
           echo ""
 
           SKILLS_DIR=".ai/skills"
-          HOOKED_SKILLS="data-sync memory-keeper self-improver session-status inclusivity-reviewer translator link-checker prompt-validator workflow-documenter hooks-manager package-manager prompt-engineer"
+          HOOKED_SKILLS="data-sync memory-keeper self-improver session-status inclusivity-reviewer translator link-checker prompt-validator workflow-documenter hooks-manager package-manager prompt-engineer workflow-orchestrator codebase-analyst"
 
           # Count skills
           SKILL_COUNT=$(find "$SKILLS_DIR" -name "*.yaml" ! -name "_TEMPLATE.yaml" 2>/dev/null | wc -l)

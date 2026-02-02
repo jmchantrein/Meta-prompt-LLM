@@ -310,6 +310,10 @@ skills:
       purpose: "Prompt optimization with research-backed frameworks"
       status: "active"
       source: "external (MIT)"
+    - name: "codebase-analyst"
+      purpose: "Deep codebase analysis for refactoring and architecture review"
+      status: "active"
+      source: "external (MIT)"
 
 # ----------------------------------------------------------------------------
 # MISSING SKILLS ROADMAP

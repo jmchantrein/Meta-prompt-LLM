@@ -36,6 +36,7 @@ A framework for creating, modifying, and maintaining prompt collections with:
 
 | Skill | Purpose | Status |
 |-------|---------|--------|
+| codebase-analyst | Deep codebase analysis for refactoring and architecture review | Active |
 | data-sync | Synchronizes data/ to project files and validates integrity | Active |
 | hooks-manager | Manages LLM hooks knowledge base and multi-platform hook generation | Active |
 | inclusivity-reviewer | Reviews content for inclusive writing and modern terminology | Active |

@@ -9,6 +9,11 @@
 
 ## Available skills
 
+### codebase-analyst
+
+Deep codebase analysis for refactoring and architecture review
+
+
 ### data-sync
 
 Synchronizes data/ to project files and validates integrity
