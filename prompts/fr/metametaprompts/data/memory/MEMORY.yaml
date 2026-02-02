@@ -105,6 +105,9 @@ decisions:
   - date: "2026-02-02"
     decision: "Slash commands generation"
     reason: "commands.yaml generates .claude/commands/*.md for Claude Code"
+  - date: "2026-02-02"
+    decision: "Stop hooks order: cmd before agent"
+    reason: "session-status (cmd) must run before consistency-check (agent) to always display"
 
 # ----------------------------------------------------------------------------
 # EVOLUTION HISTORY
@@ -171,8 +174,8 @@ sessions:
     summary: "Package-manager skill, MEMORY/hooks/commands refactor, unified internal/external architecture"
   - date: "2026-02-02"
     id: "9ytxa"
-    commits: "pending"
-    summary: "Hooks/skills/commands integration audit - all references valid (8/8), 1 cosmetic fix"
+    commits: "4405e84→78d539e"
+    summary: "Hooks/skills/commands integration audit, Stop hooks reorder fix"
 
 # ----------------------------------------------------------------------------
 # LESSONS LEARNED
