@@ -19,11 +19,12 @@
 #   ./generate.sh [OPTIONS]
 #
 # Options:
-#   --force     Force regeneration even if VERSION unchanged
-#   --check     Check if regeneration is needed (exit 1 if yes)
-#   --dry-run   Show what would be generated without writing
-#   --verbose   Show detailed output
-#   --help      Show this help message
+#   --force       Force regeneration even if VERSION unchanged
+#   --check       Check if regeneration is needed (exit 1 if yes)
+#   --check-docs  Check bilingual documentation sync (Phase 3.1)
+#   --dry-run     Show what would be generated without writing
+#   --verbose     Show detailed output
+#   --help        Show this help message
 #
 # ============================================================================
 
@@ -56,6 +57,9 @@ readonly CLAUDE_SETTINGS="${PROJECT_ROOT}/.claude/settings.json"
 readonly MEMORY_YAML="${PROJECT_ROOT}/prompts/fr/metametaprompts/data/memory/MEMORY.yaml"
 readonly MEMORY_MD="${SCRIPT_DIR}/MEMORY.md"
 
+# Skills cache (loaded once, used by all generators)
+SKILLS_CACHE=""
+
 # Data source paths (source of truth)
 readonly DATA_DIR="${PROJECT_ROOT}/prompts/fr/metametaprompts/data"
 readonly DATA_HOOKS_INTERNAL="${DATA_DIR}/hooks/internal"
@@ -64,10 +68,12 @@ readonly DATA_SKILLS_INTERNAL="${DATA_DIR}/skills/internal"
 readonly DATA_SKILLS_EXTERNAL="${DATA_DIR}/skills/external"
 readonly DATA_COMMANDS_INTERNAL="${DATA_DIR}/commands/internal"
 readonly DATA_COMMANDS_EXTERNAL="${DATA_DIR}/commands/external"
+readonly MANIFEST_FILE="${DATA_DIR}/manifest.yaml"
 
 # Options
 FORCE=false
 CHECK_ONLY=false
+CHECK_DOCS=false
 DRY_RUN=false
 VERBOSE=false
 
@@ -153,75 +159,220 @@ write_file() {
 }
 
 # ----------------------------------------------------------------------------
-# YAML parsing (simple, without external dependencies)
+# Manifest validation (Phase 1.2 refactoring)
 # ----------------------------------------------------------------------------
 
-# Extract a simple value from YAML (handles basic cases)
+# Validate manifest integrity hashes
+# Returns 0 if all hashes match, 1 if mismatches found
+validate_manifest() {
+    if [[ ! -f "${MANIFEST_FILE}" ]]; then
+        log_verbose "No manifest file found, skipping validation"
+        return 0
+    fi
+
+    log_verbose "Validating manifest integrity..."
+    local mismatches=0
+
+    # Check if we have yq for proper YAML parsing
+    if command_exists yq; then
+        # Use yq to extract integrity entries
+        local entries
+        entries=$(yq eval '.integrity | to_entries | .[] | "\(.key)|\(.value.hash)"' "${MANIFEST_FILE}" 2>/dev/null)
+
+        while IFS='|' read -r file expected_hash; do
+            if [[ -z "${file}" ]]; then
+                continue
+            fi
+
+            local full_path="${DATA_DIR}/${file}"
+            if [[ ! -f "${full_path}" ]]; then
+                log_warn "Manifest file missing: ${file}"
+                ((mismatches++))
+                continue
+            fi
+
+            # Extract just the hash value (remove sha256: prefix if present)
+            expected_hash="${expected_hash#sha256:}"
+
+            # Compute actual hash
+            local actual_hash
+            if command_exists sha256sum; then
+                actual_hash=$(sha256sum "${full_path}" | cut -d' ' -f1)
+            elif command_exists shasum; then
+                actual_hash=$(shasum -a 256 "${full_path}" | cut -d' ' -f1)
+            else
+                log_verbose "No SHA256 tool available, skipping hash check"
+                return 0
+            fi
+
+            if [[ "${actual_hash}" != "${expected_hash}" ]]; then
+                log_warn "Integrity mismatch: ${file}"
+                log_verbose "  Expected: ${expected_hash}"
+                log_verbose "  Actual:   ${actual_hash}"
+                ((mismatches++))
+            else
+                log_verbose "Integrity OK: ${file}"
+            fi
+        done <<< "${entries}"
+    else
+        log_verbose "yq not available, skipping manifest validation"
+        return 0
+    fi
+
+    if [[ ${mismatches} -gt 0 ]]; then
+        log_warn "Found ${mismatches} integrity mismatch(es)"
+        return 1
+    fi
+
+    log_verbose "All manifest integrity checks passed"
+    return 0
+}
+
+# ----------------------------------------------------------------------------
+# Documentation sync check (Phase 3.1 refactoring)
+# ----------------------------------------------------------------------------
+
+# Check if bilingual documentation is in sync
+# Returns 0 if all docs are synced, 1 if mismatches found
+check_docs_sync() {
+    local docs_en="${PROJECT_ROOT}/docs/en"
+    local docs_fr="${PROJECT_ROOT}/docs/fr"
+    local mismatches=0
+
+    if [[ ! -d "${docs_en}" ]] || [[ ! -d "${docs_fr}" ]]; then
+        log_verbose "Documentation directories not found, skipping sync check"
+        return 0
+    fi
+
+    log_verbose "Checking bilingual documentation sync..."
+
+    # Check for missing French translations
+    for en_doc in "${docs_en}"/*.md; do
+        [[ ! -f "${en_doc}" ]] && continue
+
+        local basename
+        basename=$(basename "${en_doc}")
+        local fr_doc="${docs_fr}/${basename}"
+
+        if [[ ! -f "${fr_doc}" ]]; then
+            log_warn "Missing FR translation: docs/fr/${basename}"
+            ((mismatches++))
+        else
+            # Compare last modification times
+            local en_mtime fr_mtime
+            en_mtime=$(stat -c %Y "${en_doc}" 2>/dev/null || stat -f %m "${en_doc}" 2>/dev/null)
+            fr_mtime=$(stat -c %Y "${fr_doc}" 2>/dev/null || stat -f %m "${fr_doc}" 2>/dev/null)
+
+            if [[ -n "${en_mtime}" && -n "${fr_mtime}" ]]; then
+                # If EN is more than 1 day newer than FR, warn
+                local diff=$((en_mtime - fr_mtime))
+                if [[ ${diff} -gt 86400 ]]; then
+                    log_verbose "Possible translation drift: ${basename} (EN is newer)"
+                fi
+            fi
+        fi
+    done
+
+    # Check for orphan French docs
+    for fr_doc in "${docs_fr}"/*.md; do
+        [[ ! -f "${fr_doc}" ]] && continue
+
+        local basename
+        basename=$(basename "${fr_doc}")
+        local en_doc="${docs_en}/${basename}"
+
+        if [[ ! -f "${en_doc}" ]]; then
+            log_warn "Orphan FR doc (no EN source): docs/fr/${basename}"
+            ((mismatches++))
+        fi
+    done
+
+    if [[ ${mismatches} -gt 0 ]]; then
+        log_warn "Found ${mismatches} documentation sync issue(s)"
+        return 1
+    fi
+
+    log_verbose "All documentation files in sync"
+    return 0
+}
+
+# ----------------------------------------------------------------------------
+# YAML parsing using yq (KISS principle)
+# ----------------------------------------------------------------------------
+# Requires: yq (kislyuk/yq wrapper for jq)
+# Install: pip install yq
+# ----------------------------------------------------------------------------
+
+# Extract a simple value from YAML
+# Usage: yaml_get "file.yaml" "key"
 yaml_get() {
     local file="$1"
     local key="$2"
-    grep -E "^${key}:" "${file}" 2>/dev/null | head -1 | sed "s/^${key}:[[:space:]]*//" | sed 's/^"//' | sed 's/"$//' | sed "s/^'//" | sed "s/'$//"
+    yq -r ".${key} // empty" "${file}" 2>/dev/null
 }
 
-# Extract multiline value (for instructions.role, etc.)
+# Extract multiline/nested value from YAML
+# Usage: yaml_get_block "file.yaml" "instructions.role"
 yaml_get_block() {
     local file="$1"
     local key="$2"
-    local in_block=false
-    local indent=""
-    local result=""
-
-    while IFS= read -r line; do
-        if [[ "${in_block}" == "true" ]]; then
-            # Check if we've exited the block (less indentation or new key at same level)
-            if [[ -n "${line}" && ! "${line}" =~ ^[[:space:]] ]]; then
-                break
-            fi
-            if [[ -n "${line}" ]]; then
-                # Remove the leading indentation
-                result+="${line#${indent}}"$'\n'
-            else
-                result+=$'\n'
-            fi
-        elif [[ "${line}" =~ ^${key}:[[:space:]]*\|[[:space:]]*$ ]]; then
-            in_block=true
-            # Detect indentation from next non-empty line
-            while IFS= read -r next_line; do
-                if [[ -n "${next_line}" && "${next_line}" =~ ^([[:space:]]+) ]]; then
-                    indent="${BASH_REMATCH[1]}"
-                    result+="${next_line#${indent}}"$'\n'
-                    break
-                fi
-            done
-        fi
-    done < "${file}"
-
-    echo "${result}"
+    yq -r ".${key} // empty" "${file}" 2>/dev/null
 }
 
 # Get list of items from YAML array
+# Usage: yaml_get_list "file.yaml" "tags"
 yaml_get_list() {
     local file="$1"
     local key="$2"
-    local in_list=false
+    yq -r ".${key}[]? // empty" "${file}" 2>/dev/null
+}
 
-    while IFS= read -r line; do
-        if [[ "${in_list}" == "true" ]]; then
-            if [[ "${line}" =~ ^[[:space:]]+-[[:space:]]+(.*) ]]; then
-                local item="${BASH_REMATCH[1]}"
-                # Remove quotes if present
-                item="${item#\"}"
-                item="${item%\"}"
-                item="${item#\'}"
-                item="${item%\'}"
-                echo "${item}"
-            elif [[ -n "${line}" && ! "${line}" =~ ^[[:space:]] ]]; then
-                break
-            fi
-        elif [[ "${line}" =~ ^${key}:[[:space:]]*$ ]]; then
-            in_list=true
-        fi
-    done < "${file}"
+# Load all skills into a JSON cache (called once at startup)
+# This replaces 480+ yq calls with a single pass
+load_skills_cache() {
+    if [[ -n "${SKILLS_CACHE}" ]]; then
+        return 0  # Already loaded
+    fi
+
+    log_verbose "Loading skills cache..."
+
+    local skill_files
+    skill_files=$(find "${SKILLS_DIR}" -name "*.yaml" -type f ! -name "_*" | sort)
+
+    if [[ -z "${skill_files}" ]]; then
+        SKILLS_CACHE="[]"
+        return 0
+    fi
+
+    # Merge all skill files into a single JSON array with one yq call
+    # shellcheck disable=SC2086
+    SKILLS_CACHE=$(yq -s '[.[] | select(. != null)]' ${skill_files} 2>/dev/null || echo "[]")
+
+    local count
+    count=$(echo "${SKILLS_CACHE}" | jq 'length')
+    log_verbose "Loaded ${count} skills into cache"
+}
+
+# Get skill field from cache
+# Usage: skill_get "skill-name" "field"
+skill_get() {
+    local name="$1"
+    local field="$2"
+    echo "${SKILLS_CACHE}" | jq -r --arg name "${name}" --arg field "${field}" \
+        '.[] | select(.name == $name) | .[$field] // empty'
+}
+
+# Iterate over all skills in cache
+# Usage: for_each_skill "jq_expression"
+# Example: for_each_skill '.name + ": " + .description'
+for_each_skill() {
+    local expr="$1"
+    echo "${SKILLS_CACHE}" | jq -r ".[] | ${expr}"
+}
+
+# Get all skill names from cache
+get_skill_names() {
+    echo "${SKILLS_CACHE}" | jq -r '.[].name | select(. != null and . != "")'
 }
 
 # ----------------------------------------------------------------------------
@@ -381,7 +532,7 @@ generate_agents_md() {
 
 > This file follows the [AGENTS.md standard](https://agents.md/)
 >
-> ${GENERATED_MARKER} - Do not edit manually
+> __GENERATED_MARKER__ - Do not edit manually
 
 ## First mandatory action
 
@@ -508,19 +659,13 @@ This is MANDATORY for user visibility. Do NOT rely on Stop hooks for this.
 
 AGENTS_HEADER
 )
+    # Replace placeholder with actual marker
+    content="${content//__GENERATED_MARKER__/${GENERATED_MARKER}}"
 
-    # Add skill list
-    local skill_file
-    for skill_file in $(get_skill_files); do
-        local name description category
-        name=$(yaml_get "${skill_file}" "name")
-        description=$(yaml_get "${skill_file}" "description")
-        category=$(yaml_get "${skill_file}" "category")
-
-        if [[ -n "${name}" ]]; then
-            content+=$'\n'"| ${name} | ${description:-No description} | ${category:-other} |"
-        fi
-    done
+    # Add skill list from cache (single jq call)
+    local skill_rows
+    skill_rows=$(for_each_skill 'select(.name != null and .name != "") | "| " + .name + " | " + (.description // "No description") + " | " + (.category // "other") + " |"')
+    content+=$'\n'"${skill_rows}"
 
     # Add table header before skills
     content=$(echo "${content}" | sed '/^## Available skills$/a\
@@ -567,16 +712,10 @@ cat .ai/MEMORY.md
 EOF
 )
 
-    local skill_file
-    for skill_file in $(get_skill_files); do
-        local name description
-        name=$(yaml_get "${skill_file}" "name")
-        description=$(yaml_get "${skill_file}" "description")
-
-        if [[ -n "${name}" ]]; then
-            content+="- **${name}**: ${description:-No description}"$'\n'
-        fi
-    done
+    # Add skill list from cache (single jq call)
+    local skill_list
+    skill_list=$(for_each_skill 'select(.name != null and .name != "") | "- **" + .name + "**: " + (.description // "No description")')
+    content+="${skill_list}"$'\n'
 
     write_file "${CLAUDE_MD}" "${content}"
     log_success "Generated CLAUDE.md"
@@ -588,34 +727,39 @@ generate_claude_agents() {
 
     ensure_dir "${CLAUDE_AGENTS_DIR}"
 
-    local skill_file
-    for skill_file in $(get_skill_files); do
-        local name description role guidelines
-        name=$(yaml_get "${skill_file}" "name")
-        description=$(yaml_get "${skill_file}" "description")
-        role=$(yaml_get_block "${skill_file}" "role")
-        guidelines=$(yaml_get_list "${skill_file}" "guidelines")
-
-        if [[ -z "${name}" ]]; then
-            continue
-        fi
-
+    # Generate all agent files using cache (process each skill)
+    local name
+    for name in $(get_skill_names); do
         local agent_file="${CLAUDE_AGENTS_DIR}/${name}.md"
-        local content="# ${name}"$'\n\n'
-        content+="${description:-No description}"$'\n\n'
 
-        if [[ -n "${role}" ]]; then
-            content+="## Role"$'\n\n'
-            content+="${role}"$'\n'
+        # Extract all fields for this skill in one jq call
+        local skill_data
+        skill_data=$(echo "${SKILLS_CACHE}" | jq -r --arg name "${name}" '
+            .[] | select(.name == $name) | {
+                description: (.description // "No description"),
+                instructions: (.instructions // ""),
+                constraints: (.constraints // [])
+            }
+        ')
+
+        local description instructions constraints_json
+        description=$(echo "${skill_data}" | jq -r '.description')
+        instructions=$(echo "${skill_data}" | jq -r '.instructions')
+        constraints_json=$(echo "${skill_data}" | jq -r '.constraints[]? // empty')
+
+        local content="# ${name}"$'\n\n'
+        content+="${description}"$'\n\n'
+
+        if [[ -n "${instructions}" ]]; then
+            content+="## Instructions"$'\n\n'
+            content+="${instructions}"$'\n'
         fi
 
-        if [[ -n "${guidelines}" ]]; then
-            content+="## Guidelines"$'\n\n'
-            echo "${guidelines}" | while IFS= read -r line; do
-                if [[ -n "${line}" ]]; then
-                    content+="- ${line}"$'\n'
-                fi
-            done
+        if [[ -n "${constraints_json}" ]]; then
+            content+="## Constraints"$'\n\n'
+            while IFS= read -r line; do
+                [[ -n "${line}" ]] && content+="- ${line}"$'\n'
+            done <<< "${constraints_json}"
         fi
 
         content+=$'\n'"---"$'\n'"*${GENERATED_MARKER}*"$'\n'
@@ -638,22 +782,26 @@ generate_cursorrules() {
     content+="- Use inclusive writing for French content"$'\n\n'
     content+="## Available skills"$'\n\n'
 
-    local skill_file
-    for skill_file in $(get_skill_files); do
-        local name description role
-        name=$(yaml_get "${skill_file}" "name")
-        description=$(yaml_get "${skill_file}" "description")
-        role=$(yaml_get_block "${skill_file}" "role")
+    # Generate skill sections from cache
+    local name
+    for name in $(get_skill_names); do
+        local skill_data
+        skill_data=$(echo "${SKILLS_CACHE}" | jq -r --arg name "${name}" '
+            .[] | select(.name == $name) | {
+                description: (.description // "No description"),
+                instructions: (.instructions // "")
+            }
+        ')
 
-        if [[ -z "${name}" ]]; then
-            continue
-        fi
+        local description instructions
+        description=$(echo "${skill_data}" | jq -r '.description')
+        instructions=$(echo "${skill_data}" | jq -r '.instructions')
 
         content+="### ${name}"$'\n\n'
-        content+="${description:-No description}"$'\n\n'
+        content+="${description}"$'\n\n'
 
-        if [[ -n "${role}" ]]; then
-            content+="${role}"$'\n'
+        if [[ -n "${instructions}" ]]; then
+            content+="${instructions}"$'\n'
         fi
 
         content+=$'\n'
@@ -789,78 +937,43 @@ generate_claude_commands() {
         return 0
     fi
 
-    # Read commands from YAML - simplified parsing
-    local cmd_name=""
-    local cmd_desc=""
-    local cmd_command=""
-    local cmd_skill=""
-    local in_output=false
-    local output_content=""
-
-    while IFS= read -r line; do
-        # Skip metadata section
-        [[ "${line}" =~ ^_meta: ]] && break
-
-        # New command definition (root level key)
-        if [[ "${line}" =~ ^([a-z][a-z0-9_-]*):[[:space:]]*$ ]]; then
-            # Save previous command
-            if [[ -n "${cmd_name}" ]]; then
-                local file="${commands_dir}/${cmd_name}.md"
-                local content="# /${cmd_name}"$'\n\n'
-                content+="${cmd_desc:-No description}"$'\n\n'
-
-                if [[ -n "${cmd_command}" ]]; then
-                    content+="Run: \`${cmd_command}\`"$'\n'
-                elif [[ -n "${cmd_skill}" ]]; then
-                    content+="Invoke skill: \`@${cmd_skill}\`"$'\n'
-                fi
-
-                if [[ -n "${output_content}" ]]; then
-                    content+=$'\n'"${output_content}"
-                fi
-
-                echo "${content}" > "${file}"
-            fi
-
-            cmd_name="${BASH_REMATCH[1]}"
-            cmd_desc=""
-            cmd_command=""
-            cmd_skill=""
-            in_output=false
-            output_content=""
-        elif [[ "${line}" =~ ^[[:space:]]+description:[[:space:]]*\"(.*)\" ]]; then
-            cmd_desc="${BASH_REMATCH[1]}"
-        elif [[ "${line}" =~ ^[[:space:]]+command:[[:space:]]*\"(.*)\" ]]; then
-            cmd_command="${BASH_REMATCH[1]}"
-        elif [[ "${line}" =~ ^[[:space:]]+skill:[[:space:]]*\"(.*)\" ]]; then
-            cmd_skill="${BASH_REMATCH[1]}"
-        elif [[ "${line}" =~ ^[[:space:]]+output:[[:space:]]*\| ]]; then
-            in_output=true
-        elif [[ "${in_output}" == "true" && "${line}" =~ ^[[:space:]]{4}(.*)$ ]]; then
-            output_content+="${BASH_REMATCH[1]}"$'\n'
-        elif [[ "${in_output}" == "true" && ! "${line}" =~ ^[[:space:]] ]]; then
-            in_output=false
-        fi
-    done < "${commands_file}"
-
-    # Save last command
-    if [[ -n "${cmd_name}" ]]; then
-        local file="${commands_dir}/${cmd_name}.md"
-        local content="# /${cmd_name}"$'\n\n'
-        content+="${cmd_desc:-No description}"$'\n\n'
-
-        if [[ -n "${cmd_command}" ]]; then
-            content+="Run: \`${cmd_command}\`"$'\n'
-        elif [[ -n "${cmd_skill}" ]]; then
-            content+="Invoke skill: \`@${cmd_skill}\`"$'\n'
-        fi
-
-        if [[ -n "${output_content}" ]]; then
-            content+=$'\n'"${output_content}"
-        fi
-
-        echo "${content}" > "${file}"
+    if ! command_exists yq; then
+        log_error "yq is required for commands generation. Install with: pip install yq"
+        return 1
     fi
+
+    # Get all command keys (exclude metadata keys)
+    local cmd_keys
+    cmd_keys=$(yq -r 'keys | .[] | select(. != "_meta" and . != "version" and . != "updated")' "${commands_file}")
+
+    for cmd_name in ${cmd_keys}; do
+        # Skip if not for Claude platform
+        local for_claude
+        for_claude=$(yq -r ".\"${cmd_name}\".platforms.claude // true" "${commands_file}")
+        [[ "${for_claude}" != "true" ]] && continue
+
+        local desc command skill output
+        desc=$(yq -r ".\"${cmd_name}\".description // \"No description\"" "${commands_file}")
+        command=$(yq -r ".\"${cmd_name}\".command // empty" "${commands_file}")
+        skill=$(yq -r ".\"${cmd_name}\".skill // empty" "${commands_file}")
+        output=$(yq -r ".\"${cmd_name}\".output // empty" "${commands_file}")
+
+        # Build markdown content
+        local content="# /${cmd_name}"$'\n\n'
+        content+="${desc}"$'\n\n'
+
+        if [[ -n "${command}" ]]; then
+            content+="Run: \`${command}\`"$'\n'
+        elif [[ -n "${skill}" ]]; then
+            content+="Invoke skill: \`@${skill}\`"$'\n'
+        fi
+
+        if [[ -n "${output}" ]]; then
+            content+=$'\n'"${output}"
+        fi
+
+        echo "${content}" > "${commands_dir}/${cmd_name}.md"
+    done
 
     log_success "Generated Claude Code commands"
 }
@@ -900,43 +1013,15 @@ enabled = true
 generate_continuerc() {
     log_info "Generating .continuerc.json..."
 
-    local skills_json="["
-    local first=true
-
-    local skill_file
-    for skill_file in $(get_skill_files); do
-        local name description
-        name=$(yaml_get "${skill_file}" "name")
-        description=$(yaml_get "${skill_file}" "description")
-
-        if [[ -z "${name}" ]]; then
-            continue
-        fi
-
-        if [[ "${first}" != "true" ]]; then
-            skills_json+=","
-        fi
-        first=false
-
-        # Escape quotes in description
-        description="${description//\"/\\\"}"
-
-        skills_json+=$'\n'"    {"
-        skills_json+=$'\n'"      \"name\": \"${name}\","
-        skills_json+=$'\n'"      \"description\": \"${description:-No description}\""
-        skills_json+=$'\n'"    }"
-    done
-
-    skills_json+=$'\n'"  ]"
+    # Build skills JSON array using jq (single call)
+    local skills_json
+    skills_json=$(echo "${SKILLS_CACHE}" | jq '[.[] | select(.name != null and .name != "") | {name: .name, description: (.description // "No description")}]')
 
     local content
-    content=$(cat << EOF
-{
-  "_comment": "${GENERATED_MARKER}",
-  "customCommands": ${skills_json}
-}
-EOF
-)
+    content=$(jq -n --arg comment "${GENERATED_MARKER}" --argjson skills "${skills_json}" '{
+        "_comment": $comment,
+        "customCommands": $skills
+    }')
 
     write_file "${CONTINUE_RC}" "${content}"
     log_success "Generated .continuerc.json"
@@ -959,16 +1044,10 @@ generate_aider_conf() {
     content+="  Check .ai/MEMORY.md for project context."$'\n\n'
     content+="# Available skills:"$'\n'
 
-    local skill_file
-    for skill_file in $(get_skill_files); do
-        local name description
-        name=$(yaml_get "${skill_file}" "name")
-        description=$(yaml_get "${skill_file}" "description")
-
-        if [[ -n "${name}" ]]; then
-            content+="#   - ${name}: ${description:-No description}"$'\n'
-        fi
-    done
+    # Add skill comments from cache
+    local skill_comments
+    skill_comments=$(for_each_skill 'select(.name != null and .name != "") | "#   - " + .name + ": " + (.description // "No description")')
+    content+="${skill_comments}"$'\n'
 
     write_file "${AIDER_CONF}" "${content}"
     log_success "Generated .aider.conf.yml"
@@ -980,31 +1059,31 @@ generate_ollama_modelfiles() {
 
     ensure_dir "${OLLAMA_DIR}"
 
-    local skill_file
-    for skill_file in $(get_skill_files); do
-        local name description role model
-        name=$(yaml_get "${skill_file}" "name")
-        description=$(yaml_get "${skill_file}" "description")
-        role=$(yaml_get_block "${skill_file}" "role")
+    local name
+    for name in $(get_skill_names); do
+        local skill_data
+        skill_data=$(echo "${SKILLS_CACHE}" | jq -r --arg name "${name}" '
+            .[] | select(.name == $name) | {
+                description: (.description // "No description"),
+                instructions: (.instructions // "")
+            }
+        ')
 
-        if [[ -z "${name}" ]]; then
-            continue
-        fi
-
-        # Try to get Ollama-specific model, default to llama3.2
-        model="llama3.2"
+        local description instructions
+        description=$(echo "${skill_data}" | jq -r '.description')
+        instructions=$(echo "${skill_data}" | jq -r '.instructions')
 
         local modelfile="${OLLAMA_DIR}/Modelfile.${name}"
         local content="# ${GENERATED_MARKER}"$'\n'
         content+="# Skill: ${name}"$'\n\n'
-        content+="FROM ${model}"$'\n\n'
+        content+="FROM llama3.2"$'\n\n'
         content+="PARAMETER temperature 0.3"$'\n'
         content+="PARAMETER num_ctx 4096"$'\n\n'
         content+="SYSTEM \"\"\""$'\n'
-        content+="${description:-No description}"$'\n\n'
+        content+="${description}"$'\n\n'
 
-        if [[ -n "${role}" ]]; then
-            content+="${role}"
+        if [[ -n "${instructions}" ]]; then
+            content+="${instructions}"
         fi
 
         content+=$'\n'"\"\"\""$'\n'
@@ -1021,24 +1100,27 @@ generate_opencode_agents() {
 
     ensure_dir "${OPENCODE_AGENTS_DIR}"
 
-    local skill_file
-    for skill_file in $(get_skill_files); do
-        local name description role
-        name=$(yaml_get "${skill_file}" "name")
-        description=$(yaml_get "${skill_file}" "description")
-        role=$(yaml_get_block "${skill_file}" "role")
+    local name
+    for name in $(get_skill_names); do
+        local skill_data
+        skill_data=$(echo "${SKILLS_CACHE}" | jq -r --arg name "${name}" '
+            .[] | select(.name == $name) | {
+                description: (.description // "No description"),
+                instructions: (.instructions // "")
+            }
+        ')
 
-        if [[ -z "${name}" ]]; then
-            continue
-        fi
+        local description instructions
+        description=$(echo "${skill_data}" | jq -r '.description')
+        instructions=$(echo "${skill_data}" | jq -r '.instructions')
 
         local agent_file="${OPENCODE_AGENTS_DIR}/${name}.md"
         local content="# ${name}"$'\n\n'
-        content+="${description:-No description}"$'\n\n'
+        content+="${description}"$'\n\n'
 
-        if [[ -n "${role}" ]]; then
+        if [[ -n "${instructions}" ]]; then
             content+="## Instructions"$'\n\n'
-            content+="${role}"$'\n'
+            content+="${instructions}"$'\n'
         fi
 
         content+=$'\n'"---"$'\n'"*${GENERATED_MARKER}*"$'\n'
@@ -1055,24 +1137,27 @@ generate_codex_agents() {
 
     ensure_dir "${CODEX_AGENTS_DIR}"
 
-    local skill_file
-    for skill_file in $(get_skill_files); do
-        local name description role
-        name=$(yaml_get "${skill_file}" "name")
-        description=$(yaml_get "${skill_file}" "description")
-        role=$(yaml_get_block "${skill_file}" "role")
+    local name
+    for name in $(get_skill_names); do
+        local skill_data
+        skill_data=$(echo "${SKILLS_CACHE}" | jq -r --arg name "${name}" '
+            .[] | select(.name == $name) | {
+                description: (.description // "No description"),
+                instructions: (.instructions // "")
+            }
+        ')
 
-        if [[ -z "${name}" ]]; then
-            continue
-        fi
+        local description instructions
+        description=$(echo "${skill_data}" | jq -r '.description')
+        instructions=$(echo "${skill_data}" | jq -r '.instructions')
 
         local agent_file="${CODEX_AGENTS_DIR}/${name}.md"
         local content="# ${name}"$'\n\n'
-        content+="${description:-No description}"$'\n\n'
+        content+="${description}"$'\n\n'
 
-        if [[ -n "${role}" ]]; then
-            content+="## Role"$'\n\n'
-            content+="${role}"$'\n'
+        if [[ -n "${instructions}" ]]; then
+            content+="## Instructions"$'\n\n'
+            content+="${instructions}"$'\n'
         fi
 
         content+=$'\n'"---"$'\n'"*${GENERATED_MARKER}*"$'\n'
@@ -1083,9 +1168,9 @@ generate_codex_agents() {
     log_success "Generated Codex agents"
 }
 
-# Generate Claude Code hooks settings
-# Supports: SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop, SessionEnd
-# Hook types: command, prompt, agent
+# Generate Claude Code hooks settings using yq
+# Simplified version: 266 lines → ~25 lines (KISS principle)
+# Requires: yq (kislyuk/yq or mikefarah/yq)
 generate_claude_hooks() {
     log_info "Generating Claude Code hooks..."
 
@@ -1095,259 +1180,42 @@ generate_claude_hooks() {
         return 0
     fi
 
-    ensure_dir "$(dirname "${CLAUDE_SETTINGS}")"
-
-    # Temporary file for building JSON
-    local tmp_file
-    tmp_file=$(mktemp)
-    trap "rm -f ${tmp_file}" EXIT
-
-    # Initialize hook arrays for each event type
-    declare -A event_hooks
-    local ALL_EVENTS="SessionStart UserPromptSubmit PreToolUse PostToolUse Stop SessionEnd"
-    for event in ${ALL_EVENTS}; do
-        event_hooks["${event}"]=""
-    done
-
-    # State machine variables
-    local current_event=""
-    local in_hook_list=false
-    local in_hook_item=false
-    local hook_enabled=""
-    local hook_matcher=""
-    local hook_timeout=""
-    local in_hooks_array=false
-    local hook_type=""
-    local hook_command=""
-    local hook_prompt=""
-    local reading_multiline=""
-    local multiline_content=""
-    local multiline_indent=0
-
-    # Process YAML line by line
-    while IFS= read -r line || [[ -n "${line}" ]]; do
-        # Handle multiline content
-        if [[ -n "${reading_multiline}" ]]; then
-            # Check if line is still part of multiline (has sufficient indentation)
-            local line_indent=0
-            if [[ "${line}" =~ ^([[:space:]]*) ]]; then
-                line_indent=${#BASH_REMATCH[1]}
-            fi
-
-            if [[ ${line_indent} -ge ${multiline_indent} && -n "${line}" ]] || [[ -z "${line// /}" ]]; then
-                # Still in multiline, append content
-                local content_part="${line}"
-                if [[ ${line_indent} -ge ${multiline_indent} ]]; then
-                    content_part="${line:${multiline_indent}}"
-                fi
-                multiline_content+="${content_part}"$'\n'
-                continue
-            else
-                # End of multiline
-                if [[ "${reading_multiline}" == "command" ]]; then
-                    hook_command="${multiline_content%$'\n'}"
-                elif [[ "${reading_multiline}" == "prompt" ]]; then
-                    hook_prompt="${multiline_content%$'\n'}"
-                fi
-                reading_multiline=""
-                multiline_content=""
-                # Fall through to process current line
-            fi
-        fi
-
-        # Detect top-level event (SessionStart:, UserPromptSubmit:, etc.)
-        if [[ "${line}" =~ ^(SessionStart|UserPromptSubmit|PreToolUse|PostToolUse|Stop|SessionEnd):[[:space:]]*$ ]]; then
-            # Save previous hook if exists
-            if [[ "${in_hook_item}" == "true" && "${hook_enabled}" == "true" && -n "${hook_type}" ]]; then
-                save_hook_to_event
-            fi
-            current_event="${BASH_REMATCH[1]}"
-            in_hook_list=true
-            in_hook_item=false
-            log_verbose "Processing event: ${current_event}"
-            continue
-        fi
-
-        # Skip comment lines and empty lines
-        [[ "${line}" =~ ^[[:space:]]*# ]] && continue
-        [[ -z "${line// /}" ]] && continue
-
-        # Inside an event's hook list
-        if [[ "${in_hook_list}" == "true" ]]; then
-            # Detect new hook item (- name: "...")
-            if [[ "${line}" =~ ^[[:space:]]+-[[:space:]]+name:[[:space:]]*[\"\']?([^\"\']+)[\"\']? ]]; then
-                # Save previous hook if exists
-                if [[ "${in_hook_item}" == "true" && "${hook_enabled}" == "true" && -n "${hook_type}" ]]; then
-                    save_hook_to_event
-                fi
-                # Reset for new hook
-                in_hook_item=true
-                hook_enabled=""
-                hook_matcher=""
-                hook_timeout=""
-                in_hooks_array=false
-                hook_type=""
-                hook_command=""
-                hook_prompt=""
-                continue
-            fi
-
-            # Parse hook properties
-            if [[ "${in_hook_item}" == "true" ]]; then
-                # enabled: true/false
-                if [[ "${line}" =~ enabled:[[:space:]]*(true|false) ]]; then
-                    hook_enabled="${BASH_REMATCH[1]}"
-                    continue
-                fi
-
-                # matcher: "pattern"
-                if [[ "${line}" =~ matcher:[[:space:]]*[\"\']?([^\"\']+)[\"\']? ]]; then
-                    hook_matcher="${BASH_REMATCH[1]}"
-                    continue
-                fi
-
-                # hooks: (array start)
-                if [[ "${line}" =~ ^[[:space:]]+hooks:[[:space:]]*$ ]]; then
-                    in_hooks_array=true
-                    continue
-                fi
-
-                # Inside hooks array
-                if [[ "${in_hooks_array}" == "true" ]]; then
-                    # - type: "command"
-                    if [[ "${line}" =~ -[[:space:]]+type:[[:space:]]*[\"\']?(command|prompt|agent)[\"\']? ]]; then
-                        hook_type="${BASH_REMATCH[1]}"
-                        continue
-                    fi
-
-                    # type: "command" (without dash)
-                    if [[ "${line}" =~ ^[[:space:]]+type:[[:space:]]*[\"\']?(command|prompt|agent)[\"\']? ]]; then
-                        hook_type="${BASH_REMATCH[1]}"
-                        continue
-                    fi
-
-                    # timeout: 30
-                    if [[ "${line}" =~ timeout:[[:space:]]*([0-9]+) ]]; then
-                        hook_timeout="${BASH_REMATCH[1]}"
-                        continue
-                    fi
-
-                    # command: | (multiline)
-                    if [[ "${line}" =~ command:[[:space:]]*\|[[:space:]]*$ ]]; then
-                        reading_multiline="command"
-                        multiline_content=""
-                        # Calculate indent for multiline content
-                        if [[ "${line}" =~ ^([[:space:]]*) ]]; then
-                            multiline_indent=$((${#BASH_REMATCH[1]} + 2))
-                        fi
-                        continue
-                    fi
-
-                    # command: "inline"
-                    if [[ "${line}" =~ command:[[:space:]]*[\"\']([^\"\']+)[\"\'] ]]; then
-                        hook_command="${BASH_REMATCH[1]}"
-                        continue
-                    fi
-
-                    # prompt: | (multiline)
-                    if [[ "${line}" =~ prompt:[[:space:]]*\|[[:space:]]*$ ]]; then
-                        reading_multiline="prompt"
-                        multiline_content=""
-                        if [[ "${line}" =~ ^([[:space:]]*) ]]; then
-                            multiline_indent=$((${#BASH_REMATCH[1]} + 2))
-                        fi
-                        continue
-                    fi
-
-                    # prompt: "inline"
-                    if [[ "${line}" =~ prompt:[[:space:]]*[\"\']([^\"\']+)[\"\'] ]]; then
-                        hook_prompt="${BASH_REMATCH[1]}"
-                        continue
-                    fi
-                fi
-            fi
-
-            # Check if we've left the event (new top-level key)
-            if [[ "${line}" =~ ^[a-zA-Z] && ! "${line}" =~ ^[[:space:]] ]]; then
-                in_hook_list=false
-            fi
-        fi
-    done < "${HOOKS_FILE}"
-
-    # Save final hook if exists
-    if [[ "${in_hook_item}" == "true" && "${hook_enabled}" == "true" && -n "${hook_type}" ]]; then
-        save_hook_to_event
+    if ! command_exists yq; then
+        log_error "yq is required for hooks generation. Install with: pip install yq"
+        return 1
     fi
 
-    # Build final JSON
-    local hooks_json='{"_comment":"'"${GENERATED_MARKER}"' from .ai/hooks/hooks.yaml","hooks":{'
-    local first_event=true
+    ensure_dir "$(dirname "${CLAUDE_SETTINGS}")"
 
-    for event in ${ALL_EVENTS}; do
-        if [[ -n "${event_hooks[${event}]}" ]]; then
-            [[ "${first_event}" != "true" ]] && hooks_json+=","
-            hooks_json+="\"${event}\":[${event_hooks[${event}]}]"
-            first_event=false
-        fi
-    done
+    # Use yq to transform YAML to JSON (replaces 240+ lines of state machine)
+    local hooks_json
+    hooks_json=$(yq '
+      # Filter enabled hooks and remove metadata fields
+      def transform_hook:
+        select(.enabled == true) |
+        del(.name, .description, .enabled);
 
-    hooks_json+='}}'
+      {
+        "_comment": "Auto-generated by generate.sh from .ai/hooks/hooks.yaml",
+        "hooks": {
+          "SessionStart": [.SessionStart[]? | transform_hook],
+          "UserPromptSubmit": [.UserPromptSubmit[]? | transform_hook],
+          "PreToolUse": [.PreToolUse[]? | transform_hook],
+          "PostToolUse": [.PostToolUse[]? | transform_hook],
+          "Stop": [.Stop[]? | transform_hook]
+        }
+      }
+      # Remove empty event arrays
+      | .hooks |= with_entries(select(.value | length > 0))
+    ' "${HOOKS_FILE}" 2>/dev/null)
 
-    # Format JSON if jq is available
-    if command_exists jq; then
-        hooks_json=$(echo "${hooks_json}" | jq '.' 2>/dev/null) || true
+    if [[ -z "${hooks_json}" ]]; then
+        log_error "Failed to parse hooks file with yq"
+        return 1
     fi
 
     write_file "${CLAUDE_SETTINGS}" "${hooks_json}"
     log_success "Generated Claude Code hooks settings"
-}
-
-# Helper function to save current hook to event array
-save_hook_to_event() {
-    local hook_json=""
-
-    # Build hook JSON
-    if [[ -n "${hook_matcher}" ]]; then
-        hook_json='{"matcher":"'"${hook_matcher}"'","hooks":[{"type":"'"${hook_type}"'"'
-    else
-        hook_json='{"hooks":[{"type":"'"${hook_type}"'"'
-    fi
-
-    # Add timeout if specified
-    if [[ -n "${hook_timeout}" ]]; then
-        hook_json+=',"timeout":'"${hook_timeout}"
-    fi
-
-    # Add type-specific content
-    if [[ "${hook_type}" == "command" && -n "${hook_command}" ]]; then
-        # Escape special chars in command for JSON
-        local escaped_cmd="${hook_command//\\/\\\\}"
-        escaped_cmd="${escaped_cmd//\"/\\\"}"
-        escaped_cmd="${escaped_cmd//$'\n'/\\n}"
-        escaped_cmd="${escaped_cmd//$'\t'/\\t}"
-        hook_json+=',"command":"'"${escaped_cmd}"'"'
-    elif [[ "${hook_type}" == "prompt" && -n "${hook_prompt}" ]]; then
-        local escaped_prompt="${hook_prompt//\\/\\\\}"
-        escaped_prompt="${escaped_prompt//\"/\\\"}"
-        escaped_prompt="${escaped_prompt//$'\n'/\\n}"
-        hook_json+=',"prompt":"'"${escaped_prompt}"'"'
-    elif [[ "${hook_type}" == "agent" && -n "${hook_prompt}" ]]; then
-        local escaped_prompt="${hook_prompt//\\/\\\\}"
-        escaped_prompt="${escaped_prompt//\"/\\\"}"
-        escaped_prompt="${escaped_prompt//$'\n'/\\n}"
-        hook_json+=',"prompt":"'"${escaped_prompt}"'"'
-    fi
-
-    hook_json+='}]}'
-
-    # Append to event's hook array
-    if [[ -n "${event_hooks[${current_event}]}" ]]; then
-        event_hooks["${current_event}"]+=",${hook_json}"
-    else
-        event_hooks["${current_event}"]="${hook_json}"
-    fi
-
-    log_verbose "Added hook to ${current_event}: type=${hook_type}"
 }
 
 # Generate MEMORY.md from MEMORY.yaml
@@ -1363,13 +1231,13 @@ generate_memory_md() {
     content+="> Persistent memory for AI agents. Read at session start, update via \`memory-keeper\`."$'\n'
     content+="> **Source of truth**: \`prompts/fr/metametaprompts/data/memory/MEMORY.yaml\`"$'\n\n'
 
-    # Extract identity
+    # Extract identity (using yq path notation)
     local name type created main_lang paradigm
-    name=$(yaml_get "${MEMORY_YAML}" "  name")
-    type=$(yaml_get "${MEMORY_YAML}" "  type")
-    created=$(yaml_get "${MEMORY_YAML}" "  created")
-    main_lang=$(yaml_get "${MEMORY_YAML}" "  main_language")
-    paradigm=$(yaml_get "${MEMORY_YAML}" "  paradigm")
+    name=$(yaml_get "${MEMORY_YAML}" "identity.name")
+    type=$(yaml_get "${MEMORY_YAML}" "identity.type")
+    created=$(yaml_get "${MEMORY_YAML}" "identity.created")
+    main_lang=$(yaml_get "${MEMORY_YAML}" "identity.main_language")
+    paradigm=$(yaml_get "${MEMORY_YAML}" "identity.paradigm")
 
     content+="## Project identity"$'\n\n'
     content+="| Property | Value |"$'\n'
@@ -1393,12 +1261,12 @@ generate_memory_md() {
     content+="| Preference | Value |"$'\n'
     content+="|------------|-------|"$'\n'
     local pref_lang pref_code inc_writing shell_std ai_cov summary
-    pref_lang=$(yaml_get "${MEMORY_YAML}" "  language_interface")
-    pref_code=$(yaml_get "${MEMORY_YAML}" "  language_code_docs")
-    inc_writing=$(yaml_get "${MEMORY_YAML}" "  inclusive_writing")
-    shell_std=$(yaml_get "${MEMORY_YAML}" "  shell_standard")
-    ai_cov=$(yaml_get "${MEMORY_YAML}" "  ai_tools_coverage")
-    summary=$(yaml_get "${MEMORY_YAML}" "  end_of_response_summary")
+    pref_lang=$(yaml_get "${MEMORY_YAML}" "preferences.language_interface")
+    pref_code=$(yaml_get "${MEMORY_YAML}" "preferences.language_code_docs")
+    inc_writing=$(yaml_get "${MEMORY_YAML}" "preferences.inclusive_writing")
+    shell_std=$(yaml_get "${MEMORY_YAML}" "preferences.shell_standard")
+    ai_cov=$(yaml_get "${MEMORY_YAML}" "preferences.ai_tools_coverage")
+    summary=$(yaml_get "${MEMORY_YAML}" "preferences.end_of_response_summary")
     content+="| Language (interface) | ${pref_lang:-French} |"$'\n'
     content+="| Language (code/docs) | ${pref_code:-English} |"$'\n'
     content+="| Inclusive writing | ${inc_writing:-true} |"$'\n'
@@ -1411,16 +1279,10 @@ generate_memory_md() {
     content+="| Skill | Purpose | Status |"$'\n'
     content+="|-------|---------|--------|"$'\n'
 
-    local skill_file
-    for skill_file in $(get_skill_files); do
-        local skill_name skill_desc
-        skill_name=$(yaml_get "${skill_file}" "name")
-        skill_desc=$(yaml_get "${skill_file}" "description")
-        if [[ -n "${skill_name}" ]]; then
-            content+="| ${skill_name} | ${skill_desc:-No description} | Active |"$'\n'
-        fi
-    done
-    content+=$'\n'
+    # Add skill rows from cache
+    local skill_rows
+    skill_rows=$(for_each_skill 'select(.name != null and .name != "") | "| " + .name + " | " + (.description // "No description") + " | Active |"')
+    content+="${skill_rows}"$'\n\n'
 
     # Notes section
     content+="## Notes"$'\n\n'
@@ -1485,6 +1347,10 @@ main() {
                 CHECK_ONLY=true
                 shift
                 ;;
+            --check-docs)
+                CHECK_DOCS=true
+                shift
+                ;;
             --dry-run)
                 DRY_RUN=true
                 shift
@@ -1508,6 +1374,17 @@ main() {
     log_info "Meta-prompt-LLM configuration generator"
     log_info "Project root: ${PROJECT_ROOT}"
 
+    # Handle --check-docs flag (Phase 3.1)
+    if [[ "${CHECK_DOCS}" == "true" ]]; then
+        if check_docs_sync; then
+            log_success "Documentation sync check passed"
+            exit 0
+        else
+            log_error "Documentation sync check failed"
+            exit 1
+        fi
+    fi
+
     # Check if skills directory exists
     if [[ ! -d "${SKILLS_DIR}" ]]; then
         log_error "Skills directory not found: ${SKILLS_DIR}"
@@ -1523,6 +1400,11 @@ main() {
         log_warn "No skill files found in ${SKILLS_DIR}"
         log_warn "Skipping generation"
         exit 0
+    fi
+
+    # Validate manifest integrity (Phase 1.2)
+    if [[ "${VERBOSE}" == "true" ]]; then
+        validate_manifest || log_warn "Manifest validation had warnings"
     fi
 
     # Check if regeneration is needed
@@ -1543,6 +1425,9 @@ main() {
     sync_skills
     sync_hooks
     sync_commands
+
+    # Load skills cache (one yq call instead of 480+)
+    load_skills_cache
 
     # Run all generators
     generate_memory_md

@@ -247,16 +247,6 @@
           }
         ]
       }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo \"\"\necho \"═══════════════════════════════════════════════════════════════\"\necho \"                    FIN DE SESSION\"\necho \"═══════════════════════════════════════════════════════════════\"\necho \"📝 Si des décisions importantes ont été prises,\"\necho \"   assurez-vous que .ai/MEMORY.md est à jour.\"\necho \"\"\necho \"🔄 Pour la prochaine session:\"\necho \"   - SessionStart chargera automatiquement le contexte\"\necho \"   - data-sync vérifiera la synchronisation\"\necho \"═══════════════════════════════════════════════════════════════\"\n"
-          }
-        ]
-      }
     ]
   }
 }

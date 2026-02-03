@@ -5,9 +5,9 @@
 # ============================================================================
 
 version: "1.0.0"
-updated: "2026-02-02"
+updated: "2026-02-03"
 updated_by: "memory-keeper"
-session: "3jXvo"
+session: "VAj2K"
 
 # ----------------------------------------------------------------------------
 # PROJECT IDENTITY
@@ -108,6 +108,15 @@ decisions:
   - date: "2026-02-02"
     decision: "Stop hooks order: cmd before agent"
     reason: "session-status (cmd) must run before consistency-check (agent) to always display"
+  - date: "2026-02-03"
+    decision: "yq required dependency"
+    reason: "Replaces 220+ lines regex state machine with ~10 lines; KISS principle"
+  - date: "2026-02-03"
+    decision: "SKILLS_CACHE pattern for performance"
+    reason: "Load all skills once (1 yq call) instead of per-loop (480+ calls); 73% faster"
+  - date: "2026-02-03"
+    decision: "Skills use 'instructions' field"
+    reason: "Renamed from 'role' for clarity; contains role, guidelines, process sub-fields"
 
 # ----------------------------------------------------------------------------
 # EVOLUTION HISTORY
@@ -176,6 +185,10 @@ sessions:
     id: "9ytxa"
     commits: "4405e84→ae26782"
     summary: "Full hooks/skills integration (100%), prompt-engineer + codebase-analyst skills, Rule 14, workflow-orchestrator at SessionStart"
+  - date: "2026-02-03"
+    id: "VAj2K"
+    commits: "dbc37bf→85d2b8f"
+    summary: "generate.sh optimization: yq simplification (-270 lines), SKILLS_CACHE pattern (73% faster), architecture docs updated"
 
 # ----------------------------------------------------------------------------
 # LESSONS LEARNED
@@ -229,6 +242,15 @@ lessons:
   - date: "2026-02-02"
     lesson: "Stop hook order matters"
     context: "session-status (cmd) must run BEFORE consistency-check (agent), otherwise it never displays when agent returns ok:false"
+  - date: "2026-02-03"
+    lesson: "yq over regex for YAML"
+    context: "Don't reinvent the wheel; yq is basic tool that replaces 220+ lines with ~10"
+  - date: "2026-02-03"
+    lesson: "Cache expensive operations"
+    context: "SKILLS_CACHE loads once at startup; avoids 480+ subprocess spawns"
+  - date: "2026-02-03"
+    lesson: "Performance baseline"
+    context: "generate.sh runs in ~26s with cache; was 1m38s before optimization"
 
 # ----------------------------------------------------------------------------
 # CURRENT CONTEXT
@@ -405,6 +427,8 @@ notes:
   - "Source of truth: prompts/fr/metametaprompts/data/"
   - "Generated files: .ai/ (never edit directly)"
   - "Use @future-self in commits to leave notes for future sessions"
+  - "yq is required: pip install yq (or brew install yq)"
+  - "generate.sh baseline: ~26s with cache, was 1m38s before optimization"
 
 # ----------------------------------------------------------------------------
 # PLATFORM SUPPORT

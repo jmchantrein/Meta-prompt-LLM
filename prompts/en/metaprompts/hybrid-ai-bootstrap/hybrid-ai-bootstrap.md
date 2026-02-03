@@ -1,13 +1,13 @@
 ---
 name: "hybrid-ai-bootstrap"
-version: "2.1.0"
+version: "2.2.0"
 category: "metaprompts"
 description: "Initialization prompt for hybrid AI architecture with multi-platform support"
 
-tags: ["bootstrap", "architecture", "multi-platform", "metaprompts", "initialization"]
+tags: ["bootstrap", "architecture", "multi-platform", "metaprompts", "initialization", "RISEN"]
 author: "Meta-prompt-LLM"
 created: "2026-01-31"
-updated: "2026-01-31"
+updated: "2026-02-02"
 
 language: "en"
 difficulty: "advanced"
@@ -20,16 +20,16 @@ model_hints:
 
 <!-- META
 prompt_id: "hybrid-ai-bootstrap"
-version: "2.1.0"
+version: "2.2.0"
 source_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/en/metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md"
 applicable_rules: ["rule-0", "rule-1", "rule-2", "rule-4", "rule-8", "rule-10"]
-applicable_skills: ["prompt-validator", "translator"]
+applicable_skills: ["prompt-validator", "translator", "prompt-engineer"]
 
 # --- COPY-PASTE PROMPTS ---
 use_prompt: "Fetch and apply the prompt from: https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/en/metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md"
 update_prompt: |
   Check if my prompt is up-to-date:
-  - My version: 2.1.0
+  - My version: 2.2.0
   - Source: https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/en/metaprompts/hybrid-ai-bootstrap/hybrid-ai-bootstrap.md
   Compare versions and inform me of any changes.
 -->
@@ -39,6 +39,32 @@ update_prompt: |
 # Hybrid AI architecture bootstrap
 
 > Startup prompt to initialize a new project with a hybrid AI architecture (cloud + local), including persistent memory and automatic agent orchestration.
+
+---
+
+## Role (RISEN Framework)
+
+You are a **hybrid AI systems architect specialist**. You master:
+- AI agent standards (AGENTS.md, MCP)
+- Multi-platform generation (Claude Code, Cursor, Ollama, etc.)
+- Inclusive writing and documentation best practices
+- Multi-agent workflow orchestration
+
+**Your objective**: Create a robust, maintainable, and evolved AI architecture for the project.
+
+---
+
+## End Goal
+
+At the end of this prompt, the project must have:
+- [ ] Complete `.ai/` structure with YAML skills
+- [ ] Functional and idempotent `generate.sh` script
+- [ ] AGENTS.md with fundamental rules
+- [ ] MEMORY.md for persistence between sessions
+- [ ] Bilingual documentation (EN/FR) with cross-links
+- [ ] Mandatory skills: inclusivity-reviewer, memory-keeper, workflow-orchestrator, translator
+
+---
 
 ## Context
 
@@ -347,6 +373,7 @@ At the end, provide:
 
 <!--
 VERSION HISTORY:
+- v2.2.0 (2026-02-02): Optimization via prompt-engineer (RISEN framework), added explicit role and end goal
 - v2.1.0 (2026-01-31): Added detailed inclusivity rules, rule 13 language/translation, doc cross-links
 - v2.0.0 (2026-01-31): Added persistent memory, workflow-orchestrator, prompts/ structure
 - v1.0.0 (2026-01-31): Initial version

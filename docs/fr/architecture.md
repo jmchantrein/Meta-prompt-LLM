@@ -235,6 +235,61 @@ cp data/hooks/hooks.yaml .ai/hooks/
 .ai/generate.sh --dry-run
 ```
 
+## Génération des hooks avec yq
+
+La fonction `generate_claude_hooks()` utilise `yq` (processeur YAML) pour transformer `hooks.yaml` en configuration JSON spécifique à chaque plateforme.
+
+### Fonctionnement
+
+```bash
+# Une seule commande yq remplace 220+ lignes de machine à états bash
+yq '
+  def transform_hook:
+    select(.enabled == true) |
+    del(.name, .description, .enabled);
+
+  {
+    "_comment": "Auto-généré par generate.sh",
+    "hooks": {
+      "SessionStart": [.SessionStart[]? | transform_hook],
+      "PreToolUse": [.PreToolUse[]? | transform_hook],
+      "PostToolUse": [.PostToolUse[]? | transform_hook],
+      "Stop": [.Stop[]? | transform_hook]
+    }
+  }
+' hooks.yaml > .claude/settings.json
+```
+
+### Prérequis
+
+```bash
+pip install yq  # ou: brew install yq
+```
+
+### Structure de sortie JSON
+
+```json
+{
+  "_comment": "Auto-généré par generate.sh",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "pattern-optionnel",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "commande shell ici",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [...],
+    "PostToolUse": [...]
+  }
+}
+```
+
 ## Voir aussi
 
 - [AGENTS.md](../../AGENTS.md) - Règles fondamentales pour les agents IA
