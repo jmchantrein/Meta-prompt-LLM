@@ -7,7 +7,7 @@
 version: "1.0.0"
 updated: "2026-02-03"
 updated_by: "memory-keeper"
-session: "VAj2K"
+session: "1ctTH"
 
 # ----------------------------------------------------------------------------
 # PROJECT IDENTITY
@@ -117,6 +117,15 @@ decisions:
   - date: "2026-02-03"
     decision: "Skills use 'instructions' field"
     reason: "Renamed from 'role' for clarity; contains role, guidelines, process sub-fields"
+  - date: "2026-02-03"
+    decision: "RISEN framework for all prompts"
+    reason: "Role-Instructions-Steps-End goal-Narrowing ensures structural consistency"
+  - date: "2026-02-03"
+    decision: "Explicit Output Format section required"
+    reason: "Template conformance; all prompts must declare their output structure"
+  - date: "2026-02-03"
+    decision: "Categories metametaprompts and pedagogy added"
+    reason: "Missing categories detected during prompt-validator analysis"
 
 # ----------------------------------------------------------------------------
 # EVOLUTION HISTORY
@@ -189,6 +198,10 @@ sessions:
     id: "VAj2K"
     commits: "dbc37bf→85d2b8f"
     summary: "generate.sh optimization: yq simplification (-270 lines), SKILLS_CACHE pattern (73% faster), architecture docs updated"
+  - date: "2026-02-03"
+    id: "1ctTH"
+    commits: "1766cad→7574282"
+    summary: "Prompt optimization: RISEN framework adoption, categories.yaml update, hybrid-ai-takeover v2.2.0, socratic-tutor v1.1.0"
 
 # ----------------------------------------------------------------------------
 # LESSONS LEARNED
@@ -251,6 +264,12 @@ lessons:
   - date: "2026-02-03"
     lesson: "Performance baseline"
     context: "generate.sh runs in ~26s with cache; was 1m38s before optimization"
+  - date: "2026-02-03"
+    lesson: "RISEN framework for prompts"
+    context: "Role-Instructions-Steps-End goal-Narrowing ensures structural consistency and validator compliance"
+  - date: "2026-02-03"
+    lesson: "Prompt validators require explicit Output Format"
+    context: "All prompts must declare output structure; implicit formats fail template conformance"
 
 # ----------------------------------------------------------------------------
 # CURRENT CONTEXT
