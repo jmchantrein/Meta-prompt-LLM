@@ -1,6 +1,6 @@
 ---
 name: "hybrid-ai-takeover"
-version: "2.1.0"
+version: "2.2.0"
 category: "metaprompts"
 description: "Prompt de reprise d'un projet existant vers architecture IA hybride multi-plateforme"
 
@@ -20,7 +20,7 @@ model_hints:
 
 <!-- META
 prompt_id: "hybrid-ai-takeover"
-version: "2.1.0"
+version: "2.2.0"
 source_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md"
 applicable_rules: ["rule-0", "rule-1", "rule-2", "rule-4", "rule-8", "rule-10"]
 applicable_skills: ["prompt-validator", "inclusivity-reviewer", "translator"]
@@ -29,7 +29,7 @@ applicable_skills: ["prompt-validator", "inclusivity-reviewer", "translator"]
 use_prompt: "Récupère et applique le prompt depuis : https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md"
 update_prompt: |
   Vérifie si mon prompt est à jour :
-  - Ma version : 2.1.0
+  - Ma version : 2.2.0
   - Source : https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md
   Compare les versions et informe-moi des changements.
 -->
@@ -39,6 +39,16 @@ update_prompt: |
 # Reprise de projet vers architecture IA hybride
 
 > Prompt de demarrage pour migrer un projet existant vers une architecture IA hybride (cloud + local), incluant memoire persistante et orchestration automatique des agents.
+
+## Rôle
+
+Tu es un·e **architecte spécialisé·e en migration de systèmes IA**. Tu maîtrises :
+- L'analyse de configurations IA legacy
+- La migration vers architectures hybrides (cloud + local)
+- La préservation des données et configurations existantes
+- La génération multi-plateforme (Claude Code, Ollama, Cursor, etc.)
+
+Ta mission est de migrer le projet vers une architecture IA centralisée sans perte de données ni interruption de service.
 
 ## Contexte
 
@@ -350,6 +360,17 @@ Mettre a jour README.md et README.fr.md avec section "Architecture IA".
 3. Resumer ce qui a ete migre
 4. Lister les prochaines etapes recommandees
 
+## Objectif final
+
+À la fin de l'exécution de ce prompt, le projet doit avoir :
+- [ ] Backup complet des fichiers legacy dans `.ai/legacy-backup/`
+- [ ] Structure `.ai/` centralisée avec skills extraits
+- [ ] `AGENTS.md` fusionnant toutes les règles existantes
+- [ ] Documentation bilingue migrée avec liens croisés
+- [ ] Tests existants toujours fonctionnels
+- [ ] Script `generate.sh` opérationnel et validé
+- [ ] `MEMORY.md` mis à jour avec les décisions de migration
+
 ## Contraintes
 
 - Ne jamais modifier sans avoir d'abord fait le backup (Phase 4)
@@ -378,6 +399,7 @@ A la fin, fournir :
 
 <!--
 HISTORIQUE DES VERSIONS :
+- v2.2.0 (2026-02-03) : Ajout sections Rôle et Objectif final (alignement framework RISEN)
 - v2.1.0 (2026-01-31) : Harmonisation avec hybrid-ai-bootstrap, ajout MEMORY.md, regles 12-14, suppression RULES.md (fusionne dans AGENTS.md), paradigmes, traduction
 - v1.0.0 (2026-01-31) : Version initiale
 -->

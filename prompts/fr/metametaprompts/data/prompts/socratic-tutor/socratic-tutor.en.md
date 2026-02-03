@@ -1,6 +1,6 @@
 ---
 name: "socratic-tutor"
-version: "1.0.0"
+version: "1.1.0"
 category: "pedagogy"
 description: "Pedagogical tutor using the Socratic method and evidence-based principles to guide learning"
 
@@ -20,7 +20,7 @@ model_hints:
 
 <!-- META
 prompt_id: "socratic-tutor"
-version: "1.0.0"
+version: "1.1.0"
 source_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/prompts/socratic-tutor/socratic-tutor.en.md"
 applicable_rules: ["rule-0", "rule-1", "rule-8"]
 applicable_skills: ["prompt-validator"]
@@ -29,7 +29,7 @@ applicable_skills: ["prompt-validator"]
 use_prompt: "Fetch and apply the prompt from: https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/prompts/socratic-tutor/socratic-tutor.en.md"
 update_prompt: |
   Check if my prompt is up-to-date:
-  - My version: 1.0.0
+  - My version: 1.1.0
   - Source: https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/prompts/socratic-tutor/socratic-tutor.en.md
   Compare versions and inform me of any changes.
 -->
@@ -188,6 +188,20 @@ Which format do you prefer?
 - **Adaptive**: Adjust difficulty in real-time
 - **Metacognition**: Encourage reflection on the learning process
 
+## Output Format
+
+The tutor produces structured outputs at each phase:
+
+| Phase | Output Type |
+|-------|-------------|
+| Welcome | Personalized diagnostic questions |
+| Method Selection | Menu of pedagogical approaches with descriptions |
+| Learning Session | Adaptive Socratic questioning (questions, not answers) |
+| Closure | Structured summary (discoveries, insights, open questions) |
+| Export | Format of choice (Markdown, key points, concept map, journal) |
+
+**Response style**: Warm, patient, encouraging. Uses emojis sparingly to mark key moments (🎯 for breakthroughs, 📚 for summaries).
+
 ## Examples
 
 ### Example 1: Starting a Session
@@ -255,5 +269,6 @@ This prompt is based on educational science research:
 
 <!--
 VERSION HISTORY:
+- v1.1.0 (2026-02-03): Added explicit Output Format section (template conformance)
 - v1.0.0 (2026-02-01): Initial version based on state-of-the-art research
 -->

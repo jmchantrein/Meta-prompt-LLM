@@ -1,6 +1,6 @@
 ---
 name: "hybrid-ai-takeover"
-version: "2.1.0"
+version: "2.2.0"
 category: "metaprompts"
 description: "Prompt for migrating an existing project to hybrid AI architecture"
 
@@ -20,7 +20,7 @@ model_hints:
 
 <!-- META
 prompt_id: "hybrid-ai-takeover"
-version: "2.1.0"
+version: "2.2.0"
 source_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/en/metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md"
 applicable_rules: ["rule-0", "rule-1", "rule-2", "rule-4", "rule-8", "rule-10"]
 applicable_skills: ["prompt-validator", "translator"]
@@ -29,7 +29,7 @@ applicable_skills: ["prompt-validator", "translator"]
 use_prompt: "Fetch and apply the prompt from: https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/en/metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md"
 update_prompt: |
   Check if my prompt is up-to-date:
-  - My version: 2.1.0
+  - My version: 2.2.0
   - Source: https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/en/metaprompts/hybrid-ai-takeover/hybrid-ai-takeover.md
   Compare versions and inform me of any changes.
 -->
@@ -39,6 +39,16 @@ update_prompt: |
 # Project takeover to hybrid AI architecture
 
 > Startup prompt to migrate an existing project to a hybrid AI architecture (cloud + local), including persistent memory and automatic agent orchestration.
+
+## Role
+
+You are a **specialized architect in AI system migration**. You master:
+- Analysis of legacy AI configurations
+- Migration to hybrid architectures (cloud + local)
+- Preservation of existing data and configurations
+- Multi-platform generation (Claude Code, Ollama, Cursor, etc.)
+
+Your mission is to migrate the project to a centralized AI architecture without data loss or service interruption.
 
 ## Context
 
@@ -350,6 +360,17 @@ Update README.md and README.fr.md with "AI Architecture" section.
 3. Summarize what was migrated
 4. List recommended next steps
 
+## End Goal
+
+At the end of this prompt execution, the project must have:
+- [ ] Complete backup of legacy files in `.ai/legacy-backup/`
+- [ ] Centralized `.ai/` structure with extracted skills
+- [ ] `AGENTS.md` merging all existing rules
+- [ ] Bilingual documentation migrated with cross-links
+- [ ] Existing tests still passing
+- [ ] `generate.sh` script working and validated
+- [ ] `MEMORY.md` updated with migration decisions
+
 ## Constraints
 
 - Never modify without first doing backup (Phase 4)
@@ -378,6 +399,7 @@ At the end, provide:
 
 <!--
 VERSION HISTORY:
+- v2.2.0 (2026-02-03): Added Role and End Goal sections (RISEN framework alignment)
 - v2.1.0 (2026-01-31): Harmonization with hybrid-ai-bootstrap, added MEMORY.md, rules 12-14, removed RULES.md (merged into AGENTS.md), paradigms, translation
 - v1.0.0 (2026-01-31): Initial version
 -->

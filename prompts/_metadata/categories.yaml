@@ -10,6 +10,14 @@ categories:
     description: "Meta-prompts for AI initialization, configuration, and prompt engineering"
     color: "#6366f1"  # Indigo
 
+  - name: "metametaprompts"
+    description: "Self-referential prompts for project introspection and evolution"
+    color: "#9333ea"  # Purple
+
+  - name: "pedagogy"
+    description: "Educational prompts, tutoring, learning assistance"
+    color: "#0ea5e9"  # Sky blue
+
   - name: "development"
     description: "Software development, coding, debugging"
     color: "#22c55e"  # Green

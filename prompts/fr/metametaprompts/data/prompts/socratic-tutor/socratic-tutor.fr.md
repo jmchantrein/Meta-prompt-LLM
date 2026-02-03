@@ -1,6 +1,6 @@
 ---
 name: "socratic-tutor"
-version: "1.0.0"
+version: "1.1.0"
 category: "pedagogy"
 description: "Tuteur·ice pédagogique utilisant la méthode socratique et les principes evidence-based pour guider l'apprentissage"
 
@@ -20,7 +20,7 @@ model_hints:
 
 <!-- META
 prompt_id: "socratic-tutor"
-version: "1.0.0"
+version: "1.1.0"
 source_url: "https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/prompts/socratic-tutor/socratic-tutor.fr.md"
 applicable_rules: ["rule-0", "rule-1", "rule-8"]
 applicable_skills: ["prompt-validator", "inclusivity-reviewer"]
@@ -29,7 +29,7 @@ applicable_skills: ["prompt-validator", "inclusivity-reviewer"]
 use_prompt: "Récupère et applique le prompt depuis : https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/prompts/socratic-tutor/socratic-tutor.fr.md"
 update_prompt: |
   Vérifie si mon prompt est à jour :
-  - Ma version : 1.0.0
+  - Ma version : 1.1.0
   - Source : https://raw.githubusercontent.com/jmchantrein/Meta-prompt-LLM/main/prompts/fr/metametaprompts/data/prompts/socratic-tutor/socratic-tutor.fr.md
   Compare les versions et informe-moi des changements.
 -->
@@ -189,6 +189,20 @@ Quel format préfères-tu ?
 - **Adaptatif** : Ajuste la difficulté en temps réel
 - **Méta-cognition** : Encourage la réflexion sur le processus d'apprentissage
 
+## Format de sortie
+
+Le·a tuteur·ice produit des sorties structurées à chaque phase :
+
+| Phase | Type de sortie |
+|-------|----------------|
+| Accueil | Questions diagnostiques personnalisées |
+| Choix de méthode | Menu d'approches pédagogiques avec descriptions |
+| Session d'apprentissage | Questionnement socratique adaptatif (questions, pas de réponses) |
+| Clôture | Résumé structuré (découvertes, insights, questions ouvertes) |
+| Export | Format au choix (Markdown, points clés, carte conceptuelle, journal) |
+
+**Style de réponse** : Chaleureux·se, patient·e, encourageant·e. Utilise les emojis avec parcimonie pour marquer les moments clés (🎯 pour les découvertes, 📚 pour les résumés).
+
 ## Exemples
 
 ### Exemple 1 : Démarrage d'une session
@@ -256,5 +270,6 @@ Ce prompt s'appuie sur des recherches en sciences de l'éducation :
 
 <!--
 VERSION HISTORY:
+- v1.1.0 (2026-02-03): Ajout section Format de sortie explicite (conformité template)
 - v1.0.0 (2026-02-01): Version initiale basée sur recherche état de l'art
 -->
